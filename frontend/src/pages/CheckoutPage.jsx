@@ -257,35 +257,16 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
         {/* ۴. شناسه یا یوزرنیم تلگرام کاربر */}
         <div className="selector-group" style={{ marginTop: '1.25rem' }}>
           <label className="selector-label">
-            ۴. نام کاربری یا شناسه عددی تلگرام کاربر (جهت انتساب فاکتور):
+            ۴. نام کاربری یا شناسه عددی تلگرام کاربر:
           </label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="text"
-              className="input-custom"
-              value={telegramUser}
-              onChange={(e) => setTelegramUser(e.target.value)}
-              placeholder="مثال: @babasoroush یا 987654321"
-              style={{ direction: 'ltr', flex: 1 }}
-            />
-            <button
-              type="button"
-              className="btn-sim-action"
-              onClick={() => setTelegramUser('@babasoroush')}
-              title="انتخاب سریع یوزر @babasoroush"
-              style={{
-                whiteSpace: 'nowrap',
-                fontSize: '0.82rem',
-                borderColor: telegramUser === '@babasoroush' ? 'var(--cyan)' : undefined,
-                background: telegramUser === '@babasoroush' ? 'rgba(6, 182, 212, 0.2)' : undefined
-              }}
-            >
-              @babasoroush
-            </button>
-          </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '0.35rem', display: 'block' }}>
-            💡 با وارد کردن آیدی (مثلاً <code>@babasoroush</code>)، فاکتور در دیتابیس به این کاربر تلگرام متصل می‌گردد.
-          </span>
+          <input
+            type="text"
+            className="input-custom"
+            value={telegramUser}
+            onChange={(e) => setTelegramUser(e.target.value)}
+            placeholder="مثال: @babasoroush یا 987654321"
+            style={{ direction: 'ltr' }}
+          />
         </div>
 
         {/* دکمه ارسال */}
