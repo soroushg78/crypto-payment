@@ -21,15 +21,18 @@ func NewDepositAddressRepository(pool *pgxpool.Pool) *DepositAddressRepository {
 }
 
 func (r *DepositAddressRepository) AssignAddress(ctx context.Context, networkID string, userID *string) (*domain.DepositAddress, error) {
-	// For TON: Master treasury wallet + unique memo
-	centralTonWallet := "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N"
+	// Master treasury wallet + unique memo per network
+	treasuryWallet := "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N"
+	if networkID == "tron" {
+		treasuryWallet = "TYDzsYUEpvnYmQK4zGPj29sdgyFvP4k67x"
+	}
 	memoBytes := make([]byte, 4)
 	_, _ = rand.Read(memoBytes)
 	uniqueMemo := fmt.Sprintf("ORD-%s", hex.EncodeToString(memoBytes))
 
 	addr := &domain.DepositAddress{
 		NetworkID:  networkID,
-		Address:    centralTonWallet,
+		Address:    treasuryWallet,
 		Memo:       &uniqueMemo,
 		IsAssigned: true,
 		CreatedAt:  time.Now(),

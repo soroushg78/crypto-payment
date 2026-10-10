@@ -2,14 +2,32 @@ import { apiClient } from './client';
 
 export const invoiceApi = {
   // صدور فاکتور جدید
-  createInvoice: async ({ serviceId, currencyId, networkId, telegramId, username, customAmount }) => {
+  createInvoice: async ({
+    amountUSD,
+    amount_usd,
+    currencyId,
+    networkId,
+    serviceId,
+    telegramId,
+    username,
+    customAmount
+  }) => {
+    const finalAmount =
+      amountUSD !== undefined
+        ? parseFloat(amountUSD)
+        : amount_usd !== undefined
+        ? parseFloat(amount_usd)
+        : customAmount !== undefined
+        ? parseFloat(customAmount)
+        : 0;
+
     return apiClient.post('/api/v1/invoices', {
-      service_id: serviceId,
+      amount_usd: finalAmount,
       currency_id: currencyId,
       network_id: networkId,
+      service_id: serviceId || undefined,
       telegram_id: telegramId ? parseInt(telegramId, 10) : undefined,
-      username: username || undefined,
-      custom_amount: customAmount ? parseFloat(customAmount) : undefined
+      username: username || undefined
     });
   },
 
