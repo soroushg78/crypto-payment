@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { authApi } from '../api/authApi';
+
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = 'crypto_service_auth_token';
@@ -20,30 +22,19 @@ export const AuthProvider = ({ children }) => {
   });
 
   const login = async (username, password) => {
-    // اعتبارسنجی سطح دسترسی امن
     if (!username || !password) {
       throw new Error('نام کاربری و کلمه عبور الزامی است');
     }
 
-    // بررسی ورود پیش‌فرض (قابل اتصال به اندپوینت لاگین در آینده)
-    // نام کاربری و رمز پیش‌فرض داشبورد: admin / admin123
-    if (username.trim().toLowerCase() === 'admin' && password === 'admin123') {
-      const authUser = {
-        username: 'admin',
-        role: 'administrator',
-        loginAt: new Date().toISOString()
-      };
-      const token = 'token_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const data = await authApi.login(username.trim(), password);
+    const { token, admin } = data;
 
-      localStorage.setItem(STORAGE_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+    localStorage.setItem(STORAGE_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(admin));
 
-      setUser(authUser);
-      setIsAuthenticated(true);
-      return authUser;
-    }
-
-    throw new Error('نام کاربری یا رمز عبور اشتباه است (پیش‌فرض: admin / admin123)');
+    setUser(admin);
+    setIsAuthenticated(true);
+    return admin;
   };
 
   const logout = () => {

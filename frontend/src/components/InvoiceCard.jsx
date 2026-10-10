@@ -107,6 +107,15 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
           <span className="val">{invoice.invoice_number}</span>
         </div>
 
+        {(invoice.telegram_username || invoice.user_id) && (
+          <div className="info-row">
+            <span className="label">کاربر تلگرام:</span>
+            <span className="val" style={{ color: 'var(--cyan-glow)', fontWeight: 700 }}>
+              {invoice.telegram_username ? `@${invoice.telegram_username.replace(/^@/, '')}` : `ID: ${invoice.user_id}`}
+            </span>
+          </div>
+        )}
+
         <div className="info-row">
           <span className="label">آدرس والت خام (Deposit Address):</span>
           <span className="val" style={{ wordBreak: 'break-all' }}>

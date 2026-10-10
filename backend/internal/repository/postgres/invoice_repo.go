@@ -48,11 +48,12 @@ func (r *InvoiceRepository) GetByID(ctx context.Context, id string) (*domain.Inv
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
 		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
-		       s.title, c.symbol, n.name
+		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
 		LEFT JOIN currencies c ON i.currency_id = c.id
 		LEFT JOIN networks n ON i.network_id = n.id
+		LEFT JOIN users u ON i.user_id = u.id
 		WHERE i.id = $1
 	`
 	return r.scanInvoice(r.pool.QueryRow(ctx, query, id))
@@ -63,11 +64,12 @@ func (r *InvoiceRepository) GetByNumber(ctx context.Context, number string) (*do
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
 		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
-		       s.title, c.symbol, n.name
+		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
 		LEFT JOIN currencies c ON i.currency_id = c.id
 		LEFT JOIN networks n ON i.network_id = n.id
+		LEFT JOIN users u ON i.user_id = u.id
 		WHERE i.invoice_number = $1
 	`
 	return r.scanInvoice(r.pool.QueryRow(ctx, query, number))
@@ -94,11 +96,12 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
 		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
-		       s.title, c.symbol, n.name
+		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
 		LEFT JOIN currencies c ON i.currency_id = c.id
 		LEFT JOIN networks n ON i.network_id = n.id
+		LEFT JOIN users u ON i.user_id = u.id
 		WHERE i.status = 'PENDING' AND i.expires_at > NOW()
 		ORDER BY i.created_at ASC
 	`
@@ -112,13 +115,13 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 	for rows.Next() {
 		var inv domain.Invoice
 		var statusStr string
-		var serviceTitle, currSymbol, netName *string
+		var serviceTitle, currSymbol, netName, telegramUsername *string
 
 		err := rows.Scan(
 			&inv.ID, &inv.InvoiceNumber, &inv.UserID, &inv.ServiceID, &inv.CurrencyID, &inv.NetworkID,
 			&inv.AmountUSD, &inv.CryptoAmount, &inv.ExchangeRate, &inv.PayAddress, &inv.PayMemo,
 			&statusStr, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
-			&serviceTitle, &currSymbol, &netName,
+			&serviceTitle, &currSymbol, &netName, &telegramUsername,
 		)
 		if err != nil {
 			return nil, err
@@ -134,6 +137,9 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 		if netName != nil {
 			inv.NetworkName = *netName
 		}
+		if telegramUsername != nil {
+			inv.TelegramUsername = *telegramUsername
+		}
 		invoices = append(invoices, &inv)
 	}
 	return invoices, nil
@@ -142,13 +148,13 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 func (r *InvoiceRepository) scanInvoice(row pgx.Row) (*domain.Invoice, error) {
 	var inv domain.Invoice
 	var statusStr string
-	var serviceTitle, currSymbol, netName *string
+	var serviceTitle, currSymbol, netName, telegramUsername *string
 
 	err := row.Scan(
 		&inv.ID, &inv.InvoiceNumber, &inv.UserID, &inv.ServiceID, &inv.CurrencyID, &inv.NetworkID,
 		&inv.AmountUSD, &inv.CryptoAmount, &inv.ExchangeRate, &inv.PayAddress, &inv.PayMemo,
 		&statusStr, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
-		&serviceTitle, &currSymbol, &netName,
+		&serviceTitle, &currSymbol, &netName, &telegramUsername,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -166,6 +172,9 @@ func (r *InvoiceRepository) scanInvoice(row pgx.Row) (*domain.Invoice, error) {
 	}
 	if netName != nil {
 		inv.NetworkName = *netName
+	}
+	if telegramUsername != nil {
+		inv.TelegramUsername = *telegramUsername
 	}
 	return &inv, nil
 }

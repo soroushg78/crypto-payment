@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"strings"
 	"time"
 
 	"wallet-observer/internal/domain"
@@ -77,10 +78,19 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 
 	// 4. Resolve / Create User
 	var userID *string
+	var telegramUsername string
 	if input.TelegramID != nil {
 		user, err := u.userRepo.GetOrCreateByTelegramID(ctx, *input.TelegramID, input.Username, input.Username)
 		if err == nil && user != nil {
 			userID = &user.ID
+			telegramUsername = user.Username
+		}
+	} else if input.Username != "" {
+		cleanUsername := strings.TrimPrefix(input.Username, "@")
+		user, err := u.userRepo.GetOrCreateByUsername(ctx, cleanUsername, cleanUsername)
+		if err == nil && user != nil {
+			userID = &user.ID
+			telegramUsername = user.Username
 		}
 	}
 
@@ -122,9 +132,10 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		ExpiresAt:      now.Add(30 * time.Minute),
 		CreatedAt:      now,
 		UpdatedAt:      now,
-		ServiceTitle:   serviceTitle,
-		CurrencySymbol: curr.Symbol,
-		NetworkName:    net.Name,
+		ServiceTitle:     serviceTitle,
+		CurrencySymbol:   curr.Symbol,
+		NetworkName:      net.Name,
+		TelegramUsername: telegramUsername,
 	}
 
 	if err := u.invoiceRepo.Create(ctx, invoice); err != nil {

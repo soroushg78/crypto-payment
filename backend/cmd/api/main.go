@@ -48,6 +48,7 @@ func main() {
 	networkRepo := postgres.NewNetworkRepository(pool)
 	currencyRepo := postgres.NewCurrencyRepository(pool)
 	userRepo := postgres.NewUserRepository(pool)
+	adminRepo := postgres.NewAdminRepository(pool)
 	addressRepo := postgres.NewDepositAddressRepository(pool)
 	invoiceRepo := postgres.NewInvoiceRepository(pool)
 
@@ -61,14 +62,16 @@ func main() {
 		userRepo,
 		addressRepo,
 	)
+	authUC := usecase.NewAuthUseCase(adminRepo)
 
 	// 8. Initialize Separated HTTP Handlers (SOLID - SRP)
 	healthHandler := httpDelivery.NewHealthHandler()
 	catalogHandler := httpDelivery.NewCatalogHandler(catalogUC)
 	invoiceHandler := httpDelivery.NewInvoiceHandler(invoiceUC)
+	authHandler := httpDelivery.NewAuthHandler(authUC)
 
 	// 9. Wire Router with Handlers & Middlewares
-	router := httpDelivery.NewRouter(healthHandler, catalogHandler, invoiceHandler)
+	router := httpDelivery.NewRouter(healthHandler, catalogHandler, invoiceHandler, authHandler)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	server := &http.Server{

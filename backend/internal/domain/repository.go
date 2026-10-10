@@ -23,6 +23,13 @@ type CurrencyRepository interface {
 type UserRepository interface {
 	GetOrCreateByTelegramID(ctx context.Context, telegramID int64, username, firstName string) (*User, error)
 	GetByID(ctx context.Context, id string) (*User, error)
+	GetByUsername(ctx context.Context, username string) (*User, error)
+	GetOrCreateByUsername(ctx context.Context, username, firstName string) (*User, error)
+}
+
+type AdminRepository interface {
+	GetByUsername(ctx context.Context, username string) (*Admin, string, error) // بازگرداندن ادمین و password_hash
+	UpdateLastLogin(ctx context.Context, id string) error
 }
 
 type DepositAddressRepository interface {

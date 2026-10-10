@@ -9,6 +9,7 @@ import (
 	"wallet-observer/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // NewPool initializes a PostgreSQL connection pool with connection settings.
@@ -142,6 +143,19 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_tx_to_address ON observed_transactions(to_address);
 	CREATE INDEX IF NOT EXISTS idx_tx_memo ON observed_transactions(memo);
 
+	-- 8. Admins Table (Management Authentication)
+	CREATE TABLE IF NOT EXISTS admins (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		username VARCHAR(64) UNIQUE NOT NULL,
+		password_hash VARCHAR(255) NOT NULL,
+		role VARCHAR(32) NOT NULL DEFAULT 'SUPER_ADMIN',
+		telegram_id BIGINT UNIQUE,
+		is_active BOOLEAN NOT NULL DEFAULT TRUE,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		last_login_at TIMESTAMPTZ
+	);
+	CREATE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
+
 	-- Clean up legacy dummy services if any exist
 	DELETE FROM services WHERE code IN ('VIP_1M', 'VIP_3M', 'WALLET_CREDIT_10', 'TOPUP_20');
 
@@ -163,11 +177,31 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		('TRX', 'tron', NULL, 6, 10.0, true),
 		('USDT', 'tron', 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 6, 1.0, true)
 	ON CONFLICT (symbol, network_id) DO NOTHING;
+
+	-- Seed Telegram user @babasoroush
+	INSERT INTO users (telegram_id, username, first_name)
+	VALUES (987654321, 'babasoroush', 'Soroush')
+	ON CONFLICT (telegram_id) DO UPDATE SET username = EXCLUDED.username;
 	`
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
-	slog.Info("All database tables, constraints, and supported networks/currencies initialized successfully")
+
+	// Seed default super admin (admin / admin123) with real bcrypt hash
+	var adminExists bool
+	_ = pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM admins WHERE username = 'admin')").Scan(&adminExists)
+	if !adminExists {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		if err == nil {
+			_, _ = pool.Exec(ctx,
+				"INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, 'SUPER_ADMIN')",
+				"admin", string(hashedPassword),
+			)
+			slog.Info("Default super admin seeded (username: admin, password: admin123)")
+		}
+	}
+
+	slog.Info("All database tables, constraints, admins, and supported networks/currencies initialized successfully")
 	return nil
 }

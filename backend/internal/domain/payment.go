@@ -87,9 +87,31 @@ type Invoice struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 
 	// Joined details for API convenience
-	ServiceTitle   string `json:"service_title,omitempty"`
-	CurrencySymbol string `json:"currency_symbol,omitempty"`
-	NetworkName    string `json:"network_name,omitempty"`
+	ServiceTitle     string `json:"service_title,omitempty"`
+	CurrencySymbol   string `json:"currency_symbol,omitempty"`
+	NetworkName      string `json:"network_name,omitempty"`
+	TelegramUsername string `json:"telegram_username,omitempty"`
+}
+
+// Admin represents a dashboard administrator
+type Admin struct {
+	ID          string     `json:"id"`
+	Username    string     `json:"username"`
+	Role        string     `json:"role"`
+	TelegramID  *int64     `json:"telegram_id,omitempty"`
+	IsActive    bool       `json:"is_active"`
+	CreatedAt   time.Time  `json:"created_at"`
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+}
+
+type LoginInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+	Admin *Admin `json:"admin"`
 }
 
 func (i *Invoice) IsExpired() bool {
