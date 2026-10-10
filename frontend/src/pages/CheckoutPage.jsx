@@ -1,101 +1,108 @@
 import React, { useState, useEffect } from 'react';
 import { catalogApi } from '../api/catalogApi';
 import { invoiceApi } from '../api/invoiceApi';
-import PlanSelector from '../components/PlanSelector';
 import NetworkSelector from '../components/NetworkSelector';
 import InvoiceCard from '../components/InvoiceCard';
 
 export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
-  const [services, setServices] = useState([]);
+  // Lists from backend
   const [networks, setNetworks] = useState([]);
   const [currencies, setCurrencies] = useState([]);
 
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedNetwork, setSelectedNetwork] = useState(null);
-  const [selectedCurrency, setSelectedCurrency] = useState(null);
-
+  // Selected values
+  const [selectedNetworkId, setSelectedNetworkId] = useState('');
+  const [selectedCurrencyId, setSelectedCurrencyId] = useState('');
+  const [amountUSD, setAmountUSD] = useState('10.00');
   const [telegramId, setTelegramId] = useState('84920194');
-  const [activeInvoice, setActiveInvoice] = useState(null);
 
-  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  // Loading & active invoice
+  const [activeInvoice, setActiveInvoice] = useState(null);
+  const [loadingNetworks, setLoadingNetworks] = useState(true);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // بارگذاری لیست خدمات و شبکه‌ها از بک‌اند Go
+  // 1. دریافت لیست شبکه‌های بلاکچین از بک‌اند Go
   useEffect(() => {
     let isMounted = true;
-    const loadCatalog = async () => {
+    const loadNetworks = async () => {
       try {
-        setLoadingCatalog(true);
-        const [servicesData, networksData] = await Promise.all([
-          catalogApi.getServices(),
-          catalogApi.getNetworks()
-        ]);
-
+        setLoadingNetworks(true);
+        const data = await catalogApi.getNetworks();
         if (!isMounted) return;
 
-        if (Array.isArray(servicesData) && servicesData.length > 0) {
-          setServices(servicesData);
-          setSelectedService(servicesData[0]);
-        }
-
-        if (Array.isArray(networksData) && networksData.length > 0) {
-          setNetworks(networksData);
-          setSelectedNetwork(networksData[0]);
+        if (Array.isArray(data) && data.length > 0) {
+          setNetworks(data);
+          // شبکه اول را به صورت پیش‌فرض انتخاب نمی‌کنیم تا کاربر خود دراپ‌داون را باز کند
         }
       } catch (err) {
         if (isMounted) {
-          setErrorMsg(err.message || 'خطا در واکشی کاتالوگ از سرور');
+          setErrorMsg('خطا در دریافت لیست شبکه‌ها: ' + err.message);
         }
       } finally {
-        if (isMounted) setLoadingCatalog(false);
+        if (isMounted) setLoadingNetworks(false);
       }
     };
 
-    loadCatalog();
+    loadNetworks();
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // بارگذاری ارزها هنگام تغییر شبکه
-  useEffect(() => {
-    if (!selectedNetwork?.id) return;
+  // 2. دریافت ارزهای شبکه انتخاب شده (فعال‌سازی دراپ‌داون دوم)
+  const handleNetworkChange = async (networkId) => {
+    setSelectedNetworkId(networkId);
+    setSelectedCurrencyId('');
+    setCurrencies([]);
 
-    let isMounted = true;
-    const loadCurrencies = async () => {
-      try {
-        setLoadingCurrencies(true);
-        const currData = await catalogApi.getCurrencies(selectedNetwork.id);
-        if (!isMounted) return;
+    if (!networkId) return;
 
-        if (Array.isArray(currData) && currData.length > 0) {
-          setCurrencies(currData);
-          setSelectedCurrency(currData[0]);
-        } else {
-          setCurrencies([]);
-          setSelectedCurrency(null);
+    try {
+      setLoadingCurrencies(true);
+      const currData = await catalogApi.getCurrencies(networkId);
+      if (Array.isArray(currData)) {
+        setCurrencies(currData);
+        if (currData.length === 1) {
+          setSelectedCurrencyId(currData[0].id);
         }
-      } catch (err) {
-        if (isMounted) {
-          onShowToast?.(`خطا در واکشی ارزهای شبکه: ${err.message}`, 'error');
-        }
-      } finally {
-        if (isMounted) setLoadingCurrencies(false);
       }
-    };
+    } catch (err) {
+      onShowToast?.(`خطا در دریافت ارزهای شبکه: ${err.message}`, 'error');
+    } finally {
+      setLoadingCurrencies(false);
+    }
+  };
 
-    loadCurrencies();
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedNetwork?.id]);
+  // محاسبه تخمینی کریپتو بر اساس نرخ روز
+  const selectedCurrency = currencies.find((c) => c.id === selectedCurrencyId);
+  const selectedNetwork = networks.find((n) => n.id === selectedNetworkId);
 
-  // ثبت و صدور فاکتور واقعی در دیتابیس
+  const getEstimatedCrypto = () => {
+    const val = parseFloat(amountUSD);
+    if (isNaN(val) || val <= 0 || !selectedCurrency) return null;
+
+    let rate = 1.0;
+    if (selectedCurrency.symbol === 'TON') rate = 5.0;
+    else if (selectedCurrency.symbol === 'TRX') rate = 0.15;
+
+    const crypto = (val / rate).toFixed(selectedCurrency.symbol.includes('USDT') ? 2 : 6);
+    return `${crypto} ${selectedCurrency.symbol}`;
+  };
+
+  // صدور فاکتور رسمی
   const handleCreateInvoice = async () => {
-    if (!selectedService || !selectedCurrency || !selectedNetwork) {
-      onShowToast?.('لطفاً تمامی گزینه‌ها را انتخاب کنید', 'error');
+    const numAmount = parseFloat(amountUSD);
+    if (!selectedNetworkId) {
+      onShowToast?.('لطفاً ابتدا شبکه بلاکچین را انتخاب کنید', 'error');
+      return;
+    }
+    if (!selectedCurrencyId) {
+      onShowToast?.('لطفاً ارز پرداختی را انتخاب کنید', 'error');
+      return;
+    }
+    if (isNaN(numAmount) || numAmount <= 0) {
+      onShowToast?.('لطفاً مبلغ معتبری به دلار وارد کنید', 'error');
       return;
     }
 
@@ -104,26 +111,24 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
       setErrorMsg('');
 
       const invoiceData = await invoiceApi.createInvoice({
-        serviceId: selectedService.id,
-        currencyId: selectedCurrency.id,
-        networkId: selectedNetwork.id,
+        amountUSD: numAmount,
+        currencyId: selectedCurrencyId,
+        networkId: selectedNetworkId,
         telegramId: telegramId ? parseInt(telegramId, 10) : undefined
       });
 
-      // ترکیب داده‌های کامل جهت نمایش در فاکتور
       const fullInvoice = {
         ...invoiceData,
-        service_title: selectedService.title,
-        currency_symbol: selectedCurrency.symbol,
-        network_name: selectedNetwork.name
+        currency_symbol: selectedCurrency?.symbol,
+        network_name: selectedNetwork?.name
       };
 
       setActiveInvoice(fullInvoice);
       onInvoiceCreated?.(fullInvoice);
-      onShowToast?.('فاکتور در دیتابیس صادر شد! آماده ارسال به بلاکچین ⚡', 'success');
+      onShowToast?.('فاکتور جدید در دیتابیس صادر شد! ⚡', 'success');
     } catch (err) {
       setErrorMsg(err.message || 'خطا در ایجاد فاکتور');
-      onShowToast?.(`خطا در ایجاد فاکتور: ${err.message}`, 'error');
+      onShowToast?.(err.message, 'error');
     } finally {
       setCreatingInvoice(false);
     }
@@ -146,11 +151,11 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
 
   return (
     <div className="checkout-grid">
-      {/* انتخاب پلن و شبکه */}
+      {/* فرم پرداخت: ابتدا شبکه و کارنسی، سپس مبلغ دلاری */}
       <div className="card-panel">
         <div className="card-title-wrap">
-          <div className="card-step-num">۱</div>
-          <h2 className="card-title">انتخاب خدمت از دیتابیس واقعی</h2>
+          <div className="card-step-num">⚡</div>
+          <h2 className="card-title">درگاه پرداخت و ایجاد فاکتور</h2>
         </div>
 
         {errorMsg && (
@@ -162,37 +167,92 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
               borderRadius: '8px',
               fontSize: '0.85rem',
               color: '#fda4af',
-              marginBottom: '1rem'
+              marginBottom: '1.25rem'
             }}
           >
             ⚠️ {errorMsg}
           </div>
         )}
 
-        <PlanSelector
-          services={services}
-          selectedService={selectedService}
-          onSelect={setSelectedService}
-          loading={loadingCatalog}
-        />
-
-        <div className="card-title-wrap" style={{ marginTop: '1.8rem' }}>
-          <div className="card-step-num">۲</div>
-          <h2 className="card-title">انتخاب شبکه و ارز بلاکچین</h2>
-        </div>
-
+        {/* ۱. انتخاب شبکه و دراپ‌داون وابسته کارنسی */}
         <NetworkSelector
           networks={networks}
-          selectedNetwork={selectedNetwork}
-          onSelectNetwork={setSelectedNetwork}
+          selectedNetworkId={selectedNetworkId}
+          onChangeNetwork={handleNetworkChange}
           currencies={currencies}
-          selectedCurrency={selectedCurrency}
-          onSelectCurrency={setSelectedCurrency}
+          selectedCurrencyId={selectedCurrencyId}
+          onChangeCurrency={setSelectedCurrencyId}
+          loadingNetworks={loadingNetworks}
           loadingCurrencies={loadingCurrencies}
         />
 
-        <div className="selector-group" style={{ marginTop: '1rem' }}>
-          <label className="selector-label">شناسه عددی تلگرام کاربر (جهت اتصال به ربات):</label>
+        {/* ۲. ورود مبلغ پرداختی به دلار (جایگزین انتخاب خدمت) */}
+        <div className="selector-group" style={{ marginTop: '1.5rem' }}>
+          <label className="selector-label">
+            ۳. مبلغ پرداختی به دلار آمریکا (USD Amount):
+          </label>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              className="input-custom"
+              style={{ fontSize: '1.1rem', fontWeight: 800, paddingLeft: '3.5rem', direction: 'ltr' }}
+              value={amountUSD}
+              onChange={(e) => setAmountUSD(e.target.value)}
+              placeholder="مثال: 10.00"
+            />
+            <span
+              style={{
+                position: 'absolute',
+                left: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontWeight: 800,
+                color: 'var(--cyan-glow)'
+              }}
+            >
+              $ USD
+            </span>
+          </div>
+
+          {/* کلیدهای سریع انتخاب مبلغ */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
+            {['5.00', '10.00', '25.00', '50.00', '100.00'].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className="btn-sim-action"
+                style={{
+                  background: amountUSD === preset ? 'rgba(6, 182, 212, 0.2)' : undefined,
+                  borderColor: amountUSD === preset ? 'var(--cyan)' : undefined
+                }}
+                onClick={() => setAmountUSD(preset)}
+              >
+                ${preset}
+              </button>
+            ))}
+          </div>
+
+          {/* تخمین کریپتو */}
+          {getEstimatedCrypto() && (
+            <div
+              style={{
+                marginTop: '0.6rem',
+                fontSize: '0.86rem',
+                color: 'var(--cyan-glow)',
+                direction: 'ltr',
+                textAlign: 'left'
+              }}
+            >
+              💡 معادل تقریبی: <strong>{getEstimatedCrypto()}</strong>
+            </div>
+          )}
+        </div>
+
+        {/* ۳. شناسه تلگرام کاربر */}
+        <div className="selector-group" style={{ marginTop: '1.25rem' }}>
+          <label className="selector-label">۴. شناسه عددی تلگرام کاربر (اختیاری):</label>
           <input
             type="text"
             className="input-custom"
@@ -202,17 +262,18 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           />
         </div>
 
+        {/* دکمه ارسال */}
         <button
           type="button"
           className="btn-submit"
           onClick={handleCreateInvoice}
-          disabled={creatingInvoice || loadingCatalog}
+          disabled={creatingInvoice || !selectedNetworkId || !selectedCurrencyId || !amountUSD}
         >
-          {creatingInvoice ? 'در حال صدور فاکتور در بک‌اند...' : '⚡ صدور فاکتور رسمی (POST /invoices)'}
+          {creatingInvoice ? 'در حال صدور فاکتور در دیتابیس...' : '⚡ صدور فاکتور رسمی (POST /invoices)'}
         </button>
       </div>
 
-      {/* نمایش فاکتور با آدرس خام بلاکچین */}
+      {/* ستون نمایش فاکتور صادر شده */}
       <div>
         {activeInvoice ? (
           <InvoiceCard
@@ -225,8 +286,8 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           <div className="card-panel" style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧾</div>
             <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>فاکتوری صادر نشده است</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '360px', margin: '0 auto' }}>
-              یک خدمت و ارز انتخاب کرده و روی «صدور فاکتور رسمی» کلیک کنید تا آدرس والت خام و Memo یکتا تولید شود.
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '380px', margin: '0 auto' }}>
+              ابتدا شبکه و ارز بلاکچین را از دراپ‌داون انتخاب کرده، مبلغ دلاری مورد نظر را وارد نمایید و روی دکمه صدور فاکتور کلیک کنید.
             </p>
           </div>
         )}

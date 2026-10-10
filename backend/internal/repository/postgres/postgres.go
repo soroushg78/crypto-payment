@@ -142,33 +142,32 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_tx_to_address ON observed_transactions(to_address);
 	CREATE INDEX IF NOT EXISTS idx_tx_memo ON observed_transactions(memo);
 
-	-- Seed default networks
+	-- Clean up legacy dummy services if any exist
+	DELETE FROM services WHERE code IN ('VIP_1M', 'VIP_3M', 'WALLET_CREDIT_10', 'TOPUP_20');
+
+	-- Seed actual supported networks
 	INSERT INTO networks (id, name, native_currency, rpc_endpoint, is_testnet, is_active)
 	VALUES 
-		('ton', 'The Open Network', 'TON', 'https://toncenter.com/api/v2/jsonRPC', false, true),
-		('tron', 'TRON Network', 'TRX', 'https://api.trongrid.io', false, true)
-	ON CONFLICT (id) DO NOTHING;
+		('ton', 'The Open Network (TON)', 'TON', 'https://toncenter.com/api/v2/jsonRPC', false, true),
+		('tron', 'TRON Blockchain', 'TRX', 'https://api.trongrid.io', false, true)
+	ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, native_currency = EXCLUDED.native_currency;
 
-	-- Seed default currencies
-	INSERT INTO currencies (id, symbol, network_id, contract_address, decimals, min_deposit, is_active)
+	-- Clean up legacy mock currency UUIDs (like 11111111-...)
+	DELETE FROM currencies WHERE id IN ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333');
+
+	-- Seed actual supported currencies with clean gen_random_uuid()
+	INSERT INTO currencies (symbol, network_id, contract_address, decimals, min_deposit, is_active)
 	VALUES 
-		('11111111-1111-1111-1111-111111111111', 'TON', 'ton', NULL, 9, 0.1, true),
-		('22222222-2222-2222-2222-222222222222', 'USDT', 'ton', 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', 6, 1.0, true),
-		('33333333-3333-3333-3333-333333333333', 'USDT', 'tron', 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 6, 1.0, true)
+		('TON', 'ton', NULL, 9, 0.1, true),
+		('USDT', 'ton', 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', 6, 1.0, true),
+		('TRX', 'tron', NULL, 6, 10.0, true),
+		('USDT', 'tron', 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 6, 1.0, true)
 	ON CONFLICT (symbol, network_id) DO NOTHING;
-
-	-- Seed default services
-	INSERT INTO services (id, code, title, description, price_usd, is_active)
-	VALUES 
-		('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'VIP_1M', 'اشتراک طلایی ۱ ماهه', 'دسترسی کامل ۱ ماهه به سرویس اختصاصی', 5.0000, true),
-		('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'VIP_3M', 'اشتراک طلایی ۳ ماهه', 'دسترسی کامل ۳ ماهه همراه با تخفیف ویژه', 12.0000, true),
-		('cccccccc-cccc-cccc-cccc-cccccccccccc', 'WALLET_CREDIT_10', 'شارژ حساب ۱۰ دلاری', 'افزایش موجودی حساب کاربری به میزان ۱۰ دلار', 10.0000, true)
-	ON CONFLICT (code) DO NOTHING;
 	`
 	_, err := pool.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
-	slog.Info("All database tables, constraints, and seed data initialized successfully")
+	slog.Info("All database tables, constraints, and supported networks/currencies initialized successfully")
 	return nil
 }

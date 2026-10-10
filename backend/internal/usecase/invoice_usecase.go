@@ -40,10 +40,27 @@ func NewInvoiceUseCase(
 }
 
 func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateInvoiceInput) (*domain.Invoice, error) {
-	// 1. Validate Service
-	svc, err := u.serviceRepo.GetByID(ctx, input.ServiceID)
-	if err != nil {
-		return nil, fmt.Errorf("service not found: %w", err)
+	// 1. Resolve Pricing
+	amountUSD := input.AmountUSD
+	if amountUSD <= 0 && input.CustomAmount > 0 {
+		amountUSD = input.CustomAmount
+	}
+
+	var serviceID *string
+	var serviceTitle string
+	if input.ServiceID != nil && *input.ServiceID != "" {
+		svc, err := u.serviceRepo.GetByID(ctx, *input.ServiceID)
+		if err == nil && svc != nil {
+			serviceID = &svc.ID
+			serviceTitle = svc.Title
+			if amountUSD <= 0 {
+				amountUSD = svc.PriceUSD
+			}
+		}
+	}
+
+	if amountUSD <= 0 {
+		return nil, fmt.Errorf("amount_usd must be greater than 0")
 	}
 
 	// 2. Validate Currency
@@ -67,15 +84,12 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		}
 	}
 
-	// 5. Calculate Pricing & Amount
-	amountUSD := svc.PriceUSD
-	if input.CustomAmount > 0 {
-		amountUSD = input.CustomAmount
-	}
-
+	// 5. Calculate Crypto Pricing
 	exchangeRate := 1.0
 	if curr.Symbol == "TON" {
 		exchangeRate = 5.0 // Oracle / Fixed test rate
+	} else if curr.Symbol == "TRX" {
+		exchangeRate = 0.15
 	}
 	cryptoAmount := amountUSD / exchangeRate
 	multiplier := math.Pow(10, float64(curr.Decimals))
@@ -96,7 +110,7 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 	invoice := &domain.Invoice{
 		InvoiceNumber:  invoiceNumber,
 		UserID:         userID,
-		ServiceID:      svc.ID,
+		ServiceID:      serviceID,
 		CurrencyID:     curr.ID,
 		NetworkID:      net.ID,
 		AmountUSD:      amountUSD,
@@ -108,7 +122,7 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		ExpiresAt:      now.Add(30 * time.Minute),
 		CreatedAt:      now,
 		UpdatedAt:      now,
-		ServiceTitle:   svc.Title,
+		ServiceTitle:   serviceTitle,
 		CurrencySymbol: curr.Symbol,
 		NetworkName:    net.Name,
 	}

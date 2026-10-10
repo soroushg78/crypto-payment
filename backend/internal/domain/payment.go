@@ -72,7 +72,7 @@ type Invoice struct {
 	ID            string        `json:"id"`
 	InvoiceNumber string        `json:"invoice_number"`
 	UserID        *string       `json:"user_id,omitempty"`
-	ServiceID     string        `json:"service_id"`
+	ServiceID     *string       `json:"service_id,omitempty"`
 	CurrencyID    string        `json:"currency_id"`
 	NetworkID     string        `json:"network_id"`
 	AmountUSD     float64       `json:"amount_usd"`
@@ -115,10 +115,11 @@ type ObservedTransaction struct {
 
 // DTOs for requests
 type CreateInvoiceInput struct {
-	ServiceID    string  `json:"service_id"`
-	CurrencyID   string  `json:"currency_id"`
-	NetworkID    string  `json:"network_id"`
-	TelegramID   *int64  `json:"telegram_id,omitempty"`
-	Username     string  `json:"username,omitempty"`
-	CustomAmount float64 `json:"custom_amount,omitempty"` // For wallet top-up services
+	AmountUSD    float64 `json:"amount_usd"`              // مبلغ دلاری پرداختی
+	CurrencyID   string  `json:"currency_id"`             // شناسه ارز انتخابی
+	NetworkID    string  `json:"network_id"`              // شناسه شبکه انتخابی
+	ServiceID    *string `json:"service_id,omitempty"`    // اختیاری
+	TelegramID   *int64  `json:"telegram_id,omitempty"`   // اختیاری
+	Username     string  `json:"username,omitempty"`      // اختیاری
+	CustomAmount float64 `json:"custom_amount,omitempty"` // برای سازگاری
 }

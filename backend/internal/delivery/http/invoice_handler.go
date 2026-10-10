@@ -24,8 +24,8 @@ func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.ServiceID == "" || req.CurrencyID == "" || req.NetworkID == "" {
-		writeError(w, http.StatusBadRequest, "service_id, currency_id, and network_id are required")
+	if req.CurrencyID == "" || req.NetworkID == "" || (req.AmountUSD <= 0 && req.CustomAmount <= 0 && (req.ServiceID == nil || *req.ServiceID == "")) {
+		writeError(w, http.StatusBadRequest, "currency_id, network_id, and amount_usd are required")
 		return
 	}
 
