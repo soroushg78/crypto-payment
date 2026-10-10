@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="نقشه جامع معماری ماژولار انترپرایز SOLID، دیاگرام پایگاه داده ۷ جدولی، شبیه‌ساز زنده تراکنش و داکیومنت API سرویس کریپتو">
+  <title>داشبورد جامع معماری و شبیه‌ساز پرداخت کریپتو | Crypto Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-surface: #0c121e;
+      --bg-card: rgba(15, 23, 42, 0.78);
+      --bg-card-hover: rgba(26, 38, 66, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      
+      --cyan: #06b6d4;
+      --cyan-glow: #22d3ee;
+      --indigo: #6366f1;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-fa: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-en: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.16) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.04) 0px, transparent 60%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-fa);
+      line-height: 1.7;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--cyan);
+    }
+
+    /* Sticky Navigation */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.5rem;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-glow);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 6rem;
+    }
+
+    /* Header & Hero */
+    header.hero {
+      text-align: center;
+      margin-bottom: 4rem;
+      position: relative;
+    }
+
+    .badge-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.4rem;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: 9999px;
+      color: var(--cyan-glow);
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .badge-pulse {
+      width: 9px;
+      height: 9px;
+      background: var(--cyan-glow);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--cyan-glow);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.3; }
+    }
+
+    h1.hero-title {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 20%, #38bdf8 65%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.85rem;
+      line-height: 1.3;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 900px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* Real-time Status Grid */
+    .status-banner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 4rem;
+    }
+
+    .status-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.4rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .status-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent, var(--cyan));
+    }
+
+    .status-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .status-tag {
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .tag-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .tag-future { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .tag-clean { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); }
+
+    .status-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .status-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 0.45rem;
+    }
+
+    /* Section Titles */
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 4rem 0 1.75rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .section-title span.number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: var(--font-en);
+      color: white;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+
+    /* Section 0: Clean Architecture Layered Visual */
+    .arch-layers-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 4rem;
+    }
+
+    .arch-layer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .arch-layer-card:hover {
+      border-color: var(--border-glow);
+      background: var(--bg-card-hover);
+    }
+
+    .layer-badge {
+      display: inline-block;
+      font-family: var(--font-en);
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .layer-badge.delivery { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .layer-badge.usecase { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .layer-badge.domain { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .layer-badge.repo { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .layer-badge.clients { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .layer-components {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .layer-item {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+    }
+
+    .layer-item strong {
+      display: block;
+      color: #fff;
+      font-size: 0.92rem;
+      font-family: var(--font-mono);
+      direction: ltr;
+      text-align: left;
+    }
+
+    .layer-item span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 0.25rem;
+    }
+
+    /* Mapping Table */
+    .mapping-table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      overflow-x: auto;
+      margin-bottom: 4rem;
+    }
+
+    table.mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      min-width: 760px;
+    }
+
+    table.mapping-table th {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 1.1rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--cyan-glow);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.mapping-table td {
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.93rem;
+      vertical-align: middle;
+    }
+
+    table.mapping-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .code-badge {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      direction: ltr;
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.45);
+      color: #38bdf8;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    /* Database Schema Grid & ER Inspector */
+    .db-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 4rem;
+    }
+
+    .db-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.4rem;
+      position: relative;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .db-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .db-card.highlighted {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .db-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .db-table-name {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #38bdf8;
+      direction: ltr;
+    }
+
+    .db-fields-list {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      direction: ltr;
+      text-align: left;
+      line-height: 1.7;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      margin-top: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .db-fields-list .pk { color: #f59e0b; font-weight: 700; }
+    .db-fields-list .fk { color: #a855f7; font-weight: 700; }
+    .db-fields-list .uk { color: #10b981; font-weight: 700; }
+    .db-fields-list .type { color: #64748b; }
+
+    /* Interactive Live Simulator Pro */
+    .simulator-panel {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(20, 30, 48, 0.9));
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      padding: 2.2rem;
+      margin-bottom: 4rem;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .sim-controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1.25rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sim-control-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+
+    .sim-select, .sim-input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      font-family: var(--font-fa);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .sim-select:focus, .sim-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+
+    .sim-action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn-sim {
+      padding: 0.75rem 1.4rem;
+      border-radius: 10px;
+      font-family: var(--font-fa);
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--indigo));
+      color: white;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.55);
+    }
+
+    .btn-scenario {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-scenario:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--cyan);
+    }
+
+    /* Interactive Live Invoice Box */
+    .sim-display-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .sim-display-grid { grid-template-columns: 1fr; }
+    }
+
+    .invoice-mock-card {
+      background: rgba(10, 16, 29, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .invoice-badge-status {
+      display: inline-block;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      font-family: var(--font-en);
+      margin-bottom: 1rem;
+    }
+
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-paid { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-underpaid { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .status-expired { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+    .inv-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.88rem;
+    }
+
+    .inv-detail-row .label { color: var(--text-muted); }
+    .inv-detail-row .val { font-family: var(--font-mono); color: #fff; font-weight: 600; direction: ltr; }
+
+    .qr-and-pay-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      background: rgba(0,0,0,0.3);
+      padding: 1rem;
+      border-radius: 12px;
+    }
+
+    .qr-svg {
+      width: 100px;
+      height: 100px;
+      background: white;
+      padding: 6px;
+      border-radius: 8px;
+    }
+
+    .memo-highlight-box {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px dashed rgba(245, 158, 11, 0.4);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      margin-top: 0.75rem;
+      font-size: 0.84rem;
+      color: #fbbf24;
+    }
+
+    .sim-steps-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sim-step-node {
+      background: rgba(2, 6, 23, 0.65);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .sim-step-node.active {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.18);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      transform: translateY(-3px);
+    }
+
+    .sim-step-node.completed {
+      border-color: var(--emerald);
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    .sim-step-number {
+      font-size: 0.75rem;
+      font-family: var(--font-en);
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .sim-step-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .sim-log-box {
+      background: #030712;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      direction: ltr;
+      text-align: left;
+      color: #38bdf8;
+      height: 180px;
+      overflow-y: auto;
+    }
+
+    /* Flowchart Section */
+    .flowchart-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      padding: 2.5rem 1.8rem;
+      margin-bottom: 4rem;
+      position: relative;
+    }
+
+    .flow-steps-v {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+      position: relative;
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    .flow-steps-v::before {
+      content: '';
+      position: absolute;
+      top: 35px;
+      bottom: 35px;
+      right: 32px;
+      width: 3px;
+      background: linear-gradient(180deg, var(--cyan), var(--indigo), var(--emerald), var(--violet));
+      border-radius: 2px;
+    }
+
+    .flow-node {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    .flow-badge {
+      width: 66px;
+      height: 66px;
+      min-width: 66px;
+      background: #0f172a;
+      border: 2px solid var(--cyan);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      z-index: 2;
+      box-shadow: 0 0 18px rgba(6, 182, 212, 0.3);
+    }
+
+    .flow-card {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1.35rem 1.6rem;
+      transition: all 0.3s;
+    }
+
+    .flow-card:hover {
+      border-color: var(--border-glow);
+      transform: translateX(-4px);
+      background: rgba(20, 30, 52, 0.85);
+    }
+
+    .flow-card h4 {
+      font-size: 1.15rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .flow-card h4 .role-tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--cyan-glow);
+      font-family: var(--font-en);
+    }
+
+    .flow-card p {
+      font-size: 0.94rem;
+      color: var(--text-muted);
+    }
+
+    /* Dual Client Integration Cards (React + Telegram Bot) */
+    .clients-dual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    .client-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.75rem;
+      transition: all 0.3s;
+    }
+
+    .client-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-3px);
+    }
+
+    .client-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .client-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+    }
+
+    .client-list {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .client-list li {
+      position: relative;
+      padding-right: 1.4rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .client-list li::before {
+      content: '✔';
+      position: absolute;
+      right: 0;
+      color: var(--emerald);
+      font-weight: bold;
+    }
+
+    /* API Endpoint Cards */
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 4rem;
+    }
+
+    .api-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.4rem;
+      transition: all 0.3s;
+    }
+
+    .api-card:hover {
+      border-color: var(--border-glow);
+    }
+
+    .api-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .api-method {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 6px;
+      font-family: var(--font-en);
+      font-weight: 800;
+      font-size: 0.78rem;
+    }
+
+    .method-get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .method-post { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+
+    .api-path {
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: var(--text-main);
+      direction: ltr;
+      display: inline-block;
+    }
+
+    .api-snippet {
+      background: #030712;
+      border-radius: 10px;
+      padding: 0.85rem;
+      margin-top: 0.85rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      direction: ltr;
+      text-align: left;
+      color: #94a3b8;
+      overflow-x: auto;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* TON Observer Strategy Deep Dive */
+    .observer-deep-dive {
+      background: linear-gradient(135deg, rgba(16, 23, 38, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--cyan);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 4rem;
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .strategy-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+
+    .strategy-box h5 {
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .flow-steps-v::before { right: 26px; }
+      .flow-badge { width: 52px; height: 52px; min-width: 52px; font-size: 1.25rem; }
+      h1.hero-title { font-size: 2.1rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span>Crypto Service Architecture</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#layers">لایه‌ها</a></li>
+        <li><a href="#solid">اصول SOLID</a></li>
+        <li><a href="#database">دیتابیس ۷ جدولی</a></li>
+        <li><a href="#simulator">شبیه‌ساز پرداخت</a></li>
+        <li><a href="#flowchart">فلوچارت اجرا</a></li>
+        <li><a href="#clients">فرانت‌اند و ربات</a></li>
+        <li><a href="#observer">ناظر بلاکچین (TON)</a></li>
+        <li><a href="#api">اندپوینت‌ها</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- Hero Header -->
+    <header class="hero">
+      <div class="badge-hero">
+        <div class="badge-pulse"></div>
+        معماری صددرصد ماژولار (SRP + Clean Architecture) | Go 1.22+ Standard HTTP & PostgreSQL
+      </div>
+      <h1 class="hero-title">داشبورد جامع معماری و فلوچارت پرداخت کریپتو</h1>
+      <p class="hero-subtitle">
+        ارتباط بدون واسطه با ولیدیتورهای بلاکچین (Direct Node)، دیتابیس نرمال ۷ جدولی، رعایت دقیق اصول سالید و آمادگی کامل برای فرانت‌ند React و ربات تلگرام.
+      </p>
+
+      <!-- Real-time Status Grid -->
+      <div class="status-banner">
+        <div class="status-card" style="--accent: var(--emerald)">
+          <div class="status-label">
+            <span>لایه‌های وب (Delivery)</span>
+            <span class="status-tag tag-active">تک‌مسئولیتی (SRP) ✅</span>
+          </div>
+          <div class="status-value">۳ کنترلر + ۳ میدلور</div>
+          <div class="status-desc">`catalog_handler`, `invoice_handler`, `health_handler` و روتر تفکیک‌شده</div>
+        </div>
+
+        <div class="status-card" style="--accent: var(--cyan)">
+          <div class="status-label">
+            <span>لایه‌های بیزینس (Usecases)</span>
+            <span class="status-tag tag-active">سرویس‌های مجزا ✅</span>
+          </div>
+          <div class="status-value">۳ یوزکیس تخصصی</div>
+          <div class="status-desc">`catalog_usecase`, `invoice_usecase`, `settlement_usecase`</div>
+        </div>
+
+        <div class="status-card" style="--accent: var(--indigo)">
+          <div class="status-label">
+            <span>لایه‌های دیتابیس (Postgres)</span>
+            <span class="status-tag tag-clean">۷ ریپازیتوری تفکیک‌شده ✅</span>
+          </div>
+          <div class="status-value">۷ جدول نرمالایز</div>
+          <div class="status-desc">کاربران، خدمات، شبکه‌ها، ارزها، آدرس‌ها، فاکتورها، تراکنش‌های رصدشده</div>
+        </div>
+
+        <div class="status-card" style="--accent: var(--amber)">
+          <div class="status-label">
+            <span>موتور ناظر (Observer Engine)</span>
+            <span class="status-tag tag-future">آماده اتصال ولیدیتور TON ⏳</span>
+          </div>
+          <div class="status-value">Direct Node Listener</div>
+          <div class="status-desc">پایش مستقیم واریزها به والت اصلی بر اساس شناسه یکتای Memo / Comment</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section 0: Clean Architecture Layered Map -->
+    <div id="layers" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">0</span>
+        لایه‌بندی معماری تمیز (Clean Architecture Overview)
+      </div>
+      <span class="status-tag tag-clean">جداسازی کامل دامنه‌ها و جریان داده یک‌طرفه</span>
+    </div>
+
+    <div class="arch-layers-wrap">
+      
+      <!-- 1. Delivery Layer -->
+      <div class="arch-layer-card">
+        <span class="layer-badge delivery">Delivery / Presentation Layer (لایه تحویل و وب)</span>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          مسئول دریافت درخواست‌های HTTP، اعتبارسنجی اولیه فرمت داده‌ها، مدیریت هدرهای CORS، لاگینگ متمرکز، ریکاوری از پنیک و فرمت‌بندی پاسخ‌های JSON بدون داشتن ذره‌ای منطق بیزینس یا دیتابیس.
+        </p>
+        <div class="layer-components">
+          <div class="layer-item">
+            <strong>router.go</strong>
+            <span>مسیریابی با net/http Go 1.22</span>
+          </div>
+          <div class="layer-item">
+            <strong>catalog_handler.go</strong>
+            <span>خدمات، شبکه‌ها و ارزها</span>
+          </div>
+          <div class="layer-item">
+            <strong>invoice_handler.go</strong>
+            <span>صدور و استعلام فاکتورها</span>
+          </div>
+          <div class="layer-item">
+            <strong>health_handler.go</strong>
+            <span>بررسی سلامت سرور و DB</span>
+          </div>
+          <div class="layer-item">
+            <strong>middleware.go</strong>
+            <span>CORS, Logger, Recovery</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. UseCase Layer -->
+      <div class="arch-layer-card">
+        <span class="layer-badge usecase">UseCases / Application Layer (لایه کاربرد و منطق بیزینس)</span>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          مغز متفکر سیستم. ارکستراسیون بیزینس، محاسبه مقدار کریپتو بر اساس نرخ لحظه‌ای، تولید Memo اختصاصی برای هر فاکتور، بررسی عدم وجود Double-Spending و تغییر وضعیت فاکتورها.
+        </p>
+        <div class="layer-components">
+          <div class="layer-item">
+            <strong>catalog_usecase.go</strong>
+            <span>واکشی و فیلتر کاتالوگ فعال</span>
+          </div>
+          <div class="layer-item">
+            <strong>invoice_usecase.go</strong>
+            <span>محاسبه قیمت، تخصیص آدرس و صدور فاکتور</span>
+          </div>
+          <div class="layer-item">
+            <strong>settlement_usecase.go</strong>
+            <span>تطبیق واریز ناظر، جلوگیری از کلاهبرداری و تسویه</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Domain Layer -->
+      <div class="arch-layer-card">
+        <span class="layer-badge domain">Domain / Core Entities Layer (هسته کسب‌وکار و اینترفیس‌ها)</span>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          مستقل از هرگونه فریمورک، دیتابیس یا ابزار خارجی. شامل ساختار موجودیت‌ها (Entities)، انواع وضعیت فاکتور (PENDING, PAID, ...) و قراردادهای اینترفیس ریپازیتوری‌ها.
+        </p>
+        <div class="layer-components">
+          <div class="layer-item">
+            <strong>domain/payment.go</strong>
+            <span>۷ موجودیت دیتابیس + DTOها</span>
+          </div>
+          <div class="layer-item">
+            <strong>domain/repository.go</strong>
+            <span>قرارداد ۷ ریپازیتوری مجزا</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Infrastructure & Repository Layer -->
+      <div class="arch-layer-card">
+        <span class="layer-badge repo">Infrastructure & Repository Layer (زیرساخت دیتابیس و نود)</span>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          پیاده‌سازی واقعی اینترفیس‌های دامنه با درایور پرسرعت pgxpool برای PostgreSQL و در آینده کلاینت RPC نود TON جهت رصد بدون واسطه تراکنش‌های والت مستر.
+        </p>
+        <div class="layer-components">
+          <div class="layer-item">
+            <strong>service_repo.go</strong>
+            <span>کوئری‌های جدول services</span>
+          </div>
+          <div class="layer-item">
+            <strong>invoice_repo.go</strong>
+            <span>کوئری‌های جدول invoices</span>
+          </div>
+          <div class="layer-item">
+            <strong>transaction_repo.go</strong>
+            <span>ثبت و تطبیق tx_hash بلاکچین</span>
+          </div>
+          <div class="layer-item">
+            <strong>address_repo.go</strong>
+            <span>تخصیص آدرس و مموی یکتا</span>
+          </div>
+          <div class="layer-item">
+            <strong>postgres.go / migrations</strong>
+            <span>مایگریشن‌های 000001 تا 000008</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section 1: SOLID Mapping Table -->
+    <div id="solid" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">1</span>
+        تطبیق دقیق فایل‌های پروژه با اصول SOLID و Clean Architecture
+      </div>
+      <span class="status-tag tag-active">تک‌مسئولیتی کامل (بدون فایل‌های هیولایی / God Objects)</span>
+    </div>
+
+    <div class="mapping-table-wrap">
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>مسیر فایل در پروژه</th>
+            <th>معادل معماری / الگو</th>
+            <th>مسئولیت تک‌گانه (Single Responsibility)</th>
+            <th>وضعیت پیاده‌سازی</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="code-badge">cmd/api/main.go</span></td>
+            <td><strong>نقطه ورود (Composition Root)</strong></td>
+            <td>لود کانفیگ، ایجاد pgxpool، تزریق وابستگی‌ها (DI) به شکل ماژولار و راه‌اندازی سرور با Graceful Shutdown</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">delivery/http/catalog_handler.go</span></td>
+            <td><strong>کنترلر کاتالوگ (Catalog Controller)</strong></td>
+            <td>پاسخگویی به درخواست‌های لیست خدمات، شبکه‌ها و ارزها برای فرانت‌ند و ربات</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">delivery/http/invoice_handler.go</span></td>
+            <td><strong>کنترلر فاکتور (Invoice Controller)</strong></td>
+            <td>صدور فاکتور جدید، استعلام وضعیت با شناسه و استعلام با شماره فاکتور</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">delivery/http/health_handler.go</span></td>
+            <td><strong>کنترلر سلامت (Health Controller)</strong></td>
+            <td>بررسی وضعیت زنده بودن سرور بدون تداخل با منطق‌های مالی</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">delivery/http/middleware.go</span></td>
+            <td><strong>میدلورها (Middlewares)</strong></td>
+            <td>لاگینگ اختصاصی <code>log/slog</code>، ریکاوری خطاها و تنظیم هدرهای CORS</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">delivery/http/router.go</span></td>
+            <td><strong>مسیریاب تمیز (Routing)</strong></td>
+            <td>صرفاً اتصال مسیرهای URL به کنترلرهای مجزا بدون آلودگی منطق</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">usecase/catalog_usecase.go</span></td>
+            <td><strong>سرویس کاتالوگ (Catalog Service)</strong></td>
+            <td>منطق بیزینس واکشی خدمات، شبکه‌های مجاز و ارزهای فعال</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">usecase/invoice_usecase.go</span></td>
+            <td><strong>سرویس فاکتورها (Invoice Service)</strong></td>
+            <td>محاسبه نرخ لحظه‌ای، رزرو آدرس و ممو، تولید شناسه یکتا و ایجاد فاکتور</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">usecase/settlement_usecase.go</span></td>
+            <td><strong>سرویس تسویه حساب (Settlement Service)</strong></td>
+            <td>تطابق تراکنش‌های ورودی با فاکتورهای PENDING، جلوگیری از Double-Spending و تغییر وضعیت به PAID</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">repository/postgres/*_repo.go</span></td>
+            <td><strong>۷ ریپازیتوری تفکیک‌شده (Repositories)</strong></td>
+            <td>تفکیک مجزای کوئری‌های هر جدول: <code>service_repo</code>, <code>network_repo</code>, <code>currency_repo</code>, <code>user_repo</code>, <code>address_repo</code>, <code>invoice_repo</code>, <code>transaction_repo</code></td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+          <tr>
+            <td><span class="code-badge">migrations/000001..000008_*.sql</span></td>
+            <td><strong>مایگریشن‌های گام‌به‌گام (Step-by-Step)</strong></td>
+            <td>تفکیک ساخت هر جدول در یک فایل SQL جداگانه به همراه Down migrations</td>
+            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 2: Database Schema Explorer -->
+    <div id="database" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">2</span>
+        پایگاه داده بازطراحی‌شده (۷ جدول تفکیک‌شده با کلیدهای خارجی)
+      </div>
+      <span class="status-tag tag-clean">کلیک روی هر جدول ارتباطات آن را برجسته می‌کند</span>
+    </div>
+
+    <div class="db-grid">
+      
+      <!-- Table 1: users -->
+      <div class="db-card" id="card-users" onclick="highlightTable('users')">
+        <div class="db-header">
+          <span class="db-table-name">1. users</span>
+          <span class="status-tag tag-active">کاربران</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">پروفایل مشترک کلاینت‌ها (فرانت‌ند و ربات تلگرام)</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          <span class="uk">telegram_id</span>: BIGINT (UNIQUE, NULLABLE)<br>
+          username: VARCHAR(128)<br>
+          first_name: VARCHAR(128)<br>
+          created_at: TIMESTAMPTZ
+        </div>
+      </div>
+
+      <!-- Table 2: services -->
+      <div class="db-card" id="card-services" onclick="highlightTable('services')">
+        <div class="db-header">
+          <span class="db-table-name">2. services</span>
+          <span class="status-tag tag-active">کاتالوگ خدمات</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">پلن‌های اشتراک، شارژ اکانت و مبالغ پایه دلاری</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          <span class="uk">code</span>: VARCHAR(64) (UNIQUE)<br>
+          title: VARCHAR(255)<br>
+          description: TEXT<br>
+          price_usd: <span class="type">NUMERIC(18, 4)</span><br>
+          is_active: BOOLEAN
+        </div>
+      </div>
+
+      <!-- Table 3: networks -->
+      <div class="db-card" id="card-networks" onclick="highlightTable('networks')">
+        <div class="db-header">
+          <span class="db-table-name">3. networks</span>
+          <span class="status-tag tag-active">شبکه‌ها</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">بلاکچین‌های تحت پشتیبانی سیستم (TON, TRON)</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: VARCHAR(32) (PRIMARY KEY - 'ton')<br>
+          name: VARCHAR(128)<br>
+          native_currency: VARCHAR(16)<br>
+          rpc_endpoint: TEXT<br>
+          is_testnet: BOOLEAN<br>
+          is_active: BOOLEAN
+        </div>
+      </div>
+
+      <!-- Table 4: currencies -->
+      <div class="db-card" id="card-currencies" onclick="highlightTable('currencies')">
+        <div class="db-header">
+          <span class="db-table-name">4. currencies</span>
+          <span class="status-tag tag-active">کوین‌ها و توکن‌ها</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">کوین‌های بومی و توکن‌ها (USDT, TON) به همراه دسی‌مال</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          symbol: VARCHAR(16)<br>
+          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
+          contract_address: VARCHAR(128)<br>
+          decimals: INT (6, 9, 18)<br>
+          min_deposit: <span class="type">NUMERIC(36, 18)</span>
+        </div>
+      </div>
+
+      <!-- Table 5: deposit_addresses -->
+      <div class="db-card" id="card-addresses" onclick="highlightTable('addresses')">
+        <div class="db-header">
+          <span class="db-table-name">5. deposit_addresses</span>
+          <span class="status-tag tag-active">آدرس‌ها و ممو</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">تخصیص والت متمرکز با ممو اختصاصی یا والت یکتا</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          <span class="fk">user_id</span>: UUID (FK -> users.id)<br>
+          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
+          address: TEXT<br>
+          <span class="uk">memo</span>: VARCHAR(128) (UNIQUE)<br>
+          is_assigned: BOOLEAN
+        </div>
+      </div>
+
+      <!-- Table 6: invoices -->
+      <div class="db-card" id="card-invoices" onclick="highlightTable('invoices')">
+        <div class="db-header">
+          <span class="db-table-name">6. invoices</span>
+          <span class="status-tag tag-active">فاکتورها</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">هسته مالی با نرخ تبدیل، مهلت ۳۰ دقیقه‌ای و استاتوس</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          <span class="uk">invoice_number</span>: VARCHAR(64) (UNIQUE)<br>
+          <span class="fk">service_id</span>: UUID (FK -> services.id)<br>
+          <span class="fk">currency_id</span>: UUID (FK -> currencies.id)<br>
+          amount_usd: <span class="type">NUMERIC(18, 4)</span><br>
+          crypto_amount: <span class="type">NUMERIC(36, 18)</span><br>
+          status: VARCHAR(32) ('PENDING', 'PAID')<br>
+          expires_at: TIMESTAMPTZ
+        </div>
+      </div>
+
+      <!-- Table 7: observed_transactions -->
+      <div class="db-card" id="card-transactions" onclick="highlightTable('transactions')">
+        <div class="db-header">
+          <span class="db-table-name">7. observed_transactions</span>
+          <span class="status-tag tag-active">تراکنش‌های رصدشده</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">جلوگیری قطعی از Double-Spending با قید یکتایی هش</p>
+        <div class="db-fields-list">
+          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
+          <span class="fk">invoice_id</span>: UUID (FK -> invoices.id)<br>
+          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
+          tx_hash: TEXT<br>
+          amount: <span class="type">NUMERIC(36, 18)</span><br>
+          <span class="uk">CONSTRAINT uq_network_tx_hash</span> UNIQUE(network_id, tx_hash)
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section 3: Interactive Live Simulator Pro -->
+    <div id="simulator" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">3</span>
+        شبیه‌ساز تعاملی و زنده‌ی چرخه پرداخت (Live Interactive Simulator Pro)
+      </div>
+      <span class="status-tag tag-active">تست سناریوهای پرداخت، کسری واریز، انقضا و حمله تراکنش تکراری</span>
+    </div>
+
+    <div class="simulator-panel">
+      
+      <!-- Control Settings -->
+      <div class="sim-controls-grid">
+        <div class="sim-control-group">
+          <label>انتخاب خدمت (Service)</label>
+          <select id="simServiceSelect" class="sim-select" onchange="updateSimEstimate()">
+            <option value="VIP_1M" data-price="5.00">اشتراک ۱ ماهه VIP کانال ($5.00)</option>
+            <option value="VIP_3M" data-price="12.00">اشتراک ۳ ماهه VIP کانال ($12.00)</option>
+            <option value="TOPUP_20" data-price="20.00">شارژ اعتبار کیف پول ($20.00)</option>
+          </select>
+        </div>
+
+        <div class="sim-control-group">
+          <label>انتخاب شبکه بلاکچین (Network)</label>
+          <select id="simNetworkSelect" class="sim-select" onchange="updateSimCurrencies()">
+            <option value="ton">The Open Network (TON)</option>
+            <option value="tron">TRON Blockchain (TRX/TRC20)</option>
+          </select>
+        </div>
+
+        <div class="sim-control-group">
+          <label>انتخاب ارز پرداختی (Currency)</label>
+          <select id="simCurrencySelect" class="sim-select" onchange="updateSimEstimate()">
+            <option value="TON" data-rate="5.00">TON Coin (نرخ: $5.00)</option>
+            <option value="USDT" data-rate="1.00">USDT - Tether (نرخ: $1.00)</option>
+          </select>
+        </div>
+
+        <div class="sim-control-group">
+          <label>شناسه تلگرام کاربر (اختیاری)</label>
+          <input type="text" id="simTelegramId" class="sim-input" value="84920194" placeholder="مثال: 84920194">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="sim-action-buttons">
+        <button id="btnCreateInvoice" class="btn-sim btn-primary" onclick="simCreateInvoice()">
+          <span>⚡ صدور فاکتور جدید (POST /invoices)</span>
+        </button>
+
+        <button id="btnSimPaySuccess" class="btn-sim btn-scenario" onclick="simExecuteTx('SUCCESS')">
+          <span>🟢 شبیه‌سازی واریز موفق (Paid)</span>
+        </button>
+
+        <button id="btnSimUnderpaid" class="btn-sim btn-scenario" onclick="simExecuteTx('UNDERPAID')">
+          <span>🟡 شبیه‌سازی کسری واریز (Underpaid)</span>
+        </button>
+
+        <button id="btnSimDoubleSpend" class="btn-sim btn-scenario" onclick="simExecuteTx('DOUBLE_SPEND')">
+          <span>🛡️ شبیه‌سازی حمله تراکنش تکراری (Double-Spend)</span>
+        </button>
+
+        <button id="btnSimExpire" class="btn-sim btn-scenario" onclick="simExecuteTx('EXPIRE')">
+          <span>⌛ شبیه‌سازی انقضای فاکتور (Expired)</span>
+        </button>
+      </div>
+
+      <!-- Invoice Card & Visual QR -->
+      <div class="sim-display-grid">
+        
+        <div class="invoice-mock-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="invStatusBadge" class="invoice-badge-status status-pending">PENDING (در انتظار پرداخت)</span>
+            <span id="invTimer" style="font-family: var(--font-mono); color: #fbbf24; font-weight: 700; font-size: 0.95rem;">⏱ 29:59</span>
+          </div>
+
+          <div class="inv-detail-row">
+            <span class="label">شماره فاکتور:</span>
+            <span class="val" id="invNumber">INV-2026-A82F9</span>
+          </div>
+          <div class="inv-detail-row">
+            <span class="label">خدمت درخواستی:</span>
+            <span class="val" id="invServiceTitle">اشتراک ۱ ماهه VIP ($5.00)</span>
+          </div>
+          <div class="inv-detail-row">
+            <span class="label">مبلغ دلاری:</span>
+            <span class="val" id="invAmountUsd">$5.00 USD</span>
+          </div>
+          <div class="inv-detail-row">
+            <span class="label">مبلغ پرداختی کریپتو:</span>
+            <span class="val" id="invCryptoAmount" style="color: var(--cyan-glow); font-size: 1.05rem;">1.000000000 TON</span>
+          </div>
+          <div class="inv-detail-row">
+            <span class="label">آدرس واریز والت:</span>
+            <span class="val" id="invAddress" style="font-size: 0.78rem;">EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury</span>
+          </div>
+          <div class="inv-detail-row">
+            <span class="label">کامنت / ممو اجباری (Memo):</span>
+            <span class="val" id="invMemo" style="color: #fbbf24; font-size: 1rem; font-weight: 800;">ORD-89241</span>
+          </div>
+
+          <div class="memo-highlight-box">
+            ⚠️ <strong>هشدار حیاتی:</strong> بدون وارد کردن ممو (Comment)، واریزی شناسایی نخواهد شد و به فاکتور تخصیص نمی‌یابد!
+          </div>
+
+          <div class="qr-and-pay-wrap">
+            <svg class="qr-svg" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#ffffff"/>
+              <!-- Corner 1 -->
+              <rect x="5" y="5" width="26" height="26" fill="#000000"/>
+              <rect x="9" y="9" width="18" height="18" fill="#ffffff"/>
+              <rect x="13" y="13" width="10" height="10" fill="#000000"/>
+              <!-- Corner 2 -->
+              <rect x="69" y="5" width="26" height="26" fill="#000000"/>
+              <rect x="73" y="9" width="18" height="18" fill="#ffffff"/>
+              <rect x="77" y="13" width="10" height="10" fill="#000000"/>
+              <!-- Corner 3 -->
+              <rect x="5" y="69" width="26" height="26" fill="#000000"/>
+              <rect x="9" y="73" width="18" height="18" fill="#ffffff"/>
+              <rect x="13" y="77" width="10" height="10" fill="#000000"/>
+              <!-- Center pattern -->
+              <rect x="38" y="10" width="8" height="8" fill="#000000"/>
+              <rect x="52" y="15" width="6" height="6" fill="#000000"/>
+              <rect x="36" y="36" width="28" height="28" fill="#06b6d4"/>
+              <rect x="42" y="42" width="16" height="16" fill="#ffffff"/>
+              <rect x="46" y="46" width="8" height="8" fill="#6366f1"/>
+              <rect x="15" y="42" width="12" height="6" fill="#000000"/>
+              <rect x="75" y="45" width="15" height="8" fill="#000000"/>
+              <rect x="40" y="75" width="12" height="12" fill="#000000"/>
+              <rect x="60" y="70" width="25" height="18" fill="#000000"/>
+            </svg>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">اسکن سریع با والت</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">پشتیبانی مستقیم از Tonkeeper و تلگرام ولت</p>
+              <a href="javascript:void(0)" onclick="alert('لینک پرداخت مستقیم دیپ‌لینک: ton://transfer/... با مموی فاکتور باز خواهد شد')" style="display: inline-block; font-size: 0.8rem; color: var(--cyan); margin-top: 0.4rem; font-weight: 600;">
+                🔗 باز کردن مستقیم در Tonkeeper
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Console Logs -->
+        <div>
+          <div class="sim-steps-strip">
+            <div class="sim-step-node" id="simStep1">
+              <div class="sim-step-number">Step 01</div>
+              <div class="sim-step-title">درخواست فاکتور</div>
+            </div>
+            <div class="sim-step-node" id="simStep2">
+              <div class="sim-step-number">Step 02</div>
+              <div class="sim-step-title">محاسبه و ممو</div>
+            </div>
+            <div class="sim-step-node" id="simStep3">
+              <div class="sim-step-number">Step 03</div>
+              <div class="sim-step-title">ثبت PENDING</div>
+            </div>
+            <div class="sim-step-node" id="simStep4">
+              <div class="sim-step-number">Step 04</div>
+              <div class="sim-step-title">رصد ولیدیتور</div>
+            </div>
+            <div class="sim-step-node" id="simStep5">
+              <div class="sim-step-number">Step 05</div>
+              <div class="sim-step-title">تسویه و تایید</div>
+            </div>
+          </div>
+
+          <div class="sim-log-box" id="simLogs">
+            [READY] سیستم آماده است. روی «صدور فاکتور جدید» کلیک کنید تا عملیات آغاز شود.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Section 4: Detailed Flowchart -->
+    <div id="flowchart" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">4</span>
+        فلوچارت گام‌به‌گام عملکرد واقعی سیستم (End-to-End Processing Flow)
+      </div>
+      <span class="status-tag tag-clean">اتصال یکپارچه از کلاینت تا نود بلاکچین</span>
+    </div>
+
+    <div class="flowchart-wrapper">
+      <div class="flow-steps-v">
+        
+        <div class="flow-node">
+          <div class="flow-badge">1</div>
+          <div class="flow-card">
+            <h4>
+              درخواست صدور فاکتور توسط کاربر (Invoice Creation Request)
+              <span class="role-tag">Client (React / Telegram Bot) ➔ invoice_handler</span>
+            </h4>
+            <p>
+              کلاینت متد <code>POST /api/v1/invoices</code> را صدا می‌زند و فیلدهای <code>service_id</code>, <code>currency_id</code>, <code>network_id</code> و شناسه تلگرام اختیاری را ارسال می‌کند. هندلر با استفاده از Go 1.22 JSON streaming داده‌ها را اعتبارسنجی می‌کند.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow-node">
+          <div class="flow-badge">2</div>
+          <div class="flow-card">
+            <h4>
+              محاسبه نرخ کریپتو و رزرو Memo اختصاصی (Invoice Orchestration)
+              <span class="role-tag">invoice_usecase ➔ address_repo & currency_repo</span>
+            </h4>
+            <p>
+              یوزکیس قیمت خدمت را واکشی کرده و با نرخ لحظه‌ای ارز انتخابی، مقدار دقیق کریپتو را با دقت ۱۸ رقم اعشار (برای جلوگیری از خطای Float) محاسبه می‌کند. سپس آدرس والت اصلی سیستم به همراه یک Comment / Memo یکتا تولید و به فاکتور الصاق می‌گردد.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow-node">
+          <div class="flow-badge">3</div>
+          <div class="flow-card">
+            <h4>
+              ثبت فاکتور در وضعیت PENDING (Ledger Persistence)
+              <span class="role-tag">invoice_repo ➔ PostgreSQL invoices Table</span>
+            </h4>
+            <p>
+              رکورد جدید با وضعیت <code>PENDING</code>، زمان انقضای ۳۰ دقیقه‌ای و شماره فاکتور منحصربه‌فرد در جدول <code>invoices</code> ذخیره می‌شود. پاسخ JSON شامل آدرس، ممو و QR Code برای کاربر ارسال می‌شود.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow-node">
+          <div class="flow-badge">4</div>
+          <div class="flow-card">
+            <h4>
+              پایش مستقیم ولیدیتور نود TON (Direct Blockchain Observer)
+              <span class="role-tag">Background Observer Worker ➔ Validator RPC / TonAPI</span>
+            </h4>
+            <p>
+              ماژول Observer در یک Goroutine پس‌زمینه بدون واسطه‌هایی مثل NowPayments، تراکنش‌های والت مستر را پایش می‌کند. به محض دریافت تراکنش ورودی جدید، فیلد متن Comment را استخراج و با لیست فاکتورهای PENDING تطبیق می‌دهد.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow-node">
+          <div class="flow-badge">5</div>
+          <div class="flow-card">
+            <h4>
+              بررسی Double-Spending، تسویه حساب و اعلان (Settlement & Protection)
+              <span class="role-tag">settlement_usecase ➔ transaction_repo & invoice_repo</span>
+            </h4>
+            <p>
+              پیش از هر تغییری، هش تراکنش در <code>observed_transactions</code> با قید یکتایی <code>uq_network_tx_hash</code> بررسی می‌شود. اگر تراکنش تکراری نباشد، ثبت شده، وضعیت فاکتور به <code>PAID</code> تغییر کرده و وب‌هوک به فرانت‌ند یا ربات تلگرام ارسال می‌شود تا خدمت فوراً فعال گردد.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Section 5: React Frontend & Telegram Bot Dual Clients -->
+    <div id="clients" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">5</span>
+        پشتیبانی دوگانه همزمان: اپلیکیشن تست React + ربات تلگرام
+      </div>
+      <span class="status-tag tag-active">بدون نیاز به تغییر حتی یک خط از کدهای بک‌اند</span>
+    </div>
+
+    <div class="clients-dual-grid">
+      
+      <!-- Client 1: React Test Web App -->
+      <div class="client-card">
+        <div class="client-header">
+          <div class="client-icon" style="background: rgba(6, 182, 212, 0.2); color: var(--cyan);">⚛️</div>
+          <div>
+            <h3 style="font-size: 1.2rem; color: #fff;">اپلیکیشن وب React</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">محیط تست دسکتاپ و موبایل</span>
+          </div>
+        </div>
+        <ul class="client-list">
+          <li>اتصال از طریق کلاینت ساده Axios یا TanStack Query</li>
+          <li>دریافت لیست خدمات از <code>GET /api/v1/services</code> به صورت کش‌شده</li>
+          <li>صدور فاکتور با <code>POST /api/v1/invoices</code> و رندر QR کد اختصاصی</li>
+          <li>پولینگ ساده ۵ ثانیه‌ای یا SSE از <code>GET /api/v1/invoices/{id}</code> تا زمان PAID شدن</li>
+          <li>دکمه اتصال مستقیم 1-Click به Tonkeeper یا Telegram Wallet وب</li>
+        </ul>
+      </div>
+
+      <!-- Client 2: Telegram Bot -->
+      <div class="client-card">
+        <div class="client-header">
+          <div class="client-icon" style="background: rgba(99, 102, 241, 0.2); color: var(--indigo);">🤖</div>
+          <div>
+            <h3 style="font-size: 1.2rem; color: #fff;">ربات تلگرام (Telegram Bot)</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">خرید اشتراک و تحویل اتوماتیک</span>
+          </div>
+        </div>
+        <ul class="client-list">
+          <li>استفاده از کیبوردهای اینلاین (Inline Keyboards) برای انتخاب پلن</li>
+          <li>ارسال <code>telegram_id</code> به اندپوینت فاکتور جهت ایجاد پروفایل در <code>users</code></li>
+          <li>تولید دکمه پرداخت با فرمت دیپ‌لینک: <code>ton://transfer/ADDRESS?amount=X&text=MEMO</code></li>
+          <li>ارسال پیام تبریک و لینک جوین یکبار مصرف به کانال VIP بلافاصله پس از تسویه فاکتور</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Section 6: TON Direct Node Strategy Deep Dive -->
+    <div id="observer" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">6</span>
+        معماری ناظر مستقیم بلاکچین TON (Direct Node Observer Engine)
+      </div>
+      <span class="status-tag tag-active">کارمزد صفر واسطه‌ها + امنیت ۱۰۰٪ سازمانی</span>
+    </div>
+
+    <div class="observer-deep-dive">
+      <h3 style="font-size: 1.35rem; color: #fff; margin-bottom: 0.5rem;">چرا اتصال مستقیم به نود TON به جای درگاه‌های شخص ثالث؟</h3>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        در این معماری تمامی مبالغ مستقیماً به والت مستر شما در شبکه TON واریز می‌شود و هیچ شرکت واسطه‌ای مثل NowPayments دخل و تصرفی در دارایی‌ها ندارد.
+      </p>
+
+      <div class="strategy-grid">
+        <div class="strategy-box">
+          <h5>🔑 استراتژی Master Wallet + Unique Memo</h5>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            به جای ساخت صدها والت و پرداخت کارمزد گزاف برای جابه‌جایی موجودی، یک والت امن مستر استفاده شده و برای هر سفارش یک Memo متنی یکتا (مانند <code>ORD-9821</code>) تولید می‌گردد.
+          </p>
+        </div>
+
+        <div class="strategy-box">
+          <h5>⚡ نحوه استخراج واریزی از بلاک‌ها</h5>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            ناظر با متد <code>getTransactions</code> یا سابسکرایب وب‌سوکت، پیام‌های ورودی (InMsg) را دریافت و فیلد Comment / Memo را از ساختار باینری BOC دیکود می‌کند.
+          </p>
+        </div>
+
+        <div class="strategy-box">
+          <h5>🛡️ محافظت دو لایه در برابر Double-Spending</h5>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            یک لایه در لایه UseCase و لایه دوم در سطح دیتابیس با کلید ترکیبی <code>UNIQUE(network_id, tx_hash)</code> تضمین می‌کند که هیچ هش تراکنشی نمی‌تواند دو بار پردازش شود.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7: API Endpoints Quick Reference -->
+    <div id="api" class="section-title-wrap">
+      <div class="section-title">
+        <span class="number">7</span>
+        اندپوینت‌های فعال REST API
+      </div>
+      <span class="status-tag tag-clean">ساده، استاندارد و با قابلیت اجرا در ترمینال</span>
+    </div>
+
+    <div class="api-grid">
+      
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-get">GET</span>
+            <span class="api-path">/health</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">بررسی سلامت</span>
+        </div>
+        <div class="api-snippet">
+curl -X GET http://localhost:8080/health
+// {"success":true,"data":{"service":"crypto-service","status":"healthy"}}
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-get">GET</span>
+            <span class="api-path">/api/v1/services</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">لیست خدمات</span>
+        </div>
+        <div class="api-snippet">
+curl -X GET http://localhost:8080/api/v1/services
+// لیست پلن‌های فعال همراه با قیمت دلاری
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-get">GET</span>
+            <span class="api-path">/api/v1/networks</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">لیست شبکه‌ها</span>
+        </div>
+        <div class="api-snippet">
+curl -X GET http://localhost:8080/api/v1/networks
+// خروجی شبکه‌های فعال (ton, tron)
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-get">GET</span>
+            <span class="api-path">/api/v1/networks/{id}/currencies</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">ارزهای شبکه</span>
+        </div>
+        <div class="api-snippet">
+curl -X GET http://localhost:8080/api/v1/networks/ton/currencies
+// لیست توکن‌ها و کوین‌های شبکه TON (مانند TON, USDT)
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-post">POST</span>
+            <span class="api-path">/api/v1/invoices</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">صدور فاکتور</span>
+        </div>
+        <div class="api-snippet">
+curl -X POST http://localhost:8080/api/v1/invoices \
+  -H "Content-Type: application/json" \
+  -d '{"service_id":"...","currency_id":"...","network_id":"ton","telegram_id":849201}'
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="api-header">
+          <div>
+            <span class="api-method method-get">GET</span>
+            <span class="api-path">/api/v1/invoices/{id}</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">استعلام وضعیت</span>
+        </div>
+        <div class="api-snippet">
+curl -X GET http://localhost:8080/api/v1/invoices/b1c2-984a-431f
+// وضعیت PENDING, PAID و جزئیات پرداخت
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      <p>© 2026 Crypto Service | Enterprise Clean Architecture + SOLID (SRP) & Direct TON Blockchain Observer</p>
+    </footer>
+
+  </div>
+
+  <!-- JavaScript Logic for Live Simulator and Interactive Schema -->
+  <script>
+    // State
+    let currentInvoice = {
+      number: 'INV-2026-A82F9',
+      serviceTitle: 'اشتراک ۱ ماهه VIP ($5.00)',
+      amountUsd: 5.00,
+      cryptoAmount: 1.000000000,
+      currency: 'TON',
+      network: 'ton',
+      address: 'EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury',
+      memo: 'ORD-89241',
+      status: 'PENDING',
+      timerSeconds: 1799
+    };
+
+    let timerInterval = null;
+    let processedHashes = new Set(['0x9812a...already_paid']);
+
+    // Elements
+    const logsEl = document.getElementById('simLogs');
+    const statusBadge = document.getElementById('invStatusBadge');
+    const timerEl = document.getElementById('invTimer');
+    const invNumberEl = document.getElementById('invNumber');
+    const invServiceTitleEl = document.getElementById('invServiceTitle');
+    const invAmountUsdEl = document.getElementById('invAmountUsd');
+    const invCryptoAmountEl = document.getElementById('invCryptoAmount');
+    const invAddressEl = document.getElementById('invAddress');
+    const invMemoEl = document.getElementById('invMemo');
+
+    const simSteps = [
+      document.getElementById('simStep1'),
+      document.getElementById('simStep2'),
+      document.getElementById('simStep3'),
+      document.getElementById('simStep4'),
+      document.getElementById('simStep5')
+    ];
+
+    function appendLog(msg, color = '#38bdf8') {
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      line.style.color = color;
+      line.style.marginBottom = '4px';
+      line.innerHTML = `[${time}] ${msg}`;
+      logsEl.appendChild(line);
+      logsEl.scrollTop = logsEl.scrollHeight;
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      currentInvoice.timerSeconds = 1799;
+      timerInterval = setInterval(() => {
+        if (currentInvoice.status !== 'PENDING') {
+          clearInterval(timerInterval);
+          return;
+        }
+        currentInvoice.timerSeconds--;
+        if (currentInvoice.timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          simExecuteTx('EXPIRE');
+          return;
+        }
+        const mins = Math.floor(currentInvoice.timerSeconds / 60);
+        const secs = currentInvoice.timerSeconds % 60;
+        timerEl.innerText = `⏱ ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function updateSimEstimate() {
+      const sSelect = document.getElementById('simServiceSelect');
+      const cSelect = document.getElementById('simCurrencySelect');
+      const price = parseFloat(sSelect.options[sSelect.selectedIndex].getAttribute('data-price') || '5.00');
+      const rate = parseFloat(cSelect.options[cSelect.selectedIndex].getAttribute('data-rate') || '5.00');
+      const symbol = cSelect.value;
+      const cryptoVal = (price / rate).toFixed(6);
+      appendLog(`💡 تخمین محاسبه: قیمت $${price} / نرخ $${rate} = ${cryptoVal} ${symbol}`, '#94a3b8');
+    }
+
+    function updateSimCurrencies() {
+      const netSelect = document.getElementById('simNetworkSelect').value;
+      const cSelect = document.getElementById('simCurrencySelect');
+      cSelect.innerHTML = '';
+      if (netSelect === 'ton') {
+        cSelect.innerHTML = `
+          <option value="TON" data-rate="5.00">TON Coin (نرخ: $5.00)</option>
+          <option value="USDT" data-rate="1.00">USDT - TON Jetton (نرخ: $1.00)</option>
+        `;
+      } else {
+        cSelect.innerHTML = `
+          <option value="TRX" data-rate="0.15">TRX - TRON (نرخ: $0.15)</option>
+          <option value="USDT" data-rate="1.00">USDT - TRC20 (نرخ: $1.00)</option>
+        `;
+      }
+      updateSimEstimate();
+    }
+
+    async function simCreateInvoice() {
+      const sSelect = document.getElementById('simServiceSelect');
+      const cSelect = document.getElementById('simCurrencySelect');
+      const netSelect = document.getElementById('simNetworkSelect').value;
+      const telegramId = document.getElementById('simTelegramId').value || null;
+
+      const price = parseFloat(sSelect.options[sSelect.selectedIndex].getAttribute('data-price') || '5.00');
+      const rate = parseFloat(cSelect.options[cSelect.selectedIndex].getAttribute('data-rate') || '5.00');
+      const symbol = cSelect.value;
+      const cryptoVal = (price / rate).toFixed(symbol === 'USDT' ? 2 : 6);
+
+      // Reset step highlights
+      simSteps.forEach(s => s.classList.remove('active', 'completed'));
+
+      appendLog('🚀 ارسال درخواست HTTP POST /api/v1/invoices به سرور...', '#fff');
+      simSteps[0].classList.add('active');
+      await sleep(500);
+      simSteps[0].classList.remove('active');
+      simSteps[0].classList.add('completed');
+
+      // Step 2: UseCase
+      simSteps[1].classList.add('active');
+      const rndMemo = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
+      const rndInvNum = 'INV-2026-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      appendLog(`⚙️ سرویس invoice_usecase: تولید شناسه ${rndInvNum} و انتساب مموی یکتا: "${rndMemo}"`);
+      await sleep(500);
+      simSteps[1].classList.remove('active');
+      simSteps[1].classList.add('completed');
+
+      // Step 3: DB Repo
+      simSteps[2].classList.add('active');
+      appendLog(`🐘 ریپازیتوری invoice_repo: درج رکورد در جدول invoices با وضعیت PENDING`);
+      await sleep(500);
+      simSteps[2].classList.remove('active');
+      simSteps[2].classList.add('completed');
+
+      // Update UI state
+      currentInvoice = {
+        number: rndInvNum,
+        serviceTitle: sSelect.options[sSelect.selectedIndex].text,
+        amountUsd: price,
+        cryptoAmount: cryptoVal,
+        currency: symbol,
+        network: netSelect,
+        address: netSelect === 'ton' ? 'EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury' : 'TYDzsYUEpvnYmQK4zGPj29sdgyFvP4k67x',
+        memo: rndMemo,
+        status: 'PENDING',
+        timerSeconds: 1799
+      };
+
+      invNumberEl.innerText = currentInvoice.number;
+      invServiceTitleEl.innerText = currentInvoice.serviceTitle;
+      invAmountUsdEl.innerText = `$${price.toFixed(2)} USD`;
+      invCryptoAmountEl.innerText = `${cryptoVal} ${symbol}`;
+      invAddressEl.innerText = currentInvoice.address;
+      invMemoEl.innerText = currentInvoice.memo;
+
+      statusBadge.className = 'invoice-badge-status status-pending';
+      statusBadge.innerText = 'PENDING (در انتظار پرداخت)';
+
+      startTimer();
+      appendLog(`✅ فاکتور با موفقیت صادر شد! آدرس و Memo آماده واریز است. مهلت: ۳۰ دقیقه`, '#10b981');
+    }
+
+    async function simExecuteTx(scenario) {
+      if (currentInvoice.status !== 'PENDING' && scenario !== 'DOUBLE_SPEND') {
+        appendLog(`⚠️ فاکتور فعلی در وضعیت ${currentInvoice.status} است. ابتدا فاکتور جدید صادر کنید.`, '#f59e0b');
+        return;
+      }
+
+      const rndTx = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+
+      if (scenario === 'EXPIRE') {
+        currentInvoice.status = 'EXPIRED';
+        statusBadge.className = 'invoice-badge-status status-expired';
+        statusBadge.innerText = 'EXPIRED (منقضی شده)';
+        clearInterval(timerInterval);
+        timerEl.innerText = '⏱ 00:00';
+        appendLog(`⌛ ۳۰ دقیقه مهلت واریز به پایان رسید. وضعیت فاکتور به EXPIRED تغییر یافت.`, '#94a3b8');
+        return;
+      }
+
+      if (scenario === 'DOUBLE_SPEND') {
+        appendLog(`🚨 تلاش برای ثبت مجدد هش تراکنش مصرف‌شده: ${rndTx.substring(0, 16)}...`, '#f43f5e');
+        appendLog(`🛑 خطای پایگاه داده: خطای قید یکتایی uq_network_tx_hash! تراکنش تکراری رد شد.`, '#f43f5e');
+        return;
+      }
+
+      // Step 4: Observer Node Detection
+      simSteps[3].classList.add('active');
+      appendLog(`💎 اسکنر نود ${currentInvoice.network.toUpperCase()}: تراکنش ورودی کشف شد! Tx: ${rndTx.substring(0, 16)}...`, '#38bdf8');
+      appendLog(`🔍 اعتبارسنجی Memo: دریافت شد "${currentInvoice.memo}" ➔ مطابقت دارد!`, '#a855f7');
+      await sleep(700);
+      simSteps[3].classList.remove('active');
+      simSteps[3].classList.add('completed');
+
+      // Step 5: Settlement
+      simSteps[4].classList.add('active');
+      if (scenario === 'SUCCESS') {
+        currentInvoice.status = 'PAID';
+        statusBadge.className = 'invoice-badge-status status-paid';
+        statusBadge.innerText = 'PAID (پرداخت و تسویه کامل ✅)';
+        clearInterval(timerInterval);
+        appendLog(`🔒 سرویس settlement_usecase: هش در observed_transactions ذخیره شد.`, '#10b981');
+        appendLog(`🎉 فاکتور با موفقیت تسویه شد! اشتراک کاربر فوراً فعال و پیام تلگرام ارسال گردید.`, '#34d399');
+      } else if (scenario === 'UNDERPAID') {
+        currentInvoice.status = 'UNDERPAID';
+        statusBadge.className = 'invoice-badge-status status-underpaid';
+        statusBadge.innerText = 'UNDERPAID (کسری مبلغ واریزی ⚠️)';
+        appendLog(`⚠️ هشدار کسری واریز: کاربر مبلغ کمتری واریز کرده است. فاکتور به وضعیت UNDERPAID رفت.`, '#fb7185');
+      }
+      await sleep(500);
+      simSteps[4].classList.remove('active');
+      simSteps[4].classList.add('completed');
+    }
+
+    // Database Table Highlight Relation
+    function highlightTable(tableKey) {
+      document.querySelectorAll('.db-card').forEach(c => c.classList.remove('highlighted'));
+      const activeCard = document.getElementById(`card-${tableKey}`);
+      if (activeCard) activeCard.classList.add('highlighted');
+
+      // Relationship mapping
+      const relations = {
+        'invoices': ['card-users', 'card-services', 'card-currencies', 'card-networks', 'card-addresses', 'card-transactions'],
+        'users': ['card-invoices', 'card-addresses'],
+        'services': ['card-invoices'],
+        'networks': ['card-currencies', 'card-addresses', 'card-invoices', 'card-transactions'],
+        'currencies': ['card-networks', 'card-invoices'],
+        'addresses': ['card-users', 'card-networks', 'card-invoices'],
+        'transactions': ['card-invoices', 'card-networks']
+      };
+
+      if (relations[tableKey]) {
+        relations[tableKey].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('highlighted');
+        });
+        appendLog(`🔗 جدول ${tableKey} با کلیدهای خارجی با جدول‌های دیگر مرتبط است.`, '#c084fc');
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
