@@ -146,6 +146,15 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
           </div>
         )}
 
+        {invoice.order_id && (
+          <div className="info-row">
+            <span className="label">شناسه سفارش پذیرنده (Order ID):</span>
+            <span className="val" style={{ color: '#a7f3d0', fontFamily: 'monospace' }}>
+              {invoice.order_id}
+            </span>
+          </div>
+        )}
+
         <div className="info-row">
           <span className="label">شناسه یکتای سیستم:</span>
           <span className="val" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
@@ -154,12 +163,25 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
         </div>
       </div>
 
-      {/* Memo Alert Banner */}
-      {invoice.pay_memo && (
+      {/* Memo Alert Banner for TON vs Unique Address Note for BSC */}
+      {invoice.pay_memo ? (
         <div className="memo-alert">
-          ⚠️ <strong>نکته مهم تست بلاکچین:</strong> هنگام ارسال وجه از هر تستر، اسکریپت یا والت، فیلد{' '}
-          <strong>Comment / Memo</strong> را حتماً برابر <code>{invoice.pay_memo}</code> قرار دهید تا ناظر بلاکچین
-          تراکنش را مستقیماً به این فاکتور متصل کند.
+          ⚠️ <strong>نکته واریز در شبکه TON:</strong> هنگام ارسال وجه از والت Tonkeeper یا ربات، حتماً فیلد{' '}
+          <strong>Comment / Memo</strong> را برابر <code>{invoice.pay_memo}</code> قرار دهید تا واریزی به این فاکتور متصل گردد.
+        </div>
+      ) : (
+        <div
+          style={{
+            margin: '1rem 0',
+            padding: '0.75rem 1rem',
+            background: 'rgba(6, 182, 212, 0.1)',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
+            borderRadius: '8px',
+            fontSize: '0.82rem',
+            color: 'var(--cyan-glow)'
+          }}
+        >
+          💎 <strong>معماری اختصاصی BSC:</strong> این آدرس منحصراً از طریق HD-Wallet برای این فاکتور اشتقاق یافته است. واریز بدون نیاز به هیچ ممو یا کامنت مستقیماً رصد و تسویه می‌گردد.
         </div>
       )}
 

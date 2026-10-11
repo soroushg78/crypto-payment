@@ -353,6 +353,18 @@ body {
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
 }
 
+/* Hide number input spin arrows (up/down buttons) */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Primary Action Button */
 .btn-submit {
   width: 100%;

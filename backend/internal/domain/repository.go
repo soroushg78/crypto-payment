@@ -18,6 +18,7 @@ type NetworkRepository interface {
 type CurrencyRepository interface {
 	ListByNetwork(ctx context.Context, networkID string) ([]*Currency, error)
 	GetByID(ctx context.Context, id string) (*Currency, error)
+	GetBySymbolAndNetwork(ctx context.Context, symbol, networkID string) (*Currency, error)
 }
 
 type UserRepository interface {
@@ -34,6 +35,7 @@ type AdminRepository interface {
 
 type DepositAddressRepository interface {
 	AssignAddress(ctx context.Context, networkID string, userID *string) (*DepositAddress, error)
+	ListAssigned(ctx context.Context, networkID string) ([]*DepositAddress, error)
 }
 
 type InvoiceRepository interface {

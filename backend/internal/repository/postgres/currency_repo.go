@@ -50,3 +50,17 @@ func (r *CurrencyRepository) GetByID(ctx context.Context, id string) (*domain.Cu
 	}
 	return &c, nil
 }
+
+func (r *CurrencyRepository) GetBySymbolAndNetwork(ctx context.Context, symbol, networkID string) (*domain.Currency, error) {
+	query := `SELECT id, symbol, network_id, contract_address, decimals, min_deposit, is_active FROM currencies WHERE UPPER(symbol) = UPPER($1) AND LOWER(network_id) = LOWER($2) AND is_active = true LIMIT 1`
+	var c domain.Currency
+	err := r.pool.QueryRow(ctx, query, symbol, networkID).Scan(&c.ID, &c.Symbol, &c.NetworkID, &c.ContractAddress, &c.Decimals, &c.MinDeposit, &c.IsActive)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+

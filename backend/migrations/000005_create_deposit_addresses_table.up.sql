@@ -9,3 +9,4 @@ CREATE TABLE IF NOT EXISTS deposit_addresses (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_deposit_addr ON deposit_addresses(network_id, address);
+CREATE INDEX IF NOT EXISTS idx_deposit_network_index ON deposit_addresses(network_id, derivation_index);

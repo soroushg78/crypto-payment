@@ -1,33 +1,40 @@
 import { apiClient } from './client';
 
 export const invoiceApi = {
-  // صدور فاکتور جدید
+  // صدور فاکتور جدید (پشتیبانی از پارامترهای enterprise مثل order_id و callback_url)
   createInvoice: async ({
     amountUSD,
     amount_usd,
     currencyId,
+    currency,
     networkId,
+    network,
     serviceId,
     telegramId,
     username,
-    customAmount
+    orderId,
+    order_id,
+    callbackUrl,
+    callback_url
   }) => {
     const finalAmount =
       amountUSD !== undefined
         ? parseFloat(amountUSD)
         : amount_usd !== undefined
         ? parseFloat(amount_usd)
-        : customAmount !== undefined
-        ? parseFloat(customAmount)
         : 0;
 
     return apiClient.post('/api/v1/invoices', {
       amount_usd: finalAmount,
-      currency_id: currencyId,
-      network_id: networkId,
+      currency_id: currencyId || undefined,
+      currency: currency || undefined,
+      network_id: networkId || undefined,
+      network: network || undefined,
       service_id: serviceId || undefined,
       telegram_id: telegramId ? parseInt(telegramId, 10) : undefined,
-      username: username || undefined
+      username: username || undefined,
+      order_id: orderId || order_id || undefined,
+      callback_url: callbackUrl || callback_url || undefined
     });
   },
 

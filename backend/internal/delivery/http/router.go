@@ -10,6 +10,7 @@ func NewRouter(
 	catalogH *CatalogHandler,
 	invoiceH *InvoiceHandler,
 	authH *AuthHandler,
+	rebalanceH *RebalanceHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -29,6 +30,13 @@ func NewRouter(
 	mux.HandleFunc("POST /api/v1/invoices", invoiceH.CreateInvoice)
 	mux.HandleFunc("GET /api/v1/invoices/{id}", invoiceH.GetInvoice)
 	mux.HandleFunc("GET /api/v1/invoices/number/{number}", invoiceH.GetInvoiceByNumber)
+
+	// 5. HD-Wallet & Rebalancing routes
+	mux.HandleFunc("GET /api/v1/rebalance/wallets", rebalanceH.ListWallets)
+	mux.HandleFunc("POST /api/v1/rebalance/sweep", rebalanceH.SweepWallet)
+	mux.HandleFunc("POST /api/v1/rebalance/sweep-batch", rebalanceH.SweepBatch)
+	mux.HandleFunc("GET /api/v1/rebalance/estimate", rebalanceH.EstimateGas)
+	mux.HandleFunc("GET /api/v1/rebalance/security", rebalanceH.SecuritySpecs)
 
 	// Apply Middlewares in chain
 	var handler http.Handler = mux

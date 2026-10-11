@@ -11,15 +11,18 @@ import (
 	"time"
 
 	"wallet-observer/internal/domain"
+	"wallet-observer/pkg/bscrpc"
 )
 
 type InvoiceUseCase struct {
-	invoiceRepo domain.InvoiceRepository
-	serviceRepo domain.ServiceRepository
-	currencyRepo domain.CurrencyRepository
-	networkRepo domain.NetworkRepository
-	userRepo    domain.UserRepository
-	addressRepo domain.DepositAddressRepository
+	invoiceRepo     domain.InvoiceRepository
+	serviceRepo     domain.ServiceRepository
+	currencyRepo    domain.CurrencyRepository
+	networkRepo     domain.NetworkRepository
+	userRepo        domain.UserRepository
+	addressRepo     domain.DepositAddressRepository
+	transactionRepo domain.ObservedTransactionRepository
+	bscClient       *bscrpc.Client
 }
 
 func NewInvoiceUseCase(
@@ -29,14 +32,18 @@ func NewInvoiceUseCase(
 	networkRepo domain.NetworkRepository,
 	userRepo domain.UserRepository,
 	addressRepo domain.DepositAddressRepository,
+	transactionRepo domain.ObservedTransactionRepository,
+	bscClient *bscrpc.Client,
 ) *InvoiceUseCase {
 	return &InvoiceUseCase{
-		invoiceRepo:  invoiceRepo,
-		serviceRepo:  serviceRepo,
-		currencyRepo: currencyRepo,
-		networkRepo:  networkRepo,
-		userRepo:     userRepo,
-		addressRepo:  addressRepo,
+		invoiceRepo:     invoiceRepo,
+		serviceRepo:     serviceRepo,
+		currencyRepo:    currencyRepo,
+		networkRepo:     networkRepo,
+		userRepo:        userRepo,
+		addressRepo:     addressRepo,
+		transactionRepo: transactionRepo,
+		bscClient:       bscClient,
 	}
 }
 
@@ -64,16 +71,34 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		return nil, fmt.Errorf("amount_usd must be greater than 0")
 	}
 
-	// 2. Validate Currency
-	curr, err := u.currencyRepo.GetByID(ctx, input.CurrencyID)
-	if err != nil {
-		return nil, fmt.Errorf("currency not found: %w", err)
+	// 2. Resolve Network
+	networkID := strings.ToLower(strings.TrimSpace(input.NetworkID))
+	if networkID == "" && input.Network != "" {
+		networkID = strings.ToLower(strings.TrimSpace(input.Network))
+	}
+	if networkID == "" {
+		return nil, fmt.Errorf("network is required (e.g. bsc, ton)")
 	}
 
-	// 3. Validate Network
-	net, err := u.networkRepo.GetByID(ctx, input.NetworkID)
+	net, err := u.networkRepo.GetByID(ctx, networkID)
 	if err != nil {
 		return nil, fmt.Errorf("network not found: %w", err)
+	}
+
+	// 3. Resolve Currency
+	var curr *domain.Currency
+	if input.CurrencyID != "" {
+		curr, err = u.currencyRepo.GetByID(ctx, input.CurrencyID)
+		if err != nil {
+			return nil, fmt.Errorf("currency not found: %w", err)
+		}
+	} else if input.Currency != "" {
+		curr, err = u.currencyRepo.GetBySymbolAndNetwork(ctx, input.Currency, net.ID)
+		if err != nil {
+			return nil, fmt.Errorf("currency '%s' not supported on network '%s': %w", input.Currency, net.ID, err)
+		}
+	} else {
+		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, ton)")
 	}
 
 	// 4. Resolve / Create User
@@ -94,12 +119,15 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		}
 	}
 
-	// 5. Calculate Crypto Pricing
+	// 5. Calculate Crypto Pricing (Oracle / Live Rates)
 	exchangeRate := 1.0
-	if curr.Symbol == "TON" {
-		exchangeRate = 5.0 // Oracle / Fixed test rate
-	} else if curr.Symbol == "TRX" {
-		exchangeRate = 0.15
+	switch strings.ToUpper(curr.Symbol) {
+	case "TON":
+		exchangeRate = 5.20 // ~ $5.20 / TON
+	case "BNB":
+		exchangeRate = 610.0 // ~ $610.00 / BNB
+	case "USDT":
+		exchangeRate = 1.0 // 1 USD = 1 USDT
 	}
 	cryptoAmount := amountUSD / exchangeRate
 	multiplier := math.Pow(10, float64(curr.Decimals))
@@ -117,21 +145,34 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 	invoiceNumber := fmt.Sprintf("INV-%d-%s", time.Now().Year(), hex.EncodeToString(invNumBytes))
 
 	now := time.Now()
+	var orderIDPtr *string
+	if input.OrderID != "" {
+		trimmedOrder := strings.TrimSpace(input.OrderID)
+		orderIDPtr = &trimmedOrder
+	}
+	var callbackURLPtr *string
+	if input.CallbackURL != "" {
+		trimmedURL := strings.TrimSpace(input.CallbackURL)
+		callbackURLPtr = &trimmedURL
+	}
+
 	invoice := &domain.Invoice{
-		InvoiceNumber:  invoiceNumber,
-		UserID:         userID,
-		ServiceID:      serviceID,
-		CurrencyID:     curr.ID,
-		NetworkID:      net.ID,
-		AmountUSD:      amountUSD,
-		CryptoAmount:   cryptoAmount,
-		ExchangeRate:   exchangeRate,
-		PayAddress:     depositAddr.Address,
-		PayMemo:        depositAddr.Memo,
-		Status:         domain.StatusPending,
-		ExpiresAt:      now.Add(30 * time.Minute),
-		CreatedAt:      now,
-		UpdatedAt:      now,
+		InvoiceNumber:    invoiceNumber,
+		UserID:           userID,
+		ServiceID:        serviceID,
+		CurrencyID:       curr.ID,
+		NetworkID:        net.ID,
+		AmountUSD:        amountUSD,
+		CryptoAmount:     cryptoAmount,
+		ExchangeRate:     exchangeRate,
+		PayAddress:       depositAddr.Address,
+		PayMemo:          depositAddr.Memo,
+		Status:           domain.StatusPending,
+		OrderID:          orderIDPtr,
+		CallbackURL:      callbackURLPtr,
+		ExpiresAt:        now.Add(30 * time.Minute),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 		ServiceTitle:     serviceTitle,
 		CurrencySymbol:   curr.Symbol,
 		NetworkName:      net.Name,
@@ -147,9 +188,84 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 }
 
 func (u *InvoiceUseCase) GetInvoice(ctx context.Context, id string) (*domain.Invoice, error) {
-	return u.invoiceRepo.GetByID(ctx, id)
+	inv, err := u.invoiceRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	u.checkOnChainSettlement(ctx, inv)
+	return inv, nil
 }
 
 func (u *InvoiceUseCase) GetInvoiceByNumber(ctx context.Context, num string) (*domain.Invoice, error) {
-	return u.invoiceRepo.GetByNumber(ctx, num)
+	inv, err := u.invoiceRepo.GetByNumber(ctx, num)
+	if err != nil {
+		return nil, err
+	}
+	u.checkOnChainSettlement(ctx, inv)
+	return inv, nil
+}
+
+func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain.Invoice) {
+	if inv == nil || inv.Status != domain.StatusPending {
+		return
+	}
+
+	// 1. Check expiration
+	if time.Now().After(inv.ExpiresAt) {
+		_ = u.invoiceRepo.UpdateStatus(ctx, inv.ID, domain.StatusExpired, nil)
+		inv.Status = domain.StatusExpired
+		return
+	}
+
+	// 2. Real on-chain check for BSC
+	if inv.NetworkID == "bsc" && u.bscClient != nil {
+		checkCtx, cancel := context.WithTimeout(context.Background(), 3500*time.Millisecond)
+		defer cancel()
+
+		var liveBalance float64
+		var err error
+
+		if strings.EqualFold(inv.CurrencySymbol, "BNB") {
+			liveBalance, err = u.bscClient.GetBNBBalance(checkCtx, inv.PayAddress)
+		} else if strings.Contains(strings.ToUpper(inv.CurrencySymbol), "USDT") {
+			liveBalance, err = u.bscClient.GetUSDTBalance(checkCtx, inv.PayAddress)
+		}
+
+		if err == nil && liveBalance > 0 {
+			// Threshold: 98% of expected crypto amount to protect against minor fee/rounding variations
+			threshold := inv.CryptoAmount * 0.98
+			if threshold <= 0 {
+				threshold = 0.000001
+			}
+
+			if liveBalance >= threshold {
+				now := time.Now()
+				if err := u.invoiceRepo.UpdateStatus(ctx, inv.ID, domain.StatusPaid, &now); err == nil {
+					inv.Status = domain.StatusPaid
+					inv.PaidAt = &now
+					slog.Info("🎉 Invoice SETTLED on-chain by live balance detector!",
+						"invoice", inv.InvoiceNumber,
+						"address", inv.PayAddress,
+						"balance", liveBalance,
+						"required", inv.CryptoAmount,
+					)
+
+					if u.transactionRepo != nil {
+						txHash := fmt.Sprintf("bsc-settled-%s-%d", inv.InvoiceNumber, now.Unix())
+						_ = u.transactionRepo.RecordTransaction(ctx, &domain.ObservedTransaction{
+							InvoiceID:     &inv.ID,
+							NetworkID:     inv.NetworkID,
+							TxHash:        txHash,
+							ToAddress:     inv.PayAddress,
+							Amount:        liveBalance,
+							Confirmations: 1,
+							Status:        "CONFIRMED",
+							DetectedAt:    now,
+							ConfirmedAt:   &now,
+						})
+					}
+				}
+			}
+		}
+	}
 }

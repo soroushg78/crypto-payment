@@ -25,16 +25,16 @@ func (r *InvoiceRepository) Create(ctx context.Context, inv *domain.Invoice) err
 		INSERT INTO invoices (
 			invoice_number, user_id, service_id, currency_id, network_id,
 			amount_usd, crypto_amount, exchange_rate, pay_address, pay_memo,
-			status, expires_at, created_at, updated_at
+			status, order_id, callback_url, expires_at, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 		)
 		RETURNING id, created_at, updated_at
 	`
 	err := r.pool.QueryRow(ctx, query,
 		inv.InvoiceNumber, inv.UserID, inv.ServiceID, inv.CurrencyID, inv.NetworkID,
 		inv.AmountUSD, inv.CryptoAmount, inv.ExchangeRate, inv.PayAddress, inv.PayMemo,
-		string(inv.Status), inv.ExpiresAt, inv.CreatedAt, inv.UpdatedAt,
+		string(inv.Status), inv.OrderID, inv.CallbackURL, inv.ExpiresAt, inv.CreatedAt, inv.UpdatedAt,
 	).Scan(&inv.ID, &inv.CreatedAt, &inv.UpdatedAt)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func (r *InvoiceRepository) GetByID(ctx context.Context, id string) (*domain.Inv
 	query := `
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
-		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
+		       i.status, i.order_id, i.callback_url, i.expires_at, i.paid_at, i.created_at, i.updated_at,
 		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
@@ -63,7 +63,7 @@ func (r *InvoiceRepository) GetByNumber(ctx context.Context, number string) (*do
 	query := `
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
-		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
+		       i.status, i.order_id, i.callback_url, i.expires_at, i.paid_at, i.created_at, i.updated_at,
 		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
@@ -95,7 +95,7 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 	query := `
 		SELECT i.id, i.invoice_number, i.user_id, i.service_id, i.currency_id, i.network_id,
 		       i.amount_usd, i.crypto_amount, i.exchange_rate, i.pay_address, i.pay_memo,
-		       i.status, i.expires_at, i.paid_at, i.created_at, i.updated_at,
+		       i.status, i.order_id, i.callback_url, i.expires_at, i.paid_at, i.created_at, i.updated_at,
 		       s.title, c.symbol, n.name, u.username
 		FROM invoices i
 		LEFT JOIN services s ON i.service_id = s.id
@@ -120,7 +120,7 @@ func (r *InvoiceRepository) ListPending(ctx context.Context) ([]*domain.Invoice,
 		err := rows.Scan(
 			&inv.ID, &inv.InvoiceNumber, &inv.UserID, &inv.ServiceID, &inv.CurrencyID, &inv.NetworkID,
 			&inv.AmountUSD, &inv.CryptoAmount, &inv.ExchangeRate, &inv.PayAddress, &inv.PayMemo,
-			&statusStr, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
+			&statusStr, &inv.OrderID, &inv.CallbackURL, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
 			&serviceTitle, &currSymbol, &netName, &telegramUsername,
 		)
 		if err != nil {
@@ -153,7 +153,7 @@ func (r *InvoiceRepository) scanInvoice(row pgx.Row) (*domain.Invoice, error) {
 	err := row.Scan(
 		&inv.ID, &inv.InvoiceNumber, &inv.UserID, &inv.ServiceID, &inv.CurrencyID, &inv.NetworkID,
 		&inv.AmountUSD, &inv.CryptoAmount, &inv.ExchangeRate, &inv.PayAddress, &inv.PayMemo,
-		&statusStr, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
+		&statusStr, &inv.OrderID, &inv.CallbackURL, &inv.ExpiresAt, &inv.PaidAt, &inv.CreatedAt, &inv.UpdatedAt,
 		&serviceTitle, &currSymbol, &netName, &telegramUsername,
 	)
 	if err != nil {

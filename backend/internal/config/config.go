@@ -25,15 +25,9 @@ type DatabaseConfig struct {
 	MaxConnIdleTime time.Duration
 }
 
-type ProviderConfig struct {
-	TonAPIKey   string
-	TonEndpoint string
-}
-
 type Config struct {
-	Server    ServerConfig
-	Database  DatabaseConfig
-	Providers ProviderConfig
+	Server   ServerConfig
+	Database DatabaseConfig
 }
 
 // Load reads configuration from .env file (if present) and environment variables with safe defaults.
@@ -55,10 +49,6 @@ func Load() *Config {
 			MinConns:        int32(getEnvAsInt("DB_MIN_CONNS", 5)),
 			MaxConnLifetime: time.Duration(getEnvAsInt("DB_MAX_CONN_LIFETIME_MINUTES", 60)) * time.Minute,
 			MaxConnIdleTime: time.Duration(getEnvAsInt("DB_MAX_CONN_IDLE_MINUTES", 15)) * time.Minute,
-		},
-		Providers: ProviderConfig{
-			TonAPIKey:   getEnv("TON_API_KEY", ""),
-			TonEndpoint: getEnv("TON_ENDPOINT", "https://toncenter.com/api/v2/jsonRPC"),
 		},
 	}
 }

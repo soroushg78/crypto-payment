@@ -13,7 +13,9 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
   const [selectedNetworkId, setSelectedNetworkId] = useState('');
   const [selectedCurrencyId, setSelectedCurrencyId] = useState('');
   const [amountUSD, setAmountUSD] = useState('10.00');
-  const [telegramUser, setTelegramUser] = useState('@babasoroush');
+  const [telegramUser, setTelegramUser] = useState('');
+  const [orderId, setOrderId] = useState('WALLEX-ORD-101');
+  const [callbackUrl, setCallbackUrl] = useState('https://exchange.wallex.ir/api/webhook');
 
   // Loading & active invoice
   const [activeInvoice, setActiveInvoice] = useState(null);
@@ -83,8 +85,9 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
     if (isNaN(val) || val <= 0 || !selectedCurrency) return null;
 
     let rate = 1.0;
-    if (selectedCurrency.symbol === 'TON') rate = 5.0;
-    else if (selectedCurrency.symbol === 'TRX') rate = 0.15;
+    if (selectedCurrency.symbol === 'TON') rate = 5.20;
+    else if (selectedCurrency.symbol === 'BNB') rate = 610.0;
+    else if (selectedCurrency.symbol === 'USDT') rate = 1.0;
 
     const crypto = (val / rate).toFixed(selectedCurrency.symbol.includes('USDT') ? 2 : 6);
     return `${crypto} ${selectedCurrency.symbol}`;
@@ -118,7 +121,9 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
         currencyId: selectedCurrencyId,
         networkId: selectedNetworkId,
         telegramId: isNumeric ? parseInt(cleanUser, 10) : undefined,
-        username: cleanUser ? cleanUser : undefined
+        username: cleanUser ? cleanUser : undefined,
+        order_id: orderId.trim() || undefined,
+        callback_url: callbackUrl.trim() || undefined
       });
 
       const fullInvoice = {
@@ -195,30 +200,16 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           <label className="selector-label">
             ۳. مبلغ پرداختی به دلار آمریکا (USD Amount):
           </label>
-          <div style={{ position: 'relative' }}>
-            <input
-              type="number"
-              step="0.01"
-              min="0.1"
-              className="input-custom"
-              style={{ fontSize: '1.1rem', fontWeight: 800, paddingLeft: '3.5rem', direction: 'ltr' }}
-              value={amountUSD}
-              onChange={(e) => setAmountUSD(e.target.value)}
-              placeholder="مثال: 10.00"
-            />
-            <span
-              style={{
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontWeight: 800,
-                color: 'var(--cyan-glow)'
-              }}
-            >
-              $ USD
-            </span>
-          </div>
+          <input
+            type="number"
+            step="0.01"
+            min="0.1"
+            className="input-custom"
+            style={{ fontSize: '1.1rem', fontWeight: 800, direction: 'ltr' }}
+            value={amountUSD}
+            onChange={(e) => setAmountUSD(e.target.value)}
+            placeholder="مثال: 10.00"
+          />
 
           {/* کلیدهای سریع انتخاب مبلغ */}
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
@@ -254,25 +245,50 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           )}
         </div>
 
-        {/* ۴. شناسه یا یوزرنیم تلگرام کاربر */}
+        {/* ۴. آی دی تلگرام کاربر */}
         <div className="selector-group" style={{ marginTop: '1.25rem' }}>
           <label className="selector-label">
-            ۴. نام کاربری یا شناسه عددی تلگرام کاربر:
+            ۴. شناسه کاربری / تلگرام:
           </label>
           <input
             type="text"
             className="input-custom"
+            placeholder="مثال: babasoroush یا 987654321"
             value={telegramUser}
             onChange={(e) => setTelegramUser(e.target.value)}
-            placeholder="مثال: @babasoroush یا 987654321"
             style={{ direction: 'ltr' }}
           />
+        </div>
+
+        {/* ۵. شناسه سفارش سیستم و آدرس وب‌هوک (تنظیمات تکمیلی) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginTop: '1.25rem' }}>
+          <div>
+            <label className="selector-label">شناسه سفارش (order_id):</label>
+            <input
+              type="text"
+              className="input-custom"
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              style={{ direction: 'ltr', fontSize: '0.85rem' }}
+            />
+          </div>
+          <div>
+            <label className="selector-label">آدرس وب‌هوک (callback_url):</label>
+            <input
+              type="text"
+              className="input-custom"
+              value={callbackUrl}
+              onChange={(e) => setCallbackUrl(e.target.value)}
+              style={{ direction: 'ltr', fontSize: '0.82rem' }}
+            />
+          </div>
         </div>
 
         {/* دکمه ارسال */}
         <button
           type="button"
           className="btn-submit"
+          style={{ marginTop: '1.5rem' }}
           onClick={handleCreateInvoice}
           disabled={creatingInvoice || !selectedNetworkId || !selectedCurrencyId || !amountUSD}
         >

@@ -99,13 +99,14 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 	CREATE INDEX IF NOT EXISTS idx_deposit_addr ON deposit_addresses(network_id, address);
+	CREATE INDEX IF NOT EXISTS idx_deposit_network_index ON deposit_addresses(network_id, derivation_index);
 
 	-- 6. Invoices Table (Orders)
 	CREATE TABLE IF NOT EXISTS invoices (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		invoice_number VARCHAR(64) UNIQUE NOT NULL,
 		user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-		service_id UUID REFERENCES services(id) ON DELETE RESTRICT,
+		service_id UUID REFERENCES services(id) ON DELETE SET NULL,
 		currency_id UUID REFERENCES currencies(id) ON DELETE RESTRICT,
 		network_id VARCHAR(32) NOT NULL REFERENCES networks(id) ON DELETE RESTRICT,
 		amount_usd NUMERIC(18, 4) NOT NULL,
@@ -114,6 +115,8 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		pay_address TEXT NOT NULL,
 		pay_memo VARCHAR(128),
 		status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+		order_id VARCHAR(128),
+		callback_url TEXT,
 		expires_at TIMESTAMPTZ NOT NULL,
 		paid_at TIMESTAMPTZ,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -122,6 +125,9 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 	CREATE INDEX IF NOT EXISTS idx_invoices_expires_at ON invoices(expires_at);
 	CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id);
+	ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_id VARCHAR(128);
+	ALTER TABLE invoices ADD COLUMN IF NOT EXISTS callback_url TEXT;
 
 	-- 7. Observed Transactions Table (Double-Spend Prevention)
 	CREATE TABLE IF NOT EXISTS observed_transactions (
@@ -159,23 +165,47 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	-- Clean up legacy dummy services if any exist
 	DELETE FROM services WHERE code IN ('VIP_1M', 'VIP_3M', 'WALLET_CREDIT_10', 'TOPUP_20');
 
-	-- Seed actual supported networks
+	-- Clean up legacy TRON and TON-USDT test invoices/transactions
+	DELETE FROM observed_transactions WHERE network_id = 'tron' OR invoice_id IN (
+		SELECT id FROM invoices WHERE network_id = 'tron' OR currency_id IN (
+			SELECT id FROM currencies WHERE network_id = 'tron' OR (network_id = 'ton' AND symbol = 'USDT')
+		)
+	);
+	DELETE FROM invoices WHERE network_id = 'tron' OR currency_id IN (
+		SELECT id FROM currencies WHERE network_id = 'tron' OR (network_id = 'ton' AND symbol = 'USDT')
+	);
+	DELETE FROM deposit_addresses WHERE network_id = 'tron';
+	DELETE FROM currencies WHERE network_id = 'tron';
+	DELETE FROM currencies WHERE network_id = 'ton' AND symbol = 'USDT';
+	DELETE FROM networks WHERE id = 'tron';
+
+	-- Ensure index 0 in BSC is strictly reserved for Master Gas Station and removed from invoice addresses
+	DELETE FROM observed_transactions WHERE invoice_id IN (
+		SELECT id FROM invoices WHERE pay_address IN (
+			SELECT address FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0
+		)
+	);
+	DELETE FROM invoices WHERE pay_address IN (
+		SELECT address FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0
+	);
+	DELETE FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0;
+
+	-- Seed actual supported networks (TON & BSC)
 	INSERT INTO networks (id, name, native_currency, rpc_endpoint, is_testnet, is_active)
 	VALUES 
-		('ton', 'The Open Network (TON)', 'TON', 'https://toncenter.com/api/v2/jsonRPC', false, true),
-		('tron', 'TRON Blockchain', 'TRX', 'https://api.trongrid.io', false, true)
-	ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, native_currency = EXCLUDED.native_currency;
+		('ton', 'The Open Network (TON)', 'TON', 'https://ton.org/global.config.json', false, true),
+		('bsc', 'BNB Smart Chain (BSC)', 'BNB', 'https://bsc-dataseed.binance.org', false, true)
+	ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, native_currency = EXCLUDED.native_currency, rpc_endpoint = EXCLUDED.rpc_endpoint;
 
 	-- Clean up legacy mock currency UUIDs (like 11111111-...)
 	DELETE FROM currencies WHERE id IN ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333');
 
-	-- Seed actual supported currencies with clean gen_random_uuid()
+	-- Seed actual supported currencies (TON on ton, BNB on bsc, USDT on bsc)
 	INSERT INTO currencies (symbol, network_id, contract_address, decimals, min_deposit, is_active)
 	VALUES 
 		('TON', 'ton', NULL, 9, 0.1, true),
-		('USDT', 'ton', 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs', 6, 1.0, true),
-		('TRX', 'tron', NULL, 6, 10.0, true),
-		('USDT', 'tron', 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 6, 1.0, true)
+		('BNB', 'bsc', NULL, 18, 0.001, true),
+		('USDT', 'bsc', '0x55d398326f99059fF775485246999027B3197955', 18, 1.0, true)
 	ON CONFLICT (symbol, network_id) DO NOTHING;
 
 	-- Seed Telegram user @babasoroush

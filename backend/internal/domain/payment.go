@@ -36,7 +36,7 @@ type Service struct {
 
 // Network represents a supported blockchain
 type Network struct {
-	ID             string `json:"id"` // e.g. 'ton', 'tron'
+	ID             string `json:"id"` // e.g. 'bsc', 'ton'
 	Name           string `json:"name"`
 	NativeCurrency string `json:"native_currency"`
 	RPCEndpoint    string `json:"rpc_endpoint,omitempty"`
@@ -87,10 +87,12 @@ type Invoice struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 
 	// Joined details for API convenience
-	ServiceTitle     string `json:"service_title,omitempty"`
-	CurrencySymbol   string `json:"currency_symbol,omitempty"`
-	NetworkName      string `json:"network_name,omitempty"`
-	TelegramUsername string `json:"telegram_username,omitempty"`
+	ServiceTitle     string  `json:"service_title,omitempty"`
+	CurrencySymbol   string  `json:"currency_symbol,omitempty"`
+	NetworkName      string  `json:"network_name,omitempty"`
+	TelegramUsername string  `json:"telegram_username,omitempty"`
+	OrderID          *string `json:"order_id,omitempty"`
+	CallbackURL      *string `json:"callback_url,omitempty"`
 }
 
 // Admin represents a dashboard administrator
@@ -138,8 +140,12 @@ type ObservedTransaction struct {
 // DTOs for requests
 type CreateInvoiceInput struct {
 	AmountUSD    float64 `json:"amount_usd"`              // مبلغ دلاری پرداختی
-	CurrencyID   string  `json:"currency_id"`             // شناسه ارز انتخابی
-	NetworkID    string  `json:"network_id"`              // شناسه شبکه انتخابی
+	CurrencyID   string  `json:"currency_id,omitempty"`   // شناسه ارز (اختیاری اگر currency ارسال شود)
+	NetworkID    string  `json:"network_id,omitempty"`    // شناسه شبکه (اختیاری اگر network ارسال شود)
+	Network      string  `json:"network,omitempty"`       // نماد شبکه مثل bsc یا ton
+	Currency     string  `json:"currency,omitempty"`      // نماد ارز مثل usdt, bnb, ton
+	OrderID      string  `json:"order_id,omitempty"`      // شناسه سفارش سیستم شما
+	CallbackURL  string  `json:"callback_url,omitempty"`  // وب‌هوک بازگشتی پس از واریز
 	ServiceID    *string `json:"service_id,omitempty"`    // اختیاری
 	TelegramID   *int64  `json:"telegram_id,omitempty"`   // اختیاری
 	Username     string  `json:"username,omitempty"`      // اختیاری

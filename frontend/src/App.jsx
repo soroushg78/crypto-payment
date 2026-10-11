@@ -5,6 +5,8 @@ import Toast from './components/Toast';
 import LoginPage from './pages/LoginPage';
 import CheckoutPage from './pages/CheckoutPage';
 import HistoryPage from './pages/HistoryPage';
+import RebalancePage from './pages/RebalancePage';
+import ApiDocsPage from './pages/ApiDocsPage';
 
 function MainApp() {
   const { isAuthenticated } = useAuth();
@@ -22,7 +24,7 @@ function MainApp() {
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
-    setTimeout(() => setToast({ message: '', type: 'info' }), 3000);
+    setTimeout(() => setToast({ message: '', type: 'info' }), 3500);
   };
 
   const handleInvoiceCreated = (newInv) => {
@@ -62,12 +64,22 @@ function MainApp() {
       />
 
       <main style={{ marginTop: '1.5rem' }}>
-        {activeTab === 'checkout' ? (
+        {activeTab === 'checkout' && (
           <CheckoutPage
             onInvoiceCreated={handleInvoiceCreated}
             onShowToast={showToast}
           />
-        ) : (
+        )}
+
+        {activeTab === 'rebalance' && (
+          <RebalancePage onShowToast={showToast} />
+        )}
+
+        {activeTab === 'apidocs' && (
+          <ApiDocsPage onShowToast={showToast} />
+        )}
+
+        {activeTab === 'history' && (
           <HistoryPage
             history={history}
             onClear={handleClearHistory}

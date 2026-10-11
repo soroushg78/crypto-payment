@@ -15,6 +15,8 @@ import (
 	httpDelivery "wallet-observer/internal/delivery/http"
 	"wallet-observer/internal/repository/postgres"
 	"wallet-observer/internal/usecase"
+	"wallet-observer/pkg/bscrpc"
+	"wallet-observer/pkg/hdwallet"
 	"wallet-observer/pkg/logger"
 )
 
@@ -43,14 +45,27 @@ func main() {
 		slog.Warn("Failed running database auto-migrations", "error", err)
 	}
 
+	// 5.5. Initialize BSC HD Wallet Manager (BIP-44)
+	masterMnemonic := os.Getenv("BSC_MASTER_MNEMONIC")
+	hdManager, err := hdwallet.NewManager(masterMnemonic)
+	if err != nil {
+		slog.Error("Failed to initialize HD wallet manager", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("BSC HD-Wallet Manager initialized (BIP-44 standard)")
+
 	// 6. Initialize Separated Repositories (SOLID - SRP)
 	serviceRepo := postgres.NewServiceRepository(pool)
 	networkRepo := postgres.NewNetworkRepository(pool)
 	currencyRepo := postgres.NewCurrencyRepository(pool)
 	userRepo := postgres.NewUserRepository(pool)
 	adminRepo := postgres.NewAdminRepository(pool)
-	addressRepo := postgres.NewDepositAddressRepository(pool)
+	addressRepo := postgres.NewDepositAddressRepository(pool, hdManager)
 	invoiceRepo := postgres.NewInvoiceRepository(pool)
+	transactionRepo := postgres.NewObservedTransactionRepository(pool)
+
+	// 6.5 Initialize BSC RPC Client (Direct Node Connector)
+	bscClient := bscrpc.NewClient("", hdManager)
 
 	// 7. Initialize Separated Use Cases (SOLID - SRP)
 	catalogUC := usecase.NewCatalogUseCase(serviceRepo, networkRepo, currencyRepo)
@@ -61,17 +76,21 @@ func main() {
 		networkRepo,
 		userRepo,
 		addressRepo,
+		transactionRepo,
+		bscClient,
 	)
 	authUC := usecase.NewAuthUseCase(adminRepo)
+	rebalanceUC := usecase.NewRebalanceUseCase(addressRepo, hdManager, bscClient)
 
 	// 8. Initialize Separated HTTP Handlers (SOLID - SRP)
 	healthHandler := httpDelivery.NewHealthHandler()
 	catalogHandler := httpDelivery.NewCatalogHandler(catalogUC)
 	invoiceHandler := httpDelivery.NewInvoiceHandler(invoiceUC)
 	authHandler := httpDelivery.NewAuthHandler(authUC)
+	rebalanceHandler := httpDelivery.NewRebalanceHandler(rebalanceUC)
 
 	// 9. Wire Router with Handlers & Middlewares
-	router := httpDelivery.NewRouter(healthHandler, catalogHandler, invoiceHandler, authHandler)
+	router := httpDelivery.NewRouter(healthHandler, catalogHandler, invoiceHandler, authHandler, rebalanceHandler)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	server := &http.Server{

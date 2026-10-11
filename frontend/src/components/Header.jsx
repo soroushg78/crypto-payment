@@ -68,12 +68,24 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0 }) {
       </header>
 
       {/* Tabs */}
-      <div className="view-tabs">
+      <div className="view-tabs" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         <button
           className={`tab-btn ${activeTab === 'checkout' ? 'active' : ''}`}
           onClick={() => setActiveTab('checkout')}
         >
           💳 صدور و پرداخت فاکتور
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'rebalance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rebalance')}
+        >
+          ⚡ معماری کلیدها و ریبالانسینگ (Wallex Ops)
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'apidocs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('apidocs')}
+        >
+          📖 مستندات تعاملی API و وب‌هوک (Sandbox)
         </button>
         <button
           className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
