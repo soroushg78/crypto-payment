@@ -4,29 +4,40 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 
 	"wallet-observer/internal/domain"
 	"wallet-observer/pkg/bscrpc"
 	"wallet-observer/pkg/hdwallet"
+	"wallet-observer/pkg/tonrpc"
 )
 
 type RebalanceUseCase struct {
 	addressRepo domain.DepositAddressRepository
 	hdManager   *hdwallet.Manager
 	bscClient   *bscrpc.Client
+	invoiceRepo domain.InvoiceRepository
+	tonClient   *tonrpc.Client
+	recordRepo  domain.RebalanceRecordRepository
 }
 
 func NewRebalanceUseCase(
 	addressRepo domain.DepositAddressRepository,
 	hdManager *hdwallet.Manager,
 	bscClient *bscrpc.Client,
+	invoiceRepo domain.InvoiceRepository,
+	tonClient *tonrpc.Client,
+	recordRepo domain.RebalanceRecordRepository,
 ) *RebalanceUseCase {
 	return &RebalanceUseCase{
 		addressRepo: addressRepo,
 		hdManager:   hdManager,
 		bscClient:   bscClient,
+		invoiceRepo: invoiceRepo,
+		tonClient:   tonClient,
+		recordRepo:  recordRepo,
 	}
 }
 
@@ -35,6 +46,17 @@ func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.Rebala
 	addresses, err := u.addressRepo.ListAssigned(ctx, "bsc")
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve assigned BSC addresses: %w", err)
+	}
+
+	allInvoices, _ := u.invoiceRepo.ListAll(ctx, 300)
+	invByAddr := make(map[string]*domain.Invoice)
+	for _, inv := range allInvoices {
+		if strings.EqualFold(inv.NetworkID, "bsc") {
+			addrLower := strings.ToLower(inv.PayAddress)
+			if _, exists := invByAddr[addrLower]; !exists {
+				invByAddr[addrLower] = inv
+			}
+		}
 	}
 
 	var results []*domain.RebalanceWalletStatus
@@ -66,17 +88,31 @@ func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.Rebala
 			sweepStatus = "READY_BNB"
 		}
 
+		var invCreatedAt *time.Time
+		var paidAt *time.Time
+		var invNum *string
+		if inv, ok := invByAddr[strings.ToLower(addr.Address)]; ok {
+			invCreatedAt = &inv.CreatedAt
+			paidAt = inv.PaidAt
+			invNum = &inv.InvoiceNumber
+		} else {
+			invCreatedAt = &addr.CreatedAt
+		}
+
 		item := &domain.RebalanceWalletStatus{
-			ID:              addr.ID,
-			DerivationIndex: index,
-			DerivationPath:  path,
-			Address:         addr.Address,
-			NetworkID:       addr.NetworkID,
-			BNBBalance:      bnbBal,
-			USDTBalance:     usdtBal,
-			NeedsRefuel:     needsRefuel,
-			SweepStatus:     sweepStatus,
-			CreatedAt:       addr.CreatedAt,
+			ID:                addr.ID,
+			DerivationIndex:   index,
+			DerivationPath:    path,
+			Address:           addr.Address,
+			NetworkID:         addr.NetworkID,
+			BNBBalance:        bnbBal,
+			USDTBalance:       usdtBal,
+			NeedsRefuel:       needsRefuel,
+			SweepStatus:       sweepStatus,
+			AssociatedInvoice: invNum,
+			CreatedAt:         addr.CreatedAt,
+			InvoiceCreatedAt:  invCreatedAt,
+			PaidAt:            paidAt,
 		}
 
 		results = append(results, item)
@@ -94,7 +130,7 @@ func (u *RebalanceUseCase) ExecuteSweep(ctx context.Context, req domain.SweepReq
 	}
 
 	// 2. Execute sweep sequence via BSC client
-	return u.bscClient.ExecuteOrSimulateSweep(
+	res, err := u.bscClient.ExecuteOrSimulateSweep(
 		ctx,
 		req.DerivationIndex,
 		address,
@@ -102,6 +138,39 @@ func (u *RebalanceUseCase) ExecuteSweep(ctx context.Context, req domain.SweepReq
 		req.TreasuryAddress,
 		req.RealBroadcast,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Mark any associated pending invoice for this address as PAID
+	if u.invoiceRepo != nil {
+		_ = u.invoiceRepo.MarkPaidByAddress(ctx, address)
+	}
+
+	// 4. Save audit log record to rebalance_records table
+	if u.recordRepo != nil && res != nil {
+		idx := req.DerivationIndex
+		txHashStr := res.SweepTxHash
+		if txHashStr == "" {
+			txHashStr = res.RefuelTxHash
+		}
+		status := "COMPLETED"
+		_ = u.recordRepo.Create(ctx, &domain.RebalanceRecord{
+			NetworkID:       "bsc",
+			DerivationIndex: &idx,
+			FromAddress:     res.DepositAddress,
+			ToAddress:       res.TreasuryAddress,
+			Asset:           res.AssetSwept,
+			Amount:          res.AmountSwept,
+			GasFeeBNB:       res.GasFeeBNB,
+			TxHash:          &txHashStr,
+			Status:          status,
+			IsSimulated:     false,
+			CreatedAt:       time.Now(),
+		})
+	}
+
+	return res, nil
 }
 
 // ExecuteBatchSweep sweeps multiple wallets sequentially with auto-refueling
@@ -186,8 +255,12 @@ func (u *RebalanceUseCase) GetSecuritySpecs() map[string]interface{} {
 			"https://bsc-dataseed1.defibit.io",
 			"Direct BSC Full Node (Geth/Erigon)",
 		},
-		"mnemonic_status": "Loaded and active (" + words + ")",
-		"master_mnemonic": mnemonic,
+		"mnemonic_status":             "Loaded and active (" + words + ")",
+		"master_mnemonic":             mnemonic,
+		"ton_standard":                "TON 24-Word Mnemonic (Ed25519 PBKDF2 HMAC-SHA512)",
+		"ton_wallet_contract":         "Wallet V4R2 (Tonkeeper Standard)",
+		"ton_treasury_wallet":         os.Getenv("TON_TREASURY_WALLET"),
+		"ton_mnemonic":                os.Getenv("TON_MASTER_MNEMONIC"),
 	}
 }
 
@@ -200,3 +273,85 @@ func (u *RebalanceUseCase) EstimateGas(ctx context.Context, derivationIndex int,
 
 	return u.bscClient.EstimateSweepGas(ctx, address, asset, treasuryAddress)
 }
+
+// GetTONTreasuryStatus returns live on-chain balance and invoice memo routing for TON Master Treasury
+func (u *RebalanceUseCase) GetTONTreasuryStatus(ctx context.Context) (*domain.TONTreasuryStatus, error) {
+	treasuryAddr := os.Getenv("TON_TREASURY_WALLET")
+	if treasuryAddr == "" {
+		treasuryAddr = "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw"
+	}
+
+	var liveBalance float64
+	if u.tonClient != nil {
+		ctxBal, cancel := context.WithTimeout(ctx, 4*time.Second)
+		bal, err := u.tonClient.GetBalance(ctxBal, treasuryAddr)
+		cancel()
+		if err == nil {
+			liveBalance = bal
+		} else {
+			slog.Warn("Failed to get TON treasury balance from node", "error", err)
+		}
+	}
+
+	// Fetch all TON invoices from database
+	allInvoices, err := u.invoiceRepo.ListAll(ctx, 100)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve invoices: %w", err)
+	}
+
+	var items []*domain.TONTreasuryItem
+	var totalCollected float64
+	var paidCount, pendingCount int
+
+	for _, inv := range allInvoices {
+		if strings.EqualFold(inv.NetworkID, "ton") {
+			memo := ""
+			if inv.PayMemo != nil {
+				memo = *inv.PayMemo
+			}
+
+			item := &domain.TONTreasuryItem{
+				ID:            inv.ID,
+				InvoiceNumber: inv.InvoiceNumber,
+				Memo:          memo,
+				AmountUSD:     inv.AmountUSD,
+				CryptoAmount:  inv.CryptoAmount,
+				Currency:      inv.CurrencySymbol,
+				Status:        string(inv.Status),
+				PayAddress:    inv.PayAddress,
+				CreatedAt:     inv.CreatedAt,
+				PaidAt:        inv.PaidAt,
+			}
+
+			if inv.Status == domain.StatusPaid {
+				paidCount++
+				totalCollected += inv.CryptoAmount
+			} else if inv.Status == domain.StatusPending {
+				pendingCount++
+			}
+
+			items = append(items, item)
+		}
+	}
+
+	return &domain.TONTreasuryStatus{
+		TreasuryAddress:   treasuryAddr,
+		BalanceTON:        liveBalance,
+		Architecture:      "Single Master Treasury + Unique Memo Routing (Wallex / Binance Ops)",
+		GasModel:          "Zero-Gas Internal Rebalancing (Direct Treasury Inflow)",
+		TotalInvoices:     len(items),
+		PaidInvoices:      paidCount,
+		PendingInvoices:   pendingCount,
+		TotalCollectedTON: totalCollected,
+		Items:             items,
+	}, nil
+}
+
+// ListRebalanceRecords retrieves recent rebalance and sweep records from the database
+func (u *RebalanceUseCase) ListRebalanceRecords(ctx context.Context, limit int) ([]*domain.RebalanceRecord, error) {
+	if u.recordRepo == nil {
+		return []*domain.RebalanceRecord{}, nil
+	}
+	return u.recordRepo.ListAll(ctx, limit)
+}
+

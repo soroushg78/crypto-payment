@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-type ServiceRepository interface {
-	ListActive(ctx context.Context) ([]*Service, error)
-	GetByID(ctx context.Context, id string) (*Service, error)
-}
-
 type NetworkRepository interface {
 	ListActive(ctx context.Context) ([]*Network, error)
 	GetByID(ctx context.Context, id string) (*Network, error)
@@ -44,9 +39,16 @@ type InvoiceRepository interface {
 	GetByNumber(ctx context.Context, number string) (*Invoice, error)
 	UpdateStatus(ctx context.Context, id string, status InvoiceStatus, paidAt *time.Time) error
 	ListPending(ctx context.Context) ([]*Invoice, error)
+	ListAll(ctx context.Context, limit int) ([]*Invoice, error)
+	MarkPaidByAddress(ctx context.Context, address string) error
 }
 
 type ObservedTransactionRepository interface {
 	RecordTransaction(ctx context.Context, tx *ObservedTransaction) error
 	Exists(ctx context.Context, networkID, txHash string) (bool, error)
+}
+
+type RebalanceRecordRepository interface {
+	Create(ctx context.Context, record *RebalanceRecord) error
+	ListAll(ctx context.Context, limit int) ([]*RebalanceRecord, error)
 }

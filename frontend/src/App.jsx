@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
 import Toast from './components/Toast';
@@ -6,41 +6,58 @@ import LoginPage from './pages/LoginPage';
 import CheckoutPage from './pages/CheckoutPage';
 import HistoryPage from './pages/HistoryPage';
 import RebalancePage from './pages/RebalancePage';
+import RebalanceHistoryPage from './pages/RebalanceHistoryPage';
 import ApiDocsPage from './pages/ApiDocsPage';
+import { invoiceApi } from './api/invoiceApi';
+import { rebalanceApi } from './api/rebalanceApi';
 
 function MainApp() {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('checkout');
   const [toast, setToast] = useState({ message: '', type: 'info' });
+  const [invoiceCount, setInvoiceCount] = useState(0);
+  const [rebalanceCount, setRebalanceCount] = useState(0);
 
-  const [history, setHistory] = useState(() => {
+  // دریافت تعداد فاکتورها از دیتابیس به صورت زنده
+  const refreshInvoiceCount = async () => {
     try {
-      const stored = localStorage.getItem('crypto_invoice_history_v2');
-      return stored ? JSON.parse(stored) : [];
+      const res = await invoiceApi.listInvoices(100);
+      const list = Array.isArray(res) ? res : res?.data || [];
+      setInvoiceCount(list.length);
     } catch {
-      return [];
+      // چشم‌پوشی از خطا در صورت عدم دسترسی موقت
     }
-  });
+  };
+
+  // دریافت تعداد رکوردهای ریبالانسینگ BSC از دیتابیس
+  const refreshRebalanceCount = async () => {
+    try {
+      const res = await rebalanceApi.getRebalanceRecords(150);
+      const list = Array.isArray(res) ? res : res?.data || [];
+      const bscList = list.filter((r) => {
+        const net = (r.network_id || r.network || '').toLowerCase();
+        return net === 'bsc' || net === '' || net.includes('bep');
+      });
+      setRebalanceCount(bscList.length);
+    } catch {
+      // چشم‌پوشی
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshInvoiceCount();
+      refreshRebalanceCount();
+    }
+  }, [isAuthenticated]);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: '', type: 'info' }), 3500);
   };
 
-  const handleInvoiceCreated = (newInv) => {
-    const updated = [newInv, ...history.slice(0, 29)];
-    setHistory(updated);
-    try {
-      localStorage.setItem('crypto_invoice_history_v2', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('LocalStorage error:', e);
-    }
-  };
-
-  const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('crypto_invoice_history_v2');
-    showToast('سوابق فاکتورها پاک شد.', 'info');
+  const handleInvoiceCreated = () => {
+    refreshInvoiceCount();
   };
 
   // اگر کاربر لاگین نکرده باشد، صفحه لاگین نمایش داده می‌شود
@@ -60,7 +77,8 @@ function MainApp() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        historyCount={history.length}
+        historyCount={invoiceCount}
+        rebalanceCount={rebalanceCount}
       />
 
       <main style={{ marginTop: '1.5rem' }}>
@@ -72,17 +90,26 @@ function MainApp() {
         )}
 
         {activeTab === 'rebalance' && (
-          <RebalancePage onShowToast={showToast} />
+          <RebalancePage
+            onShowToast={showToast}
+            onNavigateToRecords={() => {
+              refreshRebalanceCount();
+              setActiveTab('rebalance-records');
+            }}
+          />
         )}
 
-        {activeTab === 'apidocs' && (
-          <ApiDocsPage onShowToast={showToast} />
+        {activeTab === 'rebalance-records' && (
+          <RebalanceHistoryPage
+            onShowToast={showToast}
+            onNavigateToRebalance={() => setActiveTab('rebalance')}
+          />
         )}
 
         {activeTab === 'history' && (
           <HistoryPage
-            history={history}
-            onClear={handleClearHistory}
+            onCountUpdated={(count) => setInvoiceCount(count)}
+            onShowToast={showToast}
             onCopy={(text, label) => {
               navigator.clipboard.writeText(text);
               showToast(`${label} کپی شد! ✅`, 'success');

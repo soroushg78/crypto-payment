@@ -18,6 +18,7 @@ import (
 	"wallet-observer/pkg/bscrpc"
 	"wallet-observer/pkg/hdwallet"
 	"wallet-observer/pkg/logger"
+	"wallet-observer/pkg/tonrpc"
 )
 
 func main() {
@@ -55,7 +56,6 @@ func main() {
 	slog.Info("BSC HD-Wallet Manager initialized (BIP-44 standard)")
 
 	// 6. Initialize Separated Repositories (SOLID - SRP)
-	serviceRepo := postgres.NewServiceRepository(pool)
 	networkRepo := postgres.NewNetworkRepository(pool)
 	currencyRepo := postgres.NewCurrencyRepository(pool)
 	userRepo := postgres.NewUserRepository(pool)
@@ -63,24 +63,34 @@ func main() {
 	addressRepo := postgres.NewDepositAddressRepository(pool, hdManager)
 	invoiceRepo := postgres.NewInvoiceRepository(pool)
 	transactionRepo := postgres.NewObservedTransactionRepository(pool)
+	rebalanceRecordRepo := postgres.NewRebalanceRecordRepository(pool)
 
 	// 6.5 Initialize BSC RPC Client (Direct Node Connector)
 	bscClient := bscrpc.NewClient("", hdManager)
 
+	// 6.6 Initialize TON RPC Client (Toncenter Direct Node Connector)
+	tonEndpoint := os.Getenv("TON_ENDPOINT")
+	tonAPIKey := os.Getenv("TON_API_KEY")
+	tonClient := tonrpc.NewClient(tonEndpoint, tonAPIKey)
+	slog.Info("TON RPC Client initialized (Toncenter live node connector)")
+
 	// 7. Initialize Separated Use Cases (SOLID - SRP)
-	catalogUC := usecase.NewCatalogUseCase(serviceRepo, networkRepo, currencyRepo)
+	catalogUC := usecase.NewCatalogUseCase(networkRepo, currencyRepo)
 	invoiceUC := usecase.NewInvoiceUseCase(
 		invoiceRepo,
-		serviceRepo,
 		currencyRepo,
 		networkRepo,
 		userRepo,
 		addressRepo,
 		transactionRepo,
 		bscClient,
+		tonClient,
 	)
 	authUC := usecase.NewAuthUseCase(adminRepo)
-	rebalanceUC := usecase.NewRebalanceUseCase(addressRepo, hdManager, bscClient)
+	rebalanceUC := usecase.NewRebalanceUseCase(addressRepo, hdManager, bscClient, invoiceRepo, tonClient, rebalanceRecordRepo)
+
+	// 7.5 Start Background On-Chain Payment Observer (BSC & TON auto-settlement every 10s)
+	invoiceUC.StartBackgroundObserver(ctx, 10*time.Second)
 
 	// 8. Initialize Separated HTTP Handlers (SOLID - SRP)
 	healthHandler := httpDelivery.NewHealthHandler()

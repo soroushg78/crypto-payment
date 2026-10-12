@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 
 export const invoiceApi = {
-  // صدور فاکتور جدید (پشتیبانی از پارامترهای enterprise مثل order_id و callback_url)
+  // صدور فاکتور جدید
   createInvoice: async ({
     amountUSD,
     amount_usd,
@@ -9,13 +9,8 @@ export const invoiceApi = {
     currency,
     networkId,
     network,
-    serviceId,
     telegramId,
-    username,
-    orderId,
-    order_id,
-    callbackUrl,
-    callback_url
+    username
   }) => {
     const finalAmount =
       amountUSD !== undefined
@@ -30,11 +25,8 @@ export const invoiceApi = {
       currency: currency || undefined,
       network_id: networkId || undefined,
       network: network || undefined,
-      service_id: serviceId || undefined,
       telegram_id: telegramId ? parseInt(telegramId, 10) : undefined,
-      username: username || undefined,
-      order_id: orderId || order_id || undefined,
-      callback_url: callbackUrl || callback_url || undefined
+      username: username || undefined
     });
   },
 
@@ -48,5 +40,11 @@ export const invoiceApi = {
   getInvoiceByNumber: async (number) => {
     if (!number) throw new Error('شماره فاکتور الزامی است');
     return apiClient.get(`/api/v1/invoices/number/${number}`);
+  },
+
+  // دریافت لیست تمام فاکتورهای واقعی از دیتابیس PostgreSQL
+  listInvoices: async (limit = 100) => {
+    return apiClient.get(`/api/v1/invoices?limit=${limit}`);
   }
 };
+

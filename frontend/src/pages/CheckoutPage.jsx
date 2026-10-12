@@ -14,8 +14,6 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState('');
   const [amountUSD, setAmountUSD] = useState('10.00');
   const [telegramUser, setTelegramUser] = useState('');
-  const [orderId, setOrderId] = useState('WALLEX-ORD-101');
-  const [callbackUrl, setCallbackUrl] = useState('https://exchange.wallex.ir/api/webhook');
 
   // Loading & active invoice
   const [activeInvoice, setActiveInvoice] = useState(null);
@@ -109,11 +107,17 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
       return;
     }
 
+    const cleanUser = telegramUser.trim();
+    if (!cleanUser) {
+      setErrorMsg('وارد کردن شناسه یا نام کاربری تلگرام ضروری است.');
+      onShowToast?.('وارد کردن شناسه یا نام کاربری تلگرام ضروری است ⚠️', 'error');
+      return;
+    }
+
     try {
       setCreatingInvoice(true);
       setErrorMsg('');
 
-      const cleanUser = telegramUser.trim();
       const isNumeric = /^\d+$/.test(cleanUser);
 
       const invoiceData = await invoiceApi.createInvoice({
@@ -121,9 +125,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
         currencyId: selectedCurrencyId,
         networkId: selectedNetworkId,
         telegramId: isNumeric ? parseInt(cleanUser, 10) : undefined,
-        username: cleanUser ? cleanUser : undefined,
-        order_id: orderId.trim() || undefined,
-        callback_url: callbackUrl.trim() || undefined
+        username: cleanUser ? cleanUser : undefined
       });
 
       const fullInvoice = {
@@ -253,46 +255,24 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           <input
             type="text"
             className="input-custom"
-            placeholder="مثال: babasoroush یا 987654321"
             value={telegramUser}
-            onChange={(e) => setTelegramUser(e.target.value)}
+            onChange={(e) => {
+              setTelegramUser(e.target.value);
+              if (errorMsg) setErrorMsg('');
+            }}
             style={{ direction: 'ltr' }}
           />
         </div>
 
-        {/* ۵. شناسه سفارش سیستم و آدرس وب‌هوک (تنظیمات تکمیلی) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginTop: '1.25rem' }}>
-          <div>
-            <label className="selector-label">شناسه سفارش (order_id):</label>
-            <input
-              type="text"
-              className="input-custom"
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              style={{ direction: 'ltr', fontSize: '0.85rem' }}
-            />
-          </div>
-          <div>
-            <label className="selector-label">آدرس وب‌هوک (callback_url):</label>
-            <input
-              type="text"
-              className="input-custom"
-              value={callbackUrl}
-              onChange={(e) => setCallbackUrl(e.target.value)}
-              style={{ direction: 'ltr', fontSize: '0.82rem' }}
-            />
-          </div>
-        </div>
-
-        {/* دکمه ارسال */}
+        {/* دکمه صدور فاکتور */}
         <button
           type="button"
           className="btn-submit"
-          style={{ marginTop: '1.5rem' }}
+          style={{ marginTop: '1.5rem', fontWeight: 700 }}
           onClick={handleCreateInvoice}
           disabled={creatingInvoice || !selectedNetworkId || !selectedCurrencyId || !amountUSD}
         >
-          {creatingInvoice ? 'در حال صدور فاکتور در دیتابیس...' : '⚡ صدور فاکتور رسمی (POST /invoices)'}
+          {creatingInvoice ? 'در حال صدور فاکتور در دیتابیس...' : '⚡ صدور فاکتور پرداخت (Generate Invoice)'}
         </button>
       </div>
 

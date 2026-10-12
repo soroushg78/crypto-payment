@@ -337,14 +337,15 @@ func (c *Client) SendRawTransaction(ctx context.Context, rawTxHex string) (strin
 }
 
 // ExecuteOrSimulateSweep executes REAL on-chain sweeping without any mocks.
-// If the balance is 0, it strictly rejects with a clear error.
+// ExecuteOrSimulateSweep executes 100% REAL on-chain sweeping directly on the BSC blockchain.
+// Strictly rejects if live on-chain balance is zero or insufficient, with zero mocks.
 func (c *Client) ExecuteOrSimulateSweep(
 	ctx context.Context,
 	derivationIndex int,
 	depositAddress string,
 	asset string,
 	treasuryAddress string,
-	realBroadcast bool,
+	_ bool, // deprecated realBroadcast flag - now strictly real execution always
 ) (*domain.SweepResult, error) {
 	if treasuryAddress == "" {
 		treasuryAddress = DefaultTreasury
@@ -370,7 +371,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 	// 1. Step 1: Query live on-chain balances and estimate gas dynamically from the real BSC node
 	gasEstimate, err := c.EstimateSweepGas(ctx, depositAddress, asset, treasuryAddress)
 	if err != nil {
-		return nil, fmt.Errorf("خطا در محاسبه و تخمین گس از نود: %w", err)
+		return nil, fmt.Errorf("خطا در محاسبه و استعلام موجودی از نود بلاکچین: %w", err)
 	}
 
 	bnbBal := gasEstimate.CurrentBNB
@@ -391,25 +392,26 @@ func (c *Client) ExecuteOrSimulateSweep(
 		fmt.Sprintf("RPC Node: %s | Target Wallet: %s | Gas Deficit: %.6f BNB", c.rpcURL, depositAddress, gasEstimate.DeficitBNB),
 	)
 
-	// 2. Strict Balance Verification & Live Gas Station Refueling!
+	// 2. Strict Real On-Chain Balance Verification & Live Gas Station Refueling!
 	var refuelRequired bool
 	var refuelTxHash string
 
 	if asset == "USDT" {
 		if usdtBal <= 0 {
-			return nil, fmt.Errorf("موجودی تتر (BEP-20) والت در شبکه BSC صفر است (%.2f USDT). ابتدا باید تتر واقعی به آدرس %s واریز شود تا بتوان آن را ریبالانس کرد.", usdtBal, depositAddress)
+			return nil, fmt.Errorf("موجودی تتر (BEP-20) این ولت در نود بلاکچین صفر است (%.4f USDT). برای سوئیپ، ابتدا باید تتر واقعی به آدرس %s واریز شده باشد.", usdtBal, depositAddress)
 		}
+
 		if bnbBal < gasFeeBNB {
 			// Child wallet lacks BNB for BEP-20 token transfer!
 			// Check Master Gas Station Wallet (Index 0: Account 1 in MetaMask)
 			masterGasAddr, err := c.hdManager.DeriveAddress(0)
 			if err != nil {
-				return nil, fmt.Errorf("خطا در اشتقاق آدرس والت سوخت‌رسان مستر: %w", err)
+				return nil, fmt.Errorf("خطا در اشتقاق آدرس ولت سوخت‌رسان مستر: %w", err)
 			}
 
 			masterBNBBal, err := c.GetBNBBalance(ctx, masterGasAddr)
 			if err != nil {
-				return nil, fmt.Errorf("خطا در استعلام موجودی والت سوخت‌رسان مستر از نود: %w", err)
+				masterBNBBal = 0.0
 			}
 
 			refuelDeficit := gasFeeBNB - bnbBal
@@ -420,7 +422,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 			gasForRefuelTx := 21000 * gasPriceGwei * 1e-9
 
 			if masterBNBBal < (refuelAmountBNB + gasForRefuelTx) {
-				return nil, fmt.Errorf("کسری موجودی والت مستر سوخت‌رسان (Gas Station): والت مستر (آدرس %s - اکانت ۱ متامسک) فاقد موجودی کافی BNB جهت سوخت‌رسانی به والت کاربر است (موجودی مستر: %.6f BNB | حداقل مورد نیاز: %.6f BNB). لطفاً ابتدا اکانت ۱ متامسک را با BNB شارژ کنید تا سیستم بتواند خودکار سوخت‌رسانی کند.", masterGasAddr, masterBNBBal, refuelAmountBNB+gasForRefuelTx)
+				return nil, fmt.Errorf("کسری موجودی ولت سوخت‌رسان (Gas Station): ولت تنخواه مستر (آدرس %s) فاقد موجودی کافی BNB جهت سوخت‌رسانی به ولت کاربر است (موجودی مستر: %.6f BNB | حداقل مورد نیاز: %.6f BNB). لطفاً ولت مستر را با BNB شارژ کنید تا سیستم بتواند کارمزد تراکنش را تامین کند.", masterGasAddr, masterBNBBal, refuelAmountBNB+gasForRefuelTx)
 			}
 
 			// Master has enough BNB! Sign & broadcast real on-chain BNB transfer from Master to Child
@@ -467,7 +469,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 
 			refuelRequired = true
 			logStep(len(logs)+1, "ایستگاه سوخت‌رسانی خودکار (Gas Station Refuel)",
-				fmt.Sprintf("والت مستر صرافی (اکانت ۱ متامسک) مبلغ %.6f BNB جهت تامین گس توکن تتر به آدرس کاربر تزریق کرد.", refuelAmountBNB),
+				fmt.Sprintf("ولت مستر صرافی مبلغ %.6f BNB جهت تامین گس توکن تتر به آدرس کاربر تزریق کرد.", refuelAmountBNB),
 				"SUCCESS", refuelTxHash,
 				fmt.Sprintf("Sender (Gas Station): %s -> Recipient: %s | Live On-Chain Tx", masterGasAddr, depositAddress),
 			)
@@ -485,7 +487,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 		}
 	} else if asset == "BNB" {
 		if bnbBal <= gasFeeBNB {
-			return nil, fmt.Errorf("موجودی BNB والت (%.6f BNB) برای پوشش کارمزد شبکه (%.6f BNB) کافی نیست. حداقل موجودی باید بیشتر از کارمزد باشد.", bnbBal, gasFeeBNB)
+			return nil, fmt.Errorf("موجودی BNB ولت (%.6f BNB) برای پوشش کارمزد شبکه (%.6f BNB) کافی نیست. حداقل موجودی باید بیشتر از کارمزد تراکنش باشد.", bnbBal, gasFeeBNB)
 		}
 	}
 
@@ -522,11 +524,11 @@ func (c *Client) ExecuteOrSimulateSweep(
 	if asset == "BNB" {
 		totalWei, err := c.GetBNBBalanceWei(ctx, depositAddress)
 		if err != nil {
-			return nil, fmt.Errorf("خطا در استعلام موجودی آنچین BNB: %w", err)
+			return nil, fmt.Errorf("failed to get BNB balance: %w", err)
 		}
 		feeWei := new(big.Int).Mul(gasPriceWei, big.NewInt(int64(requiredGasUnits)))
 		if totalWei.Cmp(feeWei) <= 0 {
-			return nil, fmt.Errorf("موجودی BNB والت برای پوشش کارمزد شبکه کافی نیست")
+			return nil, fmt.Errorf("موجودی BNB ولت برای پوشش کارمزد شبکه کافی نیست")
 		}
 		transferWei := new(big.Int).Sub(totalWei, feeWei)
 		transferFloat := new(big.Float).Quo(new(big.Float).SetInt(transferWei), big.NewFloat(1e18))
@@ -549,7 +551,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 		// BEP-20 USDT transfer: method transfer(address,uint256) -> selector 0xa9059cbb
 		tokenWei, err := c.GetUSDTBalanceWei(ctx, depositAddress)
 		if err != nil || tokenWei.Sign() == 0 {
-			return nil, fmt.Errorf("موجودی تتر والت صفر است")
+			return nil, fmt.Errorf("موجودی تتر ولت در بلاکچین صفر است")
 		}
 		tokenFloat := new(big.Float).Quo(new(big.Float).SetInt(tokenWei), big.NewFloat(1e18))
 		amountSwept, _ = tokenFloat.Float64()
@@ -580,32 +582,17 @@ func (c *Client) ExecuteOrSimulateSweep(
 		return nil, fmt.Errorf("failed to serialize signed transaction: %w", err)
 	}
 	signedTxHex := "0x" + hex.EncodeToString(signedTxBytes)
-	realTxHash := signedTx.Hash().Hex()
 
-	logStep(len(logs)+1, "تولید و امضای تراکنش خام محلی (Local Transaction Signing)",
-		fmt.Sprintf("تراکنش واقعی انتقال %s ساخته شده و با الگوریتم EIP-155 در شبکه بایننس (Chain ID 56) امضا شد.", asset),
-		"SUCCESS", realTxHash,
-		fmt.Sprintf("Nonce: %d | Gas Limit: %d | Value: %.4f %s", nonce, requiredGasUnits, amountSwept, asset),
-	)
-
-	// 5. Step: Real Broadcast or Dry-Run
-	statusStr := "PREFLIGHT_VERIFIED"
-	descBroadcast := fmt.Sprintf("تراکنش انتقال واقعی با موفقیت امضا و آماده برادکست به نود گردید (هش تراکنش معتبر: %s).", realTxHash)
-
-	if realBroadcast {
-		broadcastHash, err := c.SendRawTransaction(ctx, signedTxHex)
-		if err != nil {
-			return nil, fmt.Errorf("خطا در ارسال مستقیم تراکنش به نود BSC: %w", err)
-		}
-		realTxHash = broadcastHash
-		statusStr = "BROADCASTED_LIVE"
-		descBroadcast = fmt.Sprintf("تراکنش واقعی انتقال %s با موفقیت به نود بایننس ارسال شد و در بلاکچین ثبت گردید.", asset)
+	// 5. Broadcast directly to BSC RPC Node
+	broadcastHash, err := c.SendRawTransaction(ctx, signedTxHex)
+	if err != nil {
+		return nil, fmt.Errorf("خطا در ارسال مستقیم تراکنش به نود BSC: %w", err)
 	}
 
 	logStep(len(logs)+1, "ارسال به نود بایننس اسمارت چین (Direct RPC Broadcast)",
-		descBroadcast,
-		statusStr, realTxHash,
-		fmt.Sprintf("Destination: %s | Hash: %s", treasuryAddress, realTxHash),
+		fmt.Sprintf("تراکنش واقعی انتقال %s با موفقیت به نود بایننس ارسال شد و در بلاکچین ثبت گردید.", asset),
+		"BROADCASTED_LIVE", broadcastHash,
+		fmt.Sprintf("Destination: %s | Hash: %s", treasuryAddress, broadcastHash),
 	)
 
 	return &domain.SweepResult{
@@ -617,8 +604,8 @@ func (c *Client) ExecuteOrSimulateSweep(
 		GasFeeBNB:       gasFeeBNB,
 		RefuelRequired:  refuelRequired,
 		RefuelTxHash:    refuelTxHash,
-		SweepTxHash:     realTxHash,
-		IsBroadcasted:   realBroadcast,
+		SweepTxHash:     broadcastHash,
+		IsBroadcasted:   true,
 		Logs:            logs,
 		ExecutedAt:      time.Now(),
 	}, nil

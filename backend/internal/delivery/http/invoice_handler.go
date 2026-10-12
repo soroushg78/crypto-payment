@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"wallet-observer/internal/domain"
 	"wallet-observer/internal/usecase"
@@ -26,9 +28,10 @@ func (h *InvoiceHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 
 	hasNetwork := req.NetworkID != "" || req.Network != ""
 	hasCurrency := req.CurrencyID != "" || req.Currency != ""
-	hasAmount := req.AmountUSD > 0 || req.CustomAmount > 0 || (req.ServiceID != nil && *req.ServiceID != "")
-	if !hasNetwork || !hasCurrency || !hasAmount {
-		writeError(w, http.StatusBadRequest, "network, currency, and amount_usd are required")
+	hasAmount := req.AmountUSD > 0 || req.CustomAmount > 0
+	hasTelegram := req.TelegramID != nil || strings.TrimSpace(req.Username) != ""
+	if !hasNetwork || !hasCurrency || !hasAmount || !hasTelegram {
+		writeError(w, http.StatusBadRequest, "network, currency, amount_usd, and telegram identifier (telegram_id or username) are required")
 		return
 	}
 
@@ -91,5 +94,25 @@ func (h *InvoiceHandler) GetInvoiceByNumber(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data:    invoice,
+	})
+}
+
+// ListInvoices handles GET /api/v1/invoices
+func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
+	limitStr := r.URL.Query().Get("limit")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit <= 0 {
+		limit = 50
+	}
+
+	invoices, err := h.invoiceUC.ListInvoices(r.Context(), limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data:    invoices,
 	})
 }

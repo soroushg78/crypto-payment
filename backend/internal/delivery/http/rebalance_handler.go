@@ -100,3 +100,38 @@ func (h *RebalanceHandler) EstimateGas(w http.ResponseWriter, r *http.Request) {
 		Data:    estimate,
 	})
 }
+
+// GetTONTreasury handles GET /api/v1/rebalance/ton
+func (h *RebalanceHandler) GetTONTreasury(w http.ResponseWriter, r *http.Request) {
+	status, err := h.rebalanceUC.GetTONTreasuryStatus(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data:    status,
+	})
+}
+
+// ListRecords handles GET /api/v1/rebalance/records
+func (h *RebalanceHandler) ListRecords(w http.ResponseWriter, r *http.Request) {
+	limitStr := r.URL.Query().Get("limit")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit <= 0 {
+		limit = 100
+	}
+
+	records, err := h.rebalanceUC.ListRebalanceRecords(r.Context(), limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data:    records,
+	})
+}
+

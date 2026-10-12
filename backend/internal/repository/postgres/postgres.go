@@ -54,18 +54,11 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
-	-- 2. Services Table (Products / Subscriptions)
-	CREATE TABLE IF NOT EXISTS services (
-		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-		code VARCHAR(64) UNIQUE NOT NULL,
-		title VARCHAR(255) NOT NULL,
-		description TEXT,
-		price_usd NUMERIC(18, 4) NOT NULL,
-		is_active BOOLEAN NOT NULL DEFAULT TRUE,
-		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-	);
+	-- Drop legacy services table and service_id column if still existing
+	ALTER TABLE invoices DROP COLUMN IF EXISTS service_id CASCADE;
+	DROP TABLE IF EXISTS services CASCADE;
 
-	-- 3. Networks Table (Blockchain Networks)
+	-- 2. Networks Table (Blockchain Networks)
 	CREATE TABLE IF NOT EXISTS networks (
 		id VARCHAR(32) PRIMARY KEY,
 		name VARCHAR(128) NOT NULL,
@@ -75,7 +68,7 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		is_active BOOLEAN NOT NULL DEFAULT TRUE
 	);
 
-	-- 4. Currencies Table (Tokens & Coins)
+	-- 3. Currencies Table (Tokens & Coins)
 	CREATE TABLE IF NOT EXISTS currencies (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		symbol VARCHAR(16) NOT NULL,
@@ -87,7 +80,7 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		CONSTRAINT uq_symbol_network UNIQUE (symbol, network_id)
 	);
 
-	-- 5. Deposit Addresses Table
+	-- 4. Deposit Addresses Table
 	CREATE TABLE IF NOT EXISTS deposit_addresses (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -101,12 +94,11 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_deposit_addr ON deposit_addresses(network_id, address);
 	CREATE INDEX IF NOT EXISTS idx_deposit_network_index ON deposit_addresses(network_id, derivation_index);
 
-	-- 6. Invoices Table (Orders)
+	-- 5. Invoices Table (Orders)
 	CREATE TABLE IF NOT EXISTS invoices (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		invoice_number VARCHAR(64) UNIQUE NOT NULL,
 		user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-		service_id UUID REFERENCES services(id) ON DELETE SET NULL,
 		currency_id UUID REFERENCES currencies(id) ON DELETE RESTRICT,
 		network_id VARCHAR(32) NOT NULL REFERENCES networks(id) ON DELETE RESTRICT,
 		amount_usd NUMERIC(18, 4) NOT NULL,
@@ -115,8 +107,6 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		pay_address TEXT NOT NULL,
 		pay_memo VARCHAR(128),
 		status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
-		order_id VARCHAR(128),
-		callback_url TEXT,
 		expires_at TIMESTAMPTZ NOT NULL,
 		paid_at TIMESTAMPTZ,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -125,11 +115,11 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 	CREATE INDEX IF NOT EXISTS idx_invoices_expires_at ON invoices(expires_at);
 	CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices(created_at DESC);
-	CREATE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id);
-	ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_id VARCHAR(128);
-	ALTER TABLE invoices ADD COLUMN IF NOT EXISTS callback_url TEXT;
+	DROP INDEX IF EXISTS idx_invoices_order_id;
+	ALTER TABLE invoices DROP COLUMN IF EXISTS order_id;
+	ALTER TABLE invoices DROP COLUMN IF EXISTS callback_url;
 
-	-- 7. Observed Transactions Table (Double-Spend Prevention)
+	-- 6. Observed Transactions Table (Double-Spend Prevention)
 	CREATE TABLE IF NOT EXISTS observed_transactions (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
@@ -149,7 +139,7 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	CREATE INDEX IF NOT EXISTS idx_tx_to_address ON observed_transactions(to_address);
 	CREATE INDEX IF NOT EXISTS idx_tx_memo ON observed_transactions(memo);
 
-	-- 8. Admins Table (Management Authentication)
+	-- 7. Admins Table (Management Authentication)
 	CREATE TABLE IF NOT EXISTS admins (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		username VARCHAR(64) UNIQUE NOT NULL,
@@ -162,8 +152,27 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	);
 	CREATE INDEX IF NOT EXISTS idx_admins_username ON admins(username);
 
-	-- Clean up legacy dummy services if any exist
-	DELETE FROM services WHERE code IN ('VIP_1M', 'VIP_3M', 'WALLET_CREDIT_10', 'TOPUP_20');
+	-- 8. Rebalance Records Table (Audit Trail & Sweeping History)
+	CREATE TABLE IF NOT EXISTS rebalance_records (
+		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		network_id VARCHAR(32) NOT NULL REFERENCES networks(id) ON DELETE CASCADE,
+		derivation_index INT,
+		from_address TEXT NOT NULL,
+		to_address TEXT NOT NULL,
+		asset VARCHAR(16) NOT NULL,
+		amount NUMERIC(36, 18) NOT NULL,
+		gas_fee_bnb NUMERIC(36, 18) NOT NULL DEFAULT 0,
+		tx_hash TEXT,
+		status VARCHAR(32) NOT NULL DEFAULT 'COMPLETED',
+		is_simulated BOOLEAN NOT NULL DEFAULT FALSE,
+		error_message TEXT,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
+	CREATE INDEX IF NOT EXISTS idx_rebalance_records_created_at ON rebalance_records(created_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_rebalance_records_network ON rebalance_records(network_id);
+
+	-- Clean up all fake / mock / simulated rebalance records
+	DELETE FROM rebalance_records WHERE is_simulated = TRUE;
 
 	-- Clean up legacy TRON and TON-USDT test invoices/transactions
 	DELETE FROM observed_transactions WHERE network_id = 'tron' OR invoice_id IN (

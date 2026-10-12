@@ -12,9 +12,11 @@ type RebalanceWalletStatus struct {
 	BNBBalance        float64   `json:"bnb_balance"`
 	USDTBalance       float64   `json:"usdt_balance"`
 	NeedsRefuel       bool      `json:"needs_refuel"`
-	SweepStatus       string    `json:"sweep_status"` // "READY_USDT", "READY_BNB", "NEED_GAS", "SWEPT", "EMPTY"
-	AssociatedInvoice *string   `json:"associated_invoice,omitempty"`
-	CreatedAt         time.Time `json:"created_at"`
+	SweepStatus       string     `json:"sweep_status"` // "READY_USDT", "READY_BNB", "NEED_GAS", "SWEPT", "EMPTY"
+	AssociatedInvoice *string    `json:"associated_invoice,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	InvoiceCreatedAt  *time.Time `json:"invoice_created_at,omitempty"`
+	PaidAt            *time.Time `json:"paid_at,omitempty"`
 }
 
 // SweepStepLog represents a discrete execution step during sweeping
@@ -72,3 +74,49 @@ type BatchSweepRequest struct {
 	TreasuryAddress   string `json:"treasury_address,omitempty"`
 	RealBroadcast     bool   `json:"real_broadcast"`
 }
+
+// TONTreasuryItem represents an invoice / memo routed to the TON treasury
+type TONTreasuryItem struct {
+	ID            string     `json:"id"`
+	InvoiceNumber string     `json:"invoice_number"`
+	Memo          string     `json:"memo"`
+	AmountUSD     float64    `json:"amount_usd"`
+	CryptoAmount  float64    `json:"crypto_amount"`
+	Currency      string     `json:"currency"`
+	Status        string     `json:"status"` // PAID, PENDING, EXPIRED
+	PayAddress    string     `json:"pay_address"`
+	TxHash        string     `json:"tx_hash,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	PaidAt        *time.Time `json:"paid_at,omitempty"`
+}
+
+// TONTreasuryStatus represents the TON network master treasury wallet and memo rebalancing state
+type TONTreasuryStatus struct {
+	TreasuryAddress   string             `json:"treasury_address"`
+	BalanceTON        float64            `json:"balance_ton"` // live on-chain balance from Toncenter
+	Architecture      string             `json:"architecture"`
+	GasModel          string             `json:"gas_model"`
+	TotalInvoices     int                `json:"total_invoices"`
+	PaidInvoices      int                `json:"paid_invoices"`
+	PendingInvoices   int                `json:"pending_invoices"`
+	TotalCollectedTON float64            `json:"total_collected_ton"`
+	Items             []*TONTreasuryItem `json:"items"`
+}
+
+// RebalanceRecord represents an immutable audit log of a rebalance / sweep operation
+type RebalanceRecord struct {
+	ID              string    `json:"id"`
+	NetworkID       string    `json:"network_id"`
+	DerivationIndex *int      `json:"derivation_index,omitempty"`
+	FromAddress     string    `json:"from_address"`
+	ToAddress       string    `json:"to_address"`
+	Asset           string    `json:"asset"`
+	Amount          float64   `json:"amount"`
+	GasFeeBNB       float64   `json:"gas_fee_bnb"`
+	TxHash          *string   `json:"tx_hash,omitempty"`
+	Status          string    `json:"status"` // "COMPLETED", "FAILED", "PENDING"
+	IsSimulated     bool      `json:"is_simulated"`
+	ErrorMessage    *string   `json:"error_message,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+

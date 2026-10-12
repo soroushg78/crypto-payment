@@ -12,38 +12,39 @@ import (
 
 	"wallet-observer/internal/domain"
 	"wallet-observer/pkg/bscrpc"
+	"wallet-observer/pkg/tonrpc"
 )
 
 type InvoiceUseCase struct {
 	invoiceRepo     domain.InvoiceRepository
-	serviceRepo     domain.ServiceRepository
 	currencyRepo    domain.CurrencyRepository
 	networkRepo     domain.NetworkRepository
 	userRepo        domain.UserRepository
 	addressRepo     domain.DepositAddressRepository
 	transactionRepo domain.ObservedTransactionRepository
 	bscClient       *bscrpc.Client
+	tonClient       *tonrpc.Client
 }
 
 func NewInvoiceUseCase(
 	invoiceRepo domain.InvoiceRepository,
-	serviceRepo domain.ServiceRepository,
 	currencyRepo domain.CurrencyRepository,
 	networkRepo domain.NetworkRepository,
 	userRepo domain.UserRepository,
 	addressRepo domain.DepositAddressRepository,
 	transactionRepo domain.ObservedTransactionRepository,
 	bscClient *bscrpc.Client,
+	tonClient *tonrpc.Client,
 ) *InvoiceUseCase {
 	return &InvoiceUseCase{
 		invoiceRepo:     invoiceRepo,
-		serviceRepo:     serviceRepo,
 		currencyRepo:    currencyRepo,
 		networkRepo:     networkRepo,
 		userRepo:        userRepo,
 		addressRepo:     addressRepo,
 		transactionRepo: transactionRepo,
 		bscClient:       bscClient,
+		tonClient:       tonClient,
 	}
 }
 
@@ -52,19 +53,6 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 	amountUSD := input.AmountUSD
 	if amountUSD <= 0 && input.CustomAmount > 0 {
 		amountUSD = input.CustomAmount
-	}
-
-	var serviceID *string
-	var serviceTitle string
-	if input.ServiceID != nil && *input.ServiceID != "" {
-		svc, err := u.serviceRepo.GetByID(ctx, *input.ServiceID)
-		if err == nil && svc != nil {
-			serviceID = &svc.ID
-			serviceTitle = svc.Title
-			if amountUSD <= 0 {
-				amountUSD = svc.PriceUSD
-			}
-		}
 	}
 
 	if amountUSD <= 0 {
@@ -101,21 +89,28 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, ton)")
 	}
 
-	// 4. Resolve / Create User
+	// 4. Resolve / Create User (MANDATORY)
+	if input.TelegramID == nil && strings.TrimSpace(input.Username) == "" {
+		return nil, fmt.Errorf("وارد کردن شناسه یا نام‌کاربری تلگرام الزامی است (telegram_id or username is required)")
+	}
+
 	var userID *string
 	var telegramUsername string
+	var telegramID *int64
 	if input.TelegramID != nil {
 		user, err := u.userRepo.GetOrCreateByTelegramID(ctx, *input.TelegramID, input.Username, input.Username)
 		if err == nil && user != nil {
 			userID = &user.ID
 			telegramUsername = user.Username
+			telegramID = user.TelegramID
 		}
 	} else if input.Username != "" {
-		cleanUsername := strings.TrimPrefix(input.Username, "@")
+		cleanUsername := strings.TrimPrefix(strings.TrimSpace(input.Username), "@")
 		user, err := u.userRepo.GetOrCreateByUsername(ctx, cleanUsername, cleanUsername)
 		if err == nil && user != nil {
 			userID = &user.ID
 			telegramUsername = user.Username
+			telegramID = user.TelegramID
 		}
 	}
 
@@ -145,21 +140,10 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 	invoiceNumber := fmt.Sprintf("INV-%d-%s", time.Now().Year(), hex.EncodeToString(invNumBytes))
 
 	now := time.Now()
-	var orderIDPtr *string
-	if input.OrderID != "" {
-		trimmedOrder := strings.TrimSpace(input.OrderID)
-		orderIDPtr = &trimmedOrder
-	}
-	var callbackURLPtr *string
-	if input.CallbackURL != "" {
-		trimmedURL := strings.TrimSpace(input.CallbackURL)
-		callbackURLPtr = &trimmedURL
-	}
 
 	invoice := &domain.Invoice{
 		InvoiceNumber:    invoiceNumber,
 		UserID:           userID,
-		ServiceID:        serviceID,
 		CurrencyID:       curr.ID,
 		NetworkID:        net.ID,
 		AmountUSD:        amountUSD,
@@ -168,15 +152,13 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		PayAddress:       depositAddr.Address,
 		PayMemo:          depositAddr.Memo,
 		Status:           domain.StatusPending,
-		OrderID:          orderIDPtr,
-		CallbackURL:      callbackURLPtr,
 		ExpiresAt:        now.Add(30 * time.Minute),
 		CreatedAt:        now,
 		UpdatedAt:        now,
-		ServiceTitle:     serviceTitle,
 		CurrencySymbol:   curr.Symbol,
 		NetworkName:      net.Name,
 		TelegramUsername: telegramUsername,
+		TelegramID:       telegramID,
 	}
 
 	if err := u.invoiceRepo.Create(ctx, invoice); err != nil {
@@ -203,6 +185,21 @@ func (u *InvoiceUseCase) GetInvoiceByNumber(ctx context.Context, num string) (*d
 	}
 	u.checkOnChainSettlement(ctx, inv)
 	return inv, nil
+}
+
+func (u *InvoiceUseCase) ListInvoices(ctx context.Context, limit int) ([]*domain.Invoice, error) {
+	invoices, err := u.invoiceRepo.ListAll(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify pending invoices on-chain
+	for _, inv := range invoices {
+		if inv.Status == domain.StatusPending {
+			u.checkOnChainSettlement(ctx, inv)
+		}
+	}
+	return invoices, nil
 }
 
 func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain.Invoice) {
@@ -266,6 +263,85 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 					}
 				}
 			}
+		} else {
+			// If balance is currently 0, check if this wallet was already SWEPT (nonce > 0 on-chain)
+			nonce, nonceErr := u.bscClient.GetNonce(checkCtx, inv.PayAddress)
+			if nonceErr == nil && nonce > 0 {
+				now := time.Now()
+				if err := u.invoiceRepo.UpdateStatus(ctx, inv.ID, domain.StatusPaid, &now); err == nil {
+					inv.Status = domain.StatusPaid
+					inv.PaidAt = &now
+					slog.Info("🎉 Invoice SETTLED because deposit address was SWEPT (nonce > 0)!",
+						"invoice", inv.InvoiceNumber,
+						"address", inv.PayAddress,
+						"nonce", nonce,
+					)
+				}
+			}
+		}
+	}
+
+	// 3. Real on-chain check for TON
+	if inv.NetworkID == "ton" && u.tonClient != nil && inv.PayMemo != nil && *inv.PayMemo != "" {
+		checkCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		match, err := u.tonClient.CheckPayment(checkCtx, inv.PayAddress, *inv.PayMemo, inv.CryptoAmount, inv.CreatedAt)
+		if err == nil && match != nil {
+			now := time.Now()
+			if err := u.invoiceRepo.UpdateStatus(ctx, inv.ID, domain.StatusPaid, &now); err == nil {
+				inv.Status = domain.StatusPaid
+				inv.PaidAt = &now
+				slog.Info("🎉 TON Invoice SETTLED on-chain by live memo & amount detector!",
+					"invoice", inv.InvoiceNumber,
+					"memo", *inv.PayMemo,
+					"amount", match.Amount,
+					"required", inv.CryptoAmount,
+					"tx_hash", match.TxHash,
+					"from", match.FromAddress,
+				)
+
+				if u.transactionRepo != nil {
+					_ = u.transactionRepo.RecordTransaction(ctx, &domain.ObservedTransaction{
+						InvoiceID:     &inv.ID,
+						NetworkID:     "ton",
+						TxHash:        match.TxHash,
+						ToAddress:     inv.PayAddress,
+						Amount:        match.Amount,
+						Memo:          inv.PayMemo,
+						Confirmations: 1,
+						Status:        "CONFIRMED",
+						DetectedAt:    match.Timestamp,
+						ConfirmedAt:   &now,
+					})
+				}
+			}
+		} else if err != nil {
+			slog.Debug("TON on-chain check error", "memo", *inv.PayMemo, "err", err)
 		}
 	}
 }
+
+// StartBackgroundObserver starts a background loop to verify pending invoices on-chain periodically
+func (u *InvoiceUseCase) StartBackgroundObserver(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				pending, err := u.invoiceRepo.ListPending(ctx)
+				if err != nil {
+					continue
+				}
+				for _, inv := range pending {
+					u.checkOnChainSettlement(ctx, inv)
+				}
+			}
+		}
+	}()
+	slog.Info("🚀 Background payment observer started (BSC & TON)", "interval", interval.String())
+}
+

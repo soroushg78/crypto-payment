@@ -23,17 +23,6 @@ type User struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-// Service represents a product, subscription, or item for purchase
-type Service struct {
-	ID          string    `json:"id"`
-	Code        string    `json:"code"`
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	PriceUSD    float64   `json:"price_usd"`
-	IsActive    bool      `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
 // Network represents a supported blockchain
 type Network struct {
 	ID             string `json:"id"` // e.g. 'bsc', 'ton'
@@ -67,12 +56,11 @@ type DepositAddress struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
-// Invoice represents an order created by a user for a specific service and currency
+// Invoice represents an order created by a user for a payment in cryptocurrency
 type Invoice struct {
 	ID            string        `json:"id"`
 	InvoiceNumber string        `json:"invoice_number"`
 	UserID        *string       `json:"user_id,omitempty"`
-	ServiceID     *string       `json:"service_id,omitempty"`
 	CurrencyID    string        `json:"currency_id"`
 	NetworkID     string        `json:"network_id"`
 	AmountUSD     float64       `json:"amount_usd"`
@@ -87,12 +75,10 @@ type Invoice struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 
 	// Joined details for API convenience
-	ServiceTitle     string  `json:"service_title,omitempty"`
 	CurrencySymbol   string  `json:"currency_symbol,omitempty"`
 	NetworkName      string  `json:"network_name,omitempty"`
 	TelegramUsername string  `json:"telegram_username,omitempty"`
-	OrderID          *string `json:"order_id,omitempty"`
-	CallbackURL      *string `json:"callback_url,omitempty"`
+	TelegramID       *int64  `json:"telegram_id,omitempty"`
 }
 
 // Admin represents a dashboard administrator
@@ -144,10 +130,7 @@ type CreateInvoiceInput struct {
 	NetworkID    string  `json:"network_id,omitempty"`    // شناسه شبکه (اختیاری اگر network ارسال شود)
 	Network      string  `json:"network,omitempty"`       // نماد شبکه مثل bsc یا ton
 	Currency     string  `json:"currency,omitempty"`      // نماد ارز مثل usdt, bnb, ton
-	OrderID      string  `json:"order_id,omitempty"`      // شناسه سفارش سیستم شما
-	CallbackURL  string  `json:"callback_url,omitempty"`  // وب‌هوک بازگشتی پس از واریز
-	ServiceID    *string `json:"service_id,omitempty"`    // اختیاری
-	TelegramID   *int64  `json:"telegram_id,omitempty"`   // اختیاری
-	Username     string  `json:"username,omitempty"`      // اختیاری
+	TelegramID   *int64  `json:"telegram_id,omitempty"`   // شناسه عددی تلگرام (اجباری در صورت خالی بودن username)
+	Username     string  `json:"username,omitempty"`      // نام کاربری تلگرام (اجباری در صورت خالی بودن telegram_id)
 	CustomAmount float64 `json:"custom_amount,omitempty"` // برای سازگاری
 }

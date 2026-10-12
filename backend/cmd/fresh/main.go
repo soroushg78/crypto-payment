@@ -25,14 +25,14 @@ func main() {
 	fmt.Println("🧹 Resetting & Freshing Database (Clean State)...")
 	fmt.Println("==================================================")
 
-	// Truncate tables and cascade to wipe all test invoices, observed txs, addresses, etc.
+	// Truncate tables and cascade to wipe all test invoices, observed txs, addresses, rebalance records, etc.
 	cleanQuery := `
-		TRUNCATE TABLE observed_transactions, invoices, deposit_addresses, services, currencies, networks, users CASCADE;
+		TRUNCATE TABLE rebalance_records, observed_transactions, invoices, deposit_addresses, currencies, networks, users CASCADE;
 	`
 	if _, err := pool.Exec(ctx, cleanQuery); err != nil {
 		fmt.Printf("Note: Truncate returned: %v (tables might not exist yet, running migrations)\n", err)
 	} else {
-		fmt.Println("✅ All test invoices, deposit addresses, and observed transactions truncated successfully.")
+		fmt.Println("✅ All test invoices, deposit addresses, observed transactions, and rebalance records truncated successfully.")
 	}
 
 	// Run clean AutoMigrate to re-seed tables, BSC/TON networks, currencies (BNB, USDT, TON), admin, and users
@@ -41,10 +41,9 @@ func main() {
 	}
 
 	// Verify table counts
-	var netCount, currCount, srvCount, invCount, addrCount, adminCount int
+	var netCount, currCount, invCount, addrCount, adminCount int
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM networks").Scan(&netCount)
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM currencies").Scan(&currCount)
-	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM services").Scan(&srvCount)
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM invoices").Scan(&invCount)
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM deposit_addresses").Scan(&addrCount)
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM admins").Scan(&adminCount)

@@ -1,12 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { rebalanceApi } from '../api/rebalanceApi';
 
-export default function RebalancePage({ onShowToast }) {
+const formatTehranDateTime = (dateStr) => {
+  if (!dateStr) return '-';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    const formatter = new Intl.DateTimeFormat('fa-IR', {
+      timeZone: 'Asia/Tehran',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return formatter.format(d);
+  } catch {
+    return dateStr;
+  }
+};
+
+export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
   const [wallets, setWallets] = useState([]);
   const [securitySpecs, setSecuritySpecs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showMnemonic, setShowMnemonic] = useState(false);
 
   // Individual Sweep Modal State
   const [selectedWallet, setSelectedWallet] = useState(null);
@@ -30,6 +49,10 @@ export default function RebalancePage({ onShowToast }) {
     completed: false
   });
 
+  // TON Treasury State (Informational Only - TON is Memo-based Direct Treasury)
+  const [tonData, setTonData] = useState(null);
+  const [activeNetworkTab, setActiveNetworkTab] = useState('bsc'); // 'bsc' or 'ton'
+
   const fetchGasEstimate = async (wallet, asset, treasury) => {
     if (!wallet) return;
     try {
@@ -52,14 +75,19 @@ export default function RebalancePage({ onShowToast }) {
       if (isManual) setRefreshing(true);
       else setLoading(true);
 
-      const [walletsData, specsData] = await Promise.all([
+      const [walletsData, specsData, tonTreasuryData] = await Promise.all([
         rebalanceApi.getBSCWallets(),
-        rebalanceApi.getSecuritySpecs()
+        rebalanceApi.getSecuritySpecs(),
+        rebalanceApi.getTONTreasury().catch((err) => {
+          console.warn('Failed to load TON treasury:', err);
+          return null;
+        })
       ]);
 
       setWallets(walletsData || []);
       setSecuritySpecs(specsData);
-      if (isManual) onShowToast?.('اطلاعات والت‌ها و موجودی‌های بلاکچین به‌روزرسانی شد.', 'success');
+      if (tonTreasuryData) setTonData(tonTreasuryData);
+      if (isManual) onShowToast?.('اطلاعات والت‌ها و موجودی‌های بلاکچین (BSC و TON) به‌روزرسانی شد.', 'success');
     } catch (err) {
       onShowToast?.(`خطا در دریافت اطلاعات ریبالانسینگ: ${err.message}`, 'error');
     } finally {
@@ -104,7 +132,10 @@ export default function RebalancePage({ onShowToast }) {
       });
 
       setSweepResult(res);
-      onShowToast?.('تراکنش ریبالانسینگ به نود شبکه BSC ارسال شد! 🚀', 'success');
+      onShowToast?.(
+        'تراکنش ریبالانسینگ واقعی به نود شبکه BSC ارسال و در دیتابیس ثبت گردید! 🚀✅',
+        'success'
+      );
       // Reload balances after sweep
       loadData(false);
     } catch (err) {
@@ -116,13 +147,13 @@ export default function RebalancePage({ onShowToast }) {
   };
 
   const readyWallets = wallets.filter((w) => w.bnb_balance > 0.0005 || w.usdt_balance > 0);
-  const isAllSelected = readyWallets.length > 0 && readyWallets.every((w) => selectedIndexes.includes(w.derivation_index));
+  const isAllSelected = wallets.length > 0 && wallets.every((w) => selectedIndexes.includes(w.derivation_index));
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedIndexes([]);
     } else {
-      setSelectedIndexes(readyWallets.map((w) => w.derivation_index));
+      setSelectedIndexes(wallets.map((w) => w.derivation_index));
     }
   };
 
@@ -136,7 +167,7 @@ export default function RebalancePage({ onShowToast }) {
     if (selectedIndexes.length > 0) {
       return wallets.filter((w) => selectedIndexes.includes(w.derivation_index));
     }
-    return readyWallets;
+    return wallets;
   };
 
   const handleOpenBatchModal = () => {
@@ -226,366 +257,463 @@ export default function RebalancePage({ onShowToast }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* 1. Header Banner & Security Guarantee */}
-      <div className="card-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ fontSize: '1.6rem' }}>🔐</span>
-              <h2 className="card-title" style={{ margin: 0 }}>
-                معماری تولید کلید، امنیت والت‌ها و سیستم ریبالانسینگ (Wallex Architecture)
-              </h2>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '0.4rem', maxWidth: '850px', lineHeight: 1.6 }}>
-              بررسی مستقیم امنیت کلیدها: هیچ کلید خصوصی در دیتابیس ذخیره <strong>نمی‌شود</strong>. آدرس‌های کاربران بر اساس استاندارد 
-              <strong> BIP-44 </strong> از طریق اندیس و عبارت ریشه استخراج می‌شوند و در لحظه انتقال (Sweep)، کلید خصوصی صرفاً در رم موقت محاسبه و پس از امضای تراکنش پاک می‌شود.
-            </p>
-          </div>
-
-          <button
-            className="btn-sim-action"
-            onClick={() => loadData(true)}
-            disabled={refreshing || loading}
-            style={{ padding: '0.6rem 1.2rem', borderColor: 'var(--cyan)' }}
-          >
-            {refreshing ? 'در حال استعلام نود...' : '🔄 استعلام مستقیم موجودی از نود BSC'}
-          </button>
-        </div>
-
-        {/* Security Specs Grid */}
-        {securitySpecs && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: '1rem',
-              marginTop: '1.25rem',
-              background: 'rgba(15, 23, 42, 0.6)',
-              padding: '1rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block' }}>استاندارد تولید والت:</span>
-              <strong style={{ fontSize: '0.85rem', color: 'var(--cyan-glow)' }}>{securitySpecs.standard}</strong>
-            </div>
-            <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block' }}>فرمول Derivation Path:</span>
-              <code style={{ fontSize: '0.82rem', color: '#fbbf24', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: '4px' }}>
-                {securitySpecs.derivation_path}
-              </code>
-            </div>
-            <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block' }}>وضعیت ذخیره کلید خصوصی در دیتابیس:</span>
-              <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 800 }}>🛡️ صفر (RAM Only)</span>
-            </div>
-            <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block' }}>آدرس ایستگاه سوخت‌رسانی (Gas Station):</span>
-              <code style={{ fontSize: '0.78rem', color: '#fbbf24', direction: 'ltr', display: 'block' }}>
-                {securitySpecs.gas_station_address ? `${securitySpecs.gas_station_address.slice(0, 10)}...${securitySpecs.gas_station_address.slice(-6)}` : '0x3C76...488F4'}
-              </code>
-              <span style={{ fontSize: '0.74rem', color: securitySpecs.gas_station_bnb_balance > 0 ? '#34d399' : '#f43f5e' }}>
-                موجودی: {(securitySpecs.gas_station_bnb_balance || 0).toFixed(6)} BNB (اکانت ۱ متامسک)
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Master Mnemonic Reveal Box */}
-        {securitySpecs?.master_mnemonic && (
-          <div
-            style={{
-              marginTop: '1.25rem',
-              padding: '1rem',
-              background: '#090d16',
-              borderRadius: '8px',
-              border: '1px solid rgba(251, 191, 36, 0.3)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem' }}>
-              <div>
-                <strong style={{ color: '#fbbf24', fontSize: '0.9rem' }}>
-                  🔑 عبارت ریشه مستر صرافی (Master Mnemonic - ۱۲ کلمه بازیابی):
-                </strong>
-                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  این همان ۱۲ کلمه مادر واحد برای کل سیستم است. والت سوخت‌رسان (اکانت ۱) و تمام والت‌های فاکتورها فرزندان ریاضی این ۱۲ کلمه هستند.
-                </p>
-              </div>
-              <button
-                className="btn-sim-action"
-                onClick={() => setShowMnemonic(!showMnemonic)}
-                style={{ borderColor: '#fbbf24', color: '#fbbf24', padding: '0.4rem 0.8rem' }}
-              >
-                {showMnemonic ? '🙈 مخفی‌سازی کلمات' : '👁️ نمایش ۱۲ کلمه برای تست در متامسک'}
-              </button>
-            </div>
-
-            {showMnemonic && (
-              <div style={{ marginTop: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-                <code
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    padding: '0.6rem 1rem',
-                    borderRadius: '6px',
-                    color: '#34d399',
-                    fontSize: '0.88rem',
-                    direction: 'ltr',
-                    flex: 1,
-                    fontFamily: 'monospace',
-                    border: '1px solid rgba(52, 211, 153, 0.3)'
-                  }}
-                >
-                  {securitySpecs.master_mnemonic}
-                </code>
-                <button
-                  className="btn-sim-action"
-                  onClick={() => {
-                    navigator.clipboard.writeText(securitySpecs.master_mnemonic);
-                    onShowToast?.('۱۲ کلمه مستر در کلیپ‌بورد کپی شد! ✅', 'success');
-                  }}
-                  style={{ padding: '0.6rem 1rem', background: 'rgba(52, 211, 153, 0.15)', borderColor: '#34d399', color: '#fff' }}
-                >
-                  📋 کپی ۱۲ کلمه
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 2. Visual Derivation Tree */}
-      <div className="card-panel">
-        <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>🌳</span> ساختار سلسله‌مراتبی HD-Wallet در شبکه BSC (تفکیک سوخت‌رسان و فاکتورها)
-        </h3>
-        <div
+      {/* Network Switcher Tabs */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.8rem',
+          background: 'rgba(15, 23, 42, 0.7)',
+          padding: '0.5rem',
+          borderRadius: '14px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          flexWrap: 'wrap'
+        }}
+      >
+        <button
+          className={`tab-btn ${activeNetworkTab === 'bsc' ? 'active' : ''}`}
+          onClick={() => setActiveNetworkTab('bsc')}
           style={{
-            background: '#090d16',
-            padding: '1.2rem',
+            flex: '1 1 240px',
+            padding: '0.8rem 1.2rem',
             borderRadius: '10px',
-            fontFamily: 'monospace',
-            direction: 'ltr',
-            fontSize: '0.85rem',
-            color: '#94a3b8',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            lineHeight: 1.8
+            fontSize: '0.92rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.6rem',
+            background: activeNetworkTab === 'bsc' ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1))' : 'transparent',
+            borderColor: activeNetworkTab === 'bsc' ? '#fbbf24' : 'transparent',
+            color: activeNetworkTab === 'bsc' ? '#fbbf24' : 'var(--text-muted)'
           }}
         >
-          <div>
-            <span style={{ color: '#ec4899', fontWeight: 'bold' }}>Master Mnemonic Seed</span> (Stored securely in ENV / Vault)
-          </div>
-          <div style={{ paddingLeft: '1.5rem' }}>
-            │
-            <br />
-            ├── <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>m/44'/60'/0'/0/0</span> ──► <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>Master Gas Station Wallet (Account 1)</span> [تزریق‌کننده خودکار کارمزد گس]
-            <br />
-            ├── <span style={{ color: '#06b6d4' }}>m/44'/60'/0'/0/1</span> ──► Deposit Wallet #1 (Account 2) [فاکتور کاربر ۱]
-            <br />
-            ├── <span style={{ color: '#06b6d4' }}>m/44'/60'/0'/0/2</span> ──► Deposit Wallet #2 (Account 3) [فاکتور کاربر ۲]
-            <br />
-            └── <span style={{ color: '#06b6d4' }}>m/44'/60'/0'/0/N</span> ──► Deterministic Unlimited User Invoices...
-          </div>
-        </div>
+          <span>🟡</span>
+          <span>شبکه بایننس اسمارت چین (BSC HD-Wallets)</span>
+          <span style={{ fontSize: '0.78rem', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '12px' }}>
+            {wallets.length} والت
+          </span>
+        </button>
+
+        <button
+          className={`tab-btn ${activeNetworkTab === 'ton' ? 'active' : ''}`}
+          onClick={() => setActiveNetworkTab('ton')}
+          style={{
+            flex: '1 1 240px',
+            padding: '0.8rem 1.2rem',
+            borderRadius: '10px',
+            fontSize: '0.92rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.6rem',
+            background: activeNetworkTab === 'ton' ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(2, 132, 199, 0.15))' : 'transparent',
+            borderColor: activeNetworkTab === 'ton' ? '#38bdf8' : 'transparent',
+            color: activeNetworkTab === 'ton' ? '#38bdf8' : 'var(--text-muted)'
+          }}
+        >
+          <span>💎</span>
+          <span>شبکه تون‌کوین و گرام (TON Master Treasury & Memo)</span>
+          <span style={{ fontSize: '0.78rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px' }}>
+            {tonData?.items?.length || 0} تراکنش
+          </span>
+        </button>
       </div>
 
-      {/* 3. Live Wallets Table & Sweep Trigger */}
-      <div className="card-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>📋</span> لیست والت‌های مشتریان و مدیریت ریبالانسینگ
-            </h3>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
-              تعداد کل والت‌ها: <strong>{wallets.length}</strong> | آماده انتقال به خزانه: <strong style={{ color: readyWallets.length > 0 ? '#34d399' : 'var(--text-muted)' }}>{readyWallets.length}</strong>
-              {selectedIndexes.length > 0 && (
-                <span style={{ color: 'var(--cyan-glow)', marginRight: '0.5rem' }}>
-                  | تیک‌خورده: <strong>{selectedIndexes.length} والت</strong>
+      {/* BSC Section */}
+      {activeNetworkTab === 'bsc' && (
+        <>
+
+          {/* 3. Live Wallets Table & Sweep Trigger */}
+          <div className="card-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📋</span> لیست والت‌های مشتریان و مدیریت ریبالانسینگ (BSC)
+                </h3>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                  تعداد کل والت‌ها: <strong>{wallets.length}</strong> | آماده انتقال به خزانه: <strong style={{ color: readyWallets.length > 0 ? '#34d399' : 'var(--text-muted)' }}>{readyWallets.length}</strong>
+                  {selectedIndexes.length > 0 && (
+                    <span style={{ color: 'var(--cyan-glow)', marginRight: '0.5rem' }}>
+                      | تیک‌خورده: <strong>{selectedIndexes.length} والت</strong>
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          </div>
+              </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-            {/* Batch Rebalance Selected */}
-            {selectedIndexes.length > 0 && (
-              <button
-                className="btn-sim-action"
-                onClick={handleOpenBatchModal}
-                style={{
-                  background: 'linear-gradient(135deg, #06b6d4, #2563eb)',
-                  color: '#fff',
-                  borderColor: 'transparent',
-                  padding: '0.55rem 1.1rem',
-                  fontWeight: 700,
-                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)'
-                }}
-              >
-                🚀 ریبالانس دسته‌جمعی ({selectedIndexes.length} والت انتخابی)
-              </button>
-            )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                {/* Batch Rebalance Selected */}
+                {selectedIndexes.length > 0 && (
+                  <button
+                    className="btn-sim-action"
+                    onClick={handleOpenBatchModal}
+                    style={{
+                      background: 'linear-gradient(135deg, #06b6d4, #2563eb)',
+                      color: '#fff',
+                      borderColor: 'transparent',
+                      padding: '0.55rem 1.1rem',
+                      fontWeight: 700,
+                      boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)'
+                    }}
+                  >
+                    🚀 ریبالانس دسته‌جمعی ({selectedIndexes.length} والت انتخابی)
+                  </button>
+                )}
 
-            {/* Batch Rebalance All Ready */}
-            {readyWallets.length > 0 && selectedIndexes.length === 0 && (
-              <button
-                className="btn-sim-action"
-                onClick={handleOpenBatchModal}
-                style={{
-                  background: 'rgba(52, 211, 153, 0.15)',
-                  borderColor: '#34d399',
-                  color: '#34d399',
-                  padding: '0.55rem 1.1rem',
-                  fontWeight: 700
-                }}
-              >
-                ⚡ ریبالانس یکجای همه والت‌های دارای موجودی ({readyWallets.length})
-              </button>
-            )}
+                {/* Batch Rebalance All Ready */}
+                {readyWallets.length > 0 && selectedIndexes.length === 0 && (
+                  <button
+                    className="btn-sim-action"
+                    onClick={handleOpenBatchModal}
+                    style={{
+                      background: 'rgba(52, 211, 153, 0.15)',
+                      borderColor: '#34d399',
+                      color: '#34d399',
+                      padding: '0.55rem 1.1rem',
+                      fontWeight: 700
+                    }}
+                  >
+                    ⚡ ریبالانس یکجای همه والت‌های دارای موجودی ({readyWallets.length})
+                  </button>
+                )}
 
-            <button
-              className="btn-sim-action"
-              onClick={() => loadData(true)}
-              disabled={refreshing || loading}
-              style={{ padding: '0.55rem 0.9rem' }}
-            >
-              {refreshing ? 'در حال استعلام...' : '🔄 استعلام لحظه‌ای'}
-            </button>
-          </div>
-        </div>
+                <button
+                  className="btn-sim-action"
+                  onClick={() => loadData(true)}
+                  disabled={refreshing || loading}
+                  style={{ padding: '0.55rem 0.9rem' }}
+                >
+                  {refreshing ? 'در حال استعلام...' : '🔄 استعلام لحظه‌ای'}
+                </button>
+              </div>
+            </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            در حال دریافت اطلاعات والت‌ها و استعلام نود BSC... ⏳
-          </div>
-        ) : wallets.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
-            هنوز فاکتوری در شبکه BSC صادر نشده است. ابتدا در تب "صدور فاکتور" یک فاکتور BSC بسازید تا والت آن در اینجا نمایان شود.
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.85rem',
-                textAlign: 'right'
-              }}
-            >
-              <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.03)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <th style={{ padding: '0.8rem', textAlign: 'center', width: '45px' }}>
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={toggleSelectAll}
-                      title="انتخاب همه والت‌های دارای موجودی"
-                      style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
-                    />
-                  </th>
-                  <th style={{ padding: '0.8rem' }}>اندیس (Index)</th>
-                  <th style={{ padding: '0.8rem' }}>مسیر Derivation</th>
-                  <th style={{ padding: '0.8rem' }}>آدرس والت (EVM Address)</th>
-                  <th style={{ padding: '0.8rem' }}>موجودی BNB (Gas)</th>
-                  <th style={{ padding: '0.8rem' }}>موجودی USDT (BEP-20)</th>
-                  <th style={{ padding: '0.8rem' }}>وضعیت سوئیپ</th>
-                  <th style={{ padding: '0.8rem', textAlign: 'center' }}>عملیات ریبالانس</th>
-                </tr>
-              </thead>
-              <tbody>
-                {wallets.map((w) => {
-                  const isChecked = selectedIndexes.includes(w.derivation_index);
-                  const hasBalance = w.bnb_balance > 0.0005 || w.usdt_balance > 0;
-                  return (
-                    <tr
-                      key={w.id}
-                      style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        background: isChecked ? 'rgba(6, 182, 212, 0.08)' : 'transparent',
-                        transition: 'background 0.2s'
-                      }}
-                    >
-                      <td style={{ padding: '0.8rem', textAlign: 'center' }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                در حال دریافت اطلاعات والت‌ها و استعلام نود BSC... ⏳
+              </div>
+            ) : wallets.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                هنوز فاکتوری در شبکه BSC صادر نشده است. ابتدا در تب "صدور فاکتور" یک فاکتور BSC بسازید تا والت آن در اینجا نمایان شود.
+              </div>
+            ) : (
+              <div style={{ width: '100%', overflow: 'hidden', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <table
+                  className="custom-table"
+                  style={{
+                    width: '100%',
+                    tableLayout: 'fixed',
+                    borderCollapse: 'collapse',
+                    fontSize: '0.82rem',
+                    textAlign: 'right'
+                  }}
+                >
+                  <thead>
+                    <tr style={{ background: 'rgba(30, 41, 59, 0.7)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ padding: '0.75rem 0.4rem', textAlign: 'center', width: '40px' }}>
                         <input
                           type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleSelectWallet(w.derivation_index)}
+                          checked={isAllSelected}
+                          onChange={toggleSelectAll}
+                          title="انتخاب همه گزینه‌ها"
                           style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
                         />
-                      </td>
-                      <td style={{ padding: '0.8rem', fontWeight: 'bold', color: 'var(--cyan)' }}>
-                        #{w.derivation_index}
-                      </td>
-                      <td style={{ padding: '0.8rem', fontFamily: 'monospace', color: '#fbbf24', direction: 'ltr' }}>
-                        {w.derivation_path}
-                      </td>
-                      <td style={{ padding: '0.8rem', fontFamily: 'monospace', direction: 'ltr' }}>
-                        <span title={w.address}>{w.address.slice(0, 10)}...{w.address.slice(-8)}</span>
-                        <button
-                          className="copy-icon-btn"
-                          style={{ marginLeft: '0.4rem' }}
-                          onClick={() => {
-                            navigator.clipboard.writeText(w.address);
-                            onShowToast?.('آدرس والت کپی شد! ✅', 'success');
-                          }}
-                        >
-                          کپی
-                        </button>
-                      </td>
-                      <td style={{ padding: '0.8rem', direction: 'ltr' }}>
-                        <span style={{ color: w.bnb_balance > 0 ? '#34d399' : 'var(--text-muted)' }}>
-                          {w.bnb_balance.toFixed(6)} BNB
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.8rem', direction: 'ltr' }}>
-                        <span style={{ color: w.usdt_balance > 0 ? '#38bdf8' : 'var(--text-muted)', fontWeight: 700 }}>
-                          {w.usdt_balance.toFixed(2)} USDT
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.8rem' }}>
-                        {w.sweep_status === 'READY_USDT' && (
-                          <span className="badge" style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
-                            آماده انتقال تتر ⚡
-                          </span>
-                        )}
-                        {w.sweep_status === 'READY_BNB' && (
-                          <span className="badge" style={{ background: 'rgba(52, 211, 153, 0.2)', color: '#34d399' }}>
-                            آماده انتقال BNB ⚡
-                          </span>
-                        )}
-                        {w.sweep_status === 'NEED_GAS' && (
-                          <span className="badge" style={{ background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24' }}>
-                            نیازمند سوخت‌رسانی گس ⛽
-                          </span>
-                        )}
-                        {w.sweep_status === 'EMPTY' && (
-                          <span className="badge" style={{ background: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8' }}>
-                            خالی / پایش نود ⏳
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.8rem', textAlign: 'center' }}>
-                        <button
-                          className="btn-sim-action"
-                          style={{
-                            borderColor: hasBalance ? 'var(--cyan)' : 'rgba(255,255,255,0.2)',
-                            color: '#fff',
-                            background: hasBalance ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.05)',
-                            padding: '0.4rem 0.8rem'
-                          }}
-                          onClick={() => handleOpenSweep(w)}
-                        >
-                          ⚡ ریبالانس این والت (Sweep)
-                        </button>
-                      </td>
+                      </th>
+                      <th style={{ width: '6%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>اندیس</th>
+                      <th style={{ width: '18%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>آدرس ولت (EVM)</th>
+                      <th style={{ width: '10%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>موجودی BNB</th>
+                      <th style={{ width: '10%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>موجودی USDT</th>
+                      <th style={{ width: '12%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>وضعیت سوئیپ</th>
+                      <th style={{ width: '15%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>زمان ایجاد فاکتور</th>
+                      <th style={{ width: '15%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>زمان پرداخت</th>
+                      <th style={{ width: '14%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>عملیات ریبالانس</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {wallets.map((w, idx) => {
+                      const isChecked = selectedIndexes.includes(w.derivation_index);
+                      const hasBalance = w.bnb_balance > 0.0005 || w.usdt_balance > 0;
+                      return (
+                        <tr
+                          key={w.id || idx}
+                          style={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            backgroundColor: isChecked
+                              ? 'rgba(6, 182, 212, 0.12)'
+                              : idx % 2 === 0
+                              ? 'rgba(15, 23, 42, 0.25)'
+                              : 'transparent',
+                            transition: 'background 0.2s'
+                          }}
+                        >
+                          <td style={{ padding: '0.65rem 0.4rem', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleSelectWallet(w.derivation_index)}
+                              style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
+                            />
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', fontWeight: 'bold', color: 'var(--cyan)', textAlign: 'center' }}>
+                            #{w.derivation_index}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', fontFamily: 'monospace', direction: 'ltr', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <span title={w.address} style={{ color: 'var(--cyan-glow)', fontSize: '0.78rem' }}>
+                              {w.address.slice(0, 8)}...{w.address.slice(-6)}
+                            </span>
+                            <button
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--cyan)',
+                                cursor: 'pointer',
+                                padding: '1px',
+                                fontSize: '0.72rem',
+                                marginRight: '0.3rem'
+                              }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(w.address);
+                                onShowToast?.('آدرس ولت کپی شد! ✅', 'success');
+                              }}
+                              title="کپی آدرس"
+                            >
+                              📋
+                            </button>
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', direction: 'ltr', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: w.bnb_balance > 0 ? '#fbbf24' : 'var(--text-muted)', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                              {w.bnb_balance.toFixed(4)} BNB
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', direction: 'ltr', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: w.usdt_balance > 0 ? '#10b981' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                              {w.usdt_balance.toFixed(2)} USDT
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            {w.sweep_status === 'READY_USDT' && (
+                              <span className="badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}>
+                                آماده انتقال تتر ⚡
+                              </span>
+                            )}
+                            {w.sweep_status === 'READY_BNB' && (
+                              <span className="badge" style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}>
+                                آماده انتقال BNB ⚡
+                              </span>
+                            )}
+                            {w.sweep_status === 'NEED_GAS' && (
+                              <span className="badge" style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}>
+                                نیازمند سوخت ⛽
+                              </span>
+                            )}
+                            {w.sweep_status === 'EMPTY' && (
+                              <span className="badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}>
+                                خالی / پایش ⏳
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', fontSize: '0.78rem', color: '#cbd5e1', textAlign: 'center', whiteSpace: 'nowrap', direction: 'ltr' }}>
+                            {formatTehranDateTime(w.invoice_created_at || w.created_at)}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', fontSize: '0.78rem', color: w.paid_at ? '#34d399' : 'var(--text-dim)', textAlign: 'center', whiteSpace: 'nowrap', direction: 'ltr' }}>
+                            {w.paid_at ? formatTehranDateTime(w.paid_at) : '-'}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button
+                              className="btn-sim-action"
+                              style={{
+                                borderColor: hasBalance ? 'var(--cyan)' : 'rgba(255,255,255,0.2)',
+                                color: '#fff',
+                                background: hasBalance ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.05)',
+                                padding: '0.35rem 0.7rem',
+                                fontSize: '0.75rem'
+                              }}
+                              onClick={() => handleOpenSweep(w)}
+                            >
+                              ⚡ ریبالانس (Sweep)
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        )}
+        </>
+      )}
 
-      </div>
+      {/* TON Section */}
+      {activeNetworkTab === 'ton' && (
+        <>
+
+          {/* TON Treasury Status & KPI Banner */}
+          <div className="card-panel">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🏦</span> وضعیت خزانه‌داری متمرکز TON (PostgreSQL + Toncenter Node)
+                </h3>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  className="btn-sim-action"
+                  onClick={() => loadData(true)}
+                  disabled={refreshing || loading}
+                  style={{ padding: '0.55rem 0.9rem' }}
+                >
+                  {refreshing ? 'در حال استعلام...' : '🔄 استعلام زنده از نود Toncenter'}
+                </button>
+              </div>
+            </div>
+
+            {/* KPI Summary Cards for TON */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1rem',
+                marginBottom: '1.5rem',
+                background: 'rgba(15, 23, 42, 0.6)',
+                padding: '1rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>موجودی زنده والت در نود TON:</span>
+                <strong style={{ fontSize: '1.15rem', color: '#38bdf8', direction: 'ltr', display: 'inline-block' }}>
+                  {(tonData?.balance_ton || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })} TON / گرام
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>کل تراکنش‌ها / مموهای ثبت‌شده:</span>
+                <strong style={{ fontSize: '1.15rem', color: 'var(--cyan-glow)' }}>
+                  {tonData?.total_invoices || 0} تراکنش
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>تسویه‌شده در خزانه:</span>
+                <strong style={{ fontSize: '1.15rem', color: '#34d399' }}>
+                  {tonData?.paid_invoices || 0} فاکتور ✅
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>کل واریزی تسویه‌شده به خزانه:</span>
+                <strong style={{ fontSize: '1.15rem', color: '#fbbf24', direction: 'ltr', display: 'inline-block' }}>
+                  {(tonData?.total_collected_ton || 0).toFixed(4)} TON
+                </strong>
+              </div>
+            </div>
+
+            {/* TON Table */}
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                در حال دریافت اطلاعات خزانه‌داری TON و استعلام نود... ⏳
+              </div>
+            ) : !tonData?.items || tonData.items.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                هنوز فاکتوری در شبکه TON صادر نشده است. ابتدا در تب "صدور فاکتور" یک فاکتور TON صادر کنید.
+              </div>
+            ) : (
+              <div style={{ width: '100%', overflow: 'hidden', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <table
+                  className="custom-table"
+                  style={{
+                    width: '100%',
+                    tableLayout: 'fixed',
+                    borderCollapse: 'collapse',
+                    fontSize: '0.82rem',
+                    textAlign: 'right'
+                  }}
+                >
+                  <thead>
+                    <tr style={{ background: 'rgba(30, 41, 59, 0.7)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ width: '22%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>شناسه ممو (Memo / Comment)</th>
+                      <th style={{ width: '15%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>مبلغ (TON / گرام)</th>
+                      <th style={{ width: '13%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>مبلغ دلاری</th>
+                      <th style={{ width: '16%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>وضعیت واریز</th>
+                      <th style={{ width: '17%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>زمان ایجاد فاکتور</th>
+                      <th style={{ width: '17%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>زمان پرداخت</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tonData.items.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        style={{
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                          backgroundColor: idx % 2 === 0 ? 'rgba(15, 23, 42, 0.25)' : 'transparent',
+                          transition: 'background 0.2s'
+                        }}
+                      >
+                        <td style={{ padding: '0.65rem 0.5rem', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ fontFamily: 'monospace', color: '#fbbf24', fontWeight: 700, fontSize: '0.78rem' }}>
+                              {item.memo || '-'}
+                            </span>
+                            {item.memo && (
+                              <button
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--cyan)',
+                                  cursor: 'pointer',
+                                  padding: '1px',
+                                  fontSize: '0.72rem'
+                                }}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(item.memo);
+                                  onShowToast?.('شناسه ممو کپی شد! ✅', 'success');
+                                }}
+                                title="کپی ممو"
+                              >
+                                📋
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', fontFamily: 'monospace', color: '#38bdf8', direction: 'ltr', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {item.crypto_amount} TON
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', direction: 'ltr', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          ${item.amount_usd}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          {item.status === 'PAID' ? (
+                            <span className="badge" style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', fontWeight: 700, fontSize: '0.72rem', padding: '0.2rem 0.5rem', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+                              تسویه‌شده در خزانه ✅
+                            </span>
+                          ) : item.status === 'PENDING' ? (
+                            <span className="badge" style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', fontSize: '0.72rem', padding: '0.2rem 0.5rem', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                              در انتظار واریز ⏳
+                            </span>
+                          ) : (
+                            <span className="badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8', fontSize: '0.72rem', padding: '0.2rem 0.5rem' }}>
+                              {item.status}
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', fontSize: '0.78rem', color: '#cbd5e1', textAlign: 'center', whiteSpace: 'nowrap', direction: 'ltr' }}>
+                          {formatTehranDateTime(item.created_at)}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', fontSize: '0.78rem', color: item.paid_at ? '#34d399' : 'var(--text-dim)', textAlign: 'center', whiteSpace: 'nowrap', direction: 'ltr' }}>
+                          {item.paid_at ? formatTehranDateTime(item.paid_at) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* 4. Sweep Action Modal / Panel */}
       {selectedWallet && (
@@ -754,9 +882,7 @@ export default function RebalancePage({ onShowToast }) {
               )}
             </div>
 
-            {/* Zero Balance Warning Notice */}
-            {((sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) ||
-              (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)) && (
+            {((sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) || (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)) && (
               <div
                 style={{
                   padding: '0.8rem 1rem',
@@ -769,7 +895,7 @@ export default function RebalancePage({ onShowToast }) {
                   lineHeight: 1.6
                 }}
               >
-                ⛔ <strong>موجودی واقعی صفر است:</strong> والت انتخاب شده در شبکه زنده بایننس هیچ موجودی {sweepAsset} ندارد. برای ریبالانسینگ واقعی، ابتدا باید تراکنش واریز واقعی روی شبکه BSC به این آدرس انجام شود. داده ساختگی و ماک اجازه انتقال ندارد!
+                ⛔ <strong>موجودی واقعی والت صفر است:</strong> برای ارسال تراکنش واقعی به نود اصلی BSC، ابتدا باید {sweepAsset} واقعی به این آدرس واریز شود.
               </div>
             )}
 
@@ -800,23 +926,20 @@ export default function RebalancePage({ onShowToast }) {
               }
               style={{
                 opacity:
-                  (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) ||
-                  (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
+                  (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) || (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
                     ? 0.5
                     : 1,
                 cursor:
-                  (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) ||
-                  (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
+                  (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) || (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
                     ? 'not-allowed'
                     : 'pointer'
               }}
             >
               {sweeping
                 ? 'در حال اجرای مراحل سوئیپ و امضا در حافظه...'
-                : (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) ||
-                  (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
-                ? '⛔ موجودی صفر است (امکان ریبالانسینگ نیست)'
-                : '⚡ اجرای فرآیند ریبالانسینگ واقعی (Execute Sweep)'}
+                : (sweepAsset === 'USDT' && selectedWallet.usdt_balance <= 0) || (sweepAsset === 'BNB' && selectedWallet.bnb_balance <= 0)
+                ? '⛔ موجودی صفر است (امکان ارسال تراکنش آنچین نیست)'
+                : '🚀 برادکست مستقیم تراکنش ریبالانسینگ به نود BSC'}
             </button>
 
             {/* Step-by-Step Logs */}
@@ -878,7 +1001,37 @@ export default function RebalancePage({ onShowToast }) {
                 </div>
 
                 <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(6, 182, 212, 0.1)', borderRadius: '6px', fontSize: '0.82rem', color: 'var(--cyan-glow)' }}>
-                  💎 <strong>نتیجه:</strong> کلید خصوصی پس از امضای محلی بلافاصله از رم نابود شد و مبلغ <strong>{sweepResult.amount_swept} {sweepResult.asset_swept}</strong> با موفقیت به سمت خزانه رهسپار شد.
+                  💎 <strong>نتیجه:</strong> کلید خصوصی پس از امضای محلی بلافاصله از رم نابود شد و مبلغ <strong>{sweepResult.amount_swept} {sweepResult.asset_swept}</strong> با موفقیت به سمت خزانه رهسپار و در دیتابیس ثبت گردید.
+                </div>
+
+                {/* Direct Navigation to Rebalance Ledger */}
+                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                  {onNavigateToRecords && (
+                    <button
+                      className="btn-sim-action"
+                      onClick={() => {
+                        setSelectedWallet(null);
+                        onNavigateToRecords();
+                      }}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(6, 182, 212, 0.2)',
+                        color: 'var(--cyan-glow)',
+                        borderColor: 'var(--cyan)',
+                        padding: '0.65rem 1rem',
+                        fontWeight: 700
+                      }}
+                    >
+                      📊 مشاهده این عملیات در جدول سوابق ریبالانسینگ (Ledger) ↗
+                    </button>
+                  )}
+                  <button
+                    className="btn-sim-action"
+                    onClick={() => setSelectedWallet(null)}
+                    style={{ padding: '0.65rem 1.2rem' }}
+                  >
+                    بستن پنجره
+                  </button>
                 </div>
               </div>
             )}

@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="نقشه جامع معماری ماژولار انترپرایز SOLID، دیاگرام پایگاه داده ۷ جدولی، شبیه‌ساز زنده تراکنش و داکیومنت API سرویس کریپتو">
-  <title>داشبورد جامع معماری و شبیه‌ساز پرداخت کریپتو | Crypto Service</title>
+  <meta name="description" content="داشبورد جامع معماری، مدیریت کلیدهای رمزارزی، پایگاه داده ۸ جدولی، شبیه‌ساز زنده پرداخت و مستندات API درگاه کریپتو">
+  <title>داشبورد جامع معماری و شبیه‌ساز پرداخت کریپتو | Crypto Service Architecture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <style>
     :root {
       --bg-dark: #07090e;
       --bg-surface: #0c121e;
-      --bg-card: rgba(15, 23, 42, 0.78);
-      --bg-card-hover: rgba(26, 38, 66, 0.9);
+      --bg-card: rgba(15, 23, 42, 0.82);
+      --bg-card-hover: rgba(26, 38, 66, 0.95);
       --border-color: rgba(255, 255, 255, 0.08);
       --border-glow: rgba(56, 189, 248, 0.35);
-      
+
       --cyan: #06b6d4;
       --cyan-glow: #22d3ee;
       --indigo: #6366f1;
@@ -25,11 +25,12 @@
       --emerald: #10b981;
       --amber: #f59e0b;
       --rose: #f43f5e;
-      
+      --sky: #38bdf8;
+
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
-      
+
       --font-fa: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-en: 'Outfit', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
@@ -62,8 +63,8 @@
 
     /* Scrollbar */
     ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
     }
     ::-webkit-scrollbar-track {
       background: var(--bg-dark);
@@ -81,19 +82,20 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(7, 9, 14, 0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(7, 9, 14, 0.88);
+      backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border-color);
       padding: 0.75rem 1.5rem;
     }
 
     .nav-container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .brand-logo {
@@ -101,7 +103,7 @@
       align-items: center;
       gap: 0.75rem;
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       color: #fff;
       text-decoration: none;
     }
@@ -129,102 +131,99 @@
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-weight: 600;
       padding: 0.4rem 0.8rem;
       border-radius: 8px;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
-    .nav-links a:hover, .nav-links a.active {
+    .nav-links a:hover,
+    .nav-links a.active {
       color: #fff;
       background: rgba(255, 255, 255, 0.08);
-      border-color: var(--border-glow);
+      border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
     .container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 2.5rem 1.5rem 6rem;
+      padding: 2rem 1.5rem 5rem 1.5rem;
     }
 
-    /* Header & Hero */
-    header.hero {
+    /* Hero Section */
+    .hero {
       text-align: center;
-      margin-bottom: 4rem;
+      padding: 3rem 1rem 2.5rem 1rem;
       position: relative;
     }
 
     .badge-hero {
       display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.45rem 1.4rem;
+      gap: 0.5rem;
       background: rgba(6, 182, 212, 0.12);
       border: 1px solid rgba(6, 182, 212, 0.35);
-      border-radius: 9999px;
       color: var(--cyan-glow);
-      font-size: 0.9rem;
+      padding: 0.35rem 1.1rem;
+      border-radius: 30px;
+      font-size: 0.82rem;
       font-weight: 700;
       margin-bottom: 1.25rem;
-      backdrop-filter: blur(10px);
     }
 
     .badge-pulse {
-      width: 9px;
-      height: 9px;
-      background: var(--cyan-glow);
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      box-shadow: 0 0 12px var(--cyan-glow);
+      background: var(--cyan-glow);
+      box-shadow: 0 0 10px var(--cyan-glow);
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.6); opacity: 0.3; }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    h1.hero-title {
-      font-size: 2.8rem;
+    .hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.7rem);
       font-weight: 900;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #ffffff 20%, #38bdf8 65%, #a855f7 100%);
+      letter-spacing: -0.5px;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 40%, var(--cyan-glow) 80%, #a5b4fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 0.85rem;
-      line-height: 1.3;
     }
 
     .hero-subtitle {
-      font-size: 1.15rem;
+      max-width: 860px;
+      margin: 0 auto 2rem auto;
       color: var(--text-muted);
-      max-width: 900px;
-      margin: 0 auto 2.5rem;
+      font-size: 1.02rem;
+      line-height: 1.85;
     }
 
-    /* Real-time Status Grid */
+    /* Demo Quick Stats Bar */
     .status-banner {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 4rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
     }
 
     .status-card {
       background: var(--bg-card);
-      backdrop-filter: blur(14px);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 1.4rem 1.5rem;
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
       position: relative;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .status-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--border-glow);
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
     }
 
     .status-card::before {
@@ -237,37 +236,28 @@
       background: var(--accent, var(--cyan));
     }
 
+    .status-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent, var(--cyan));
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
     .status-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-dim);
+      gap: 0.4rem;
     }
-
-    .status-tag {
-      padding: 0.2rem 0.6rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-
-    .tag-active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
-    .tag-future { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
-    .tag-clean { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); }
 
     .status-value {
-      font-size: 1.35rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: #fff;
-    }
-
-    .status-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      margin-top: 0.45rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     /* Section Titles */
@@ -275,1783 +265,1105 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 4rem 0 1.75rem;
-      padding-bottom: 0.85rem;
+      margin: 3.5rem 0 1.5rem 0;
+      padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border-color);
       flex-wrap: wrap;
       gap: 1rem;
     }
 
     .section-title {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      font-size: 1.6rem;
+      font-size: 1.45rem;
       font-weight: 800;
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
     }
 
-    .section-title span.number {
-      display: inline-flex;
+    .section-title .number {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: var(--cyan-glow);
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--cyan), var(--indigo));
-      border-radius: 10px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-family: var(--font-en);
-      color: white;
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+      font-weight: 700;
     }
 
-    /* Section 0: Clean Architecture Layered Visual */
-    .arch-layers-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 4rem;
-    }
-
-    .arch-layer-card {
-      background: var(--bg-card);
+    .section-tag {
+      font-size: 0.78rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 1.5rem;
-      position: relative;
-      transition: all 0.3s;
-    }
-
-    .arch-layer-card:hover {
-      border-color: var(--border-glow);
-      background: var(--bg-card-hover);
-    }
-
-    .layer-badge {
-      display: inline-block;
-      font-family: var(--font-en);
-      font-weight: 800;
-      font-size: 0.8rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-    }
-
-    .layer-badge.delivery { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-    .layer-badge.usecase { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
-    .layer-badge.domain { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-    .layer-badge.repo { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .layer-badge.clients { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-
-    .layer-components {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.75rem;
-      margin-top: 0.75rem;
-    }
-
-    .layer-item {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
-      padding: 0.8rem 1rem;
-    }
-
-    .layer-item strong {
-      display: block;
-      color: #fff;
-      font-size: 0.92rem;
-      font-family: var(--font-mono);
-      direction: ltr;
-      text-align: left;
-    }
-
-    .layer-item span {
-      font-size: 0.82rem;
       color: var(--text-muted);
-      display: block;
-      margin-top: 0.25rem;
     }
 
-    /* Mapping Table */
-    .mapping-table-wrap {
+    /* Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 18px;
-      overflow-x: auto;
-      margin-bottom: 4rem;
+      border-radius: 16px;
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
     }
 
-    table.mapping-table {
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    /* Strategy Comparison Matrix */
+    .matrix-table-wrap {
+      overflow-x: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    table.matrix-table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 0.9rem;
       text-align: right;
-      min-width: 760px;
     }
 
-    table.mapping-table th {
-      background: rgba(15, 23, 42, 0.9);
-      padding: 1.1rem 1.25rem;
-      font-weight: 700;
-      font-size: 0.95rem;
+    table.matrix-table th {
+      background: rgba(15, 23, 42, 0.8);
       color: var(--cyan-glow);
-      border-bottom: 1px solid var(--border-color);
+      padding: 1rem;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
     }
 
-    table.mapping-table td {
-      padding: 1.1rem 1.25rem;
+    table.matrix-table td {
+      padding: 0.95rem 1rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.93rem;
+      color: #e2e8f0;
       vertical-align: middle;
     }
 
-    table.mapping-table tr:hover td {
+    table.matrix-table tr:hover td {
       background: rgba(255, 255, 255, 0.02);
     }
 
-    .code-badge {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      direction: ltr;
-      display: inline-block;
-      padding: 0.25rem 0.65rem;
+    .badge-bsc {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 0.2rem 0.6rem;
       border-radius: 6px;
-      background: rgba(0, 0, 0, 0.45);
-      color: #38bdf8;
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 0.78rem;
+      font-weight: 700;
     }
 
-    /* Database Schema Grid & ER Inspector */
+    .badge-ton {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    /* Database 8 Tables Grid */
     .db-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
       gap: 1.25rem;
-      margin-bottom: 4rem;
     }
 
     .db-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 18px;
-      padding: 1.4rem;
-      position: relative;
-      transition: all 0.3s;
+      background: rgba(12, 18, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 1.25rem;
       cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
     }
 
     .db-card:hover {
-      border-color: var(--border-glow);
       transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      border-color: var(--cyan);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.18);
     }
 
     .db-card.highlighted {
-      border-color: var(--cyan);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      border-color: var(--cyan-glow);
       background: rgba(6, 182, 212, 0.08);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
     }
 
-    .db-header {
+    .db-card-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.75rem;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
     }
 
-    .db-table-name {
+    .db-table-title {
+      font-weight: 800;
+      color: #fff;
+      font-size: 1rem;
       font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 1.15rem;
-      color: #38bdf8;
-      direction: ltr;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .db-fields-list {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      direction: ltr;
-      text-align: left;
-      line-height: 1.7;
       background: rgba(0, 0, 0, 0.4);
-      padding: 0.85rem 1rem;
-      border-radius: 10px;
-      margin-top: 0.75rem;
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      direction: ltr;
+      line-height: 1.8;
+      max-height: 220px;
+      overflow-y: auto;
     }
 
-    .db-fields-list .pk { color: #f59e0b; font-weight: 700; }
-    .db-fields-list .fk { color: #a855f7; font-weight: 700; }
-    .db-fields-list .uk { color: #10b981; font-weight: 700; }
-    .db-fields-list .type { color: #64748b; }
+    .pk { color: #f59e0b; font-weight: 700; }
+    .fk { color: #38bdf8; font-weight: 600; }
+    .uk { color: #c084fc; font-weight: 600; }
 
-    /* Interactive Live Simulator Pro */
-    .simulator-panel {
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(20, 30, 48, 0.9));
-      border: 1px solid var(--border-glow);
-      border-radius: 24px;
-      padding: 2.2rem;
-      margin-bottom: 4rem;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    /* Interactive Simulator */
+    .sim-panel {
+      background: #090e18;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
     }
 
     .sim-controls-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-bottom: 1.75rem;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 1.25rem;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 1.5rem;
     }
 
-    .sim-control-group label {
+    .form-group label {
       display: block;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--text-dim);
-      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      font-weight: 600;
     }
 
-    .sim-select, .sim-input {
+    .form-control {
       width: 100%;
-      background: #0f172a;
-      border: 1px solid #334155;
-      color: #fff;
-      padding: 0.6rem 0.9rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      color: #fff;
       font-family: var(--font-fa);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       outline: none;
-      transition: all 0.2s;
+      transition: border-color 0.2s ease;
     }
 
-    .sim-select:focus, .sim-input:focus {
+    .form-control:focus {
       border-color: var(--cyan);
-      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
     }
 
-    .sim-action-buttons {
+    .sim-actions-bar {
       display: flex;
-      flex-wrap: wrap;
       gap: 0.75rem;
-      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
     }
 
     .btn-sim {
-      padding: 0.75rem 1.4rem;
+      padding: 0.6rem 1.25rem;
       border-radius: 10px;
-      font-family: var(--font-fa);
+      font-size: 0.85rem;
       font-weight: 700;
-      font-size: 0.92rem;
       cursor: pointer;
       border: none;
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
     }
 
-    .btn-primary {
+    .btn-sim-primary {
       background: linear-gradient(135deg, var(--cyan), var(--indigo));
-      color: white;
-      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
     }
-    .btn-primary:hover {
+    .btn-sim-primary:hover {
+      box-shadow: 0 6px 22px rgba(6, 182, 212, 0.5);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.55);
     }
 
-    .btn-scenario {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-main);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    .btn-sim-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid #10b981;
     }
-    .btn-scenario:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: var(--cyan);
+    .btn-sim-success:hover {
+      background: rgba(16, 185, 129, 0.35);
     }
 
-    /* Interactive Live Invoice Box */
+    .btn-sim-danger {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      border: 1px solid #f43f5e;
+    }
+    .btn-sim-danger:hover {
+      background: rgba(244, 63, 94, 0.35);
+    }
+
+    .btn-sim-warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid #f59e0b;
+    }
+
+    /* Live Invoice Preview Box in Simulator */
     .sim-display-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1fr 1.2fr;
       gap: 1.5rem;
-      margin-bottom: 1.75rem;
     }
-
     @media (max-width: 900px) {
       .sim-display-grid { grid-template-columns: 1fr; }
     }
 
-    .invoice-mock-card {
-      background: rgba(10, 16, 29, 0.85);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 18px;
-      padding: 1.5rem;
-      position: relative;
+    .invoice-preview-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 1.25rem;
     }
 
-    .invoice-badge-status {
-      display: inline-block;
-      padding: 0.25rem 0.8rem;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 0.82rem;
-      font-family: var(--font-en);
+    .inv-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.75rem;
     }
 
-    .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .status-paid { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-underpaid { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-    .status-expired { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-paid { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-underpaid { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .status-expired { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
 
     .inv-detail-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.88rem;
+      padding: 0.45rem 0;
+      font-size: 0.82rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
+    .inv-detail-row span:first-child { color: var(--text-dim); }
+    .inv-detail-row span:last-child { color: #f8fafc; font-family: var(--font-mono); direction: ltr; }
 
-    .inv-detail-row .label { color: var(--text-muted); }
-    .inv-detail-row .val { font-family: var(--font-mono); color: #fff; font-weight: 600; direction: ltr; }
-
-    .qr-and-pay-wrap {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      margin-top: 1rem;
-      background: rgba(0,0,0,0.3);
-      padding: 1rem;
-      border-radius: 12px;
-    }
-
-    .qr-svg {
-      width: 100px;
-      height: 100px;
-      background: white;
-      padding: 6px;
-      border-radius: 8px;
-    }
-
-    .memo-highlight-box {
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px dashed rgba(245, 158, 11, 0.4);
-      border-radius: 8px;
-      padding: 0.6rem 0.8rem;
-      margin-top: 0.75rem;
-      font-size: 0.84rem;
-      color: #fbbf24;
-    }
-
-    .sim-steps-strip {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 0.85rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .sim-step-node {
-      background: rgba(2, 6, 23, 0.65);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 1rem;
-      text-align: center;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .sim-step-node.active {
-      border-color: var(--cyan);
-      background: rgba(6, 182, 212, 0.18);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-      transform: translateY(-3px);
-    }
-
-    .sim-step-node.completed {
-      border-color: var(--emerald);
-      background: rgba(16, 185, 129, 0.15);
-    }
-
-    .sim-step-number {
-      font-size: 0.75rem;
-      font-family: var(--font-en);
-      color: var(--text-dim);
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 0.25rem;
-    }
-
-    .sim-step-title {
-      font-weight: 700;
-      font-size: 0.92rem;
-      color: var(--text-main);
-    }
-
-    .sim-log-box {
+    /* Terminal Log Console */
+    .terminal-console {
       background: #030712;
-      border: 1px solid #1e293b;
-      border-radius: 14px;
-      padding: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
       font-family: var(--font-mono);
-      font-size: 0.86rem;
-      direction: ltr;
-      text-align: left;
+      font-size: 0.78rem;
       color: #38bdf8;
-      height: 180px;
+      height: 280px;
       overflow-y: auto;
+      direction: ltr;
+      line-height: 1.6;
     }
 
-    /* Flowchart Section */
-    .flowchart-wrapper {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 22px;
-      padding: 2.5rem 1.8rem;
-      margin-bottom: 4rem;
-      position: relative;
-    }
-
-    .flow-steps-v {
-      display: flex;
-      flex-direction: column;
-      gap: 1.6rem;
-      position: relative;
-      max-width: 950px;
-      margin: 0 auto;
-    }
-
-    .flow-steps-v::before {
-      content: '';
-      position: absolute;
-      top: 35px;
-      bottom: 35px;
-      right: 32px;
-      width: 3px;
-      background: linear-gradient(180deg, var(--cyan), var(--indigo), var(--emerald), var(--violet));
-      border-radius: 2px;
-    }
-
-    .flow-node {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.5rem;
-      position: relative;
-    }
-
-    .flow-badge {
-      width: 66px;
-      height: 66px;
-      min-width: 66px;
-      background: #0f172a;
-      border: 2px solid var(--cyan);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      z-index: 2;
-      box-shadow: 0 0 18px rgba(6, 182, 212, 0.3);
-    }
-
-    .flow-card {
-      flex: 1;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 1.35rem 1.6rem;
-      transition: all 0.3s;
-    }
-
-    .flow-card:hover {
-      border-color: var(--border-glow);
-      transform: translateX(-4px);
-      background: rgba(20, 30, 52, 0.85);
-    }
-
-    .flow-card h4 {
-      font-size: 1.15rem;
-      color: #fff;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .flow-card h4 .role-tag {
-      font-size: 0.75rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--cyan-glow);
-      font-family: var(--font-en);
-    }
-
-    .flow-card p {
-      font-size: 0.94rem;
-      color: var(--text-muted);
-    }
-
-    /* Dual Client Integration Cards (React + Telegram Bot) */
-    .clients-dual-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 4rem;
-    }
-
-    .client-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 20px;
-      padding: 1.75rem;
-      transition: all 0.3s;
-    }
-
-    .client-card:hover {
-      border-color: var(--border-glow);
-      transform: translateY(-3px);
-    }
-
-    .client-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .client-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
-    }
-
-    .client-list {
-      list-style: none;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-
-    .client-list li {
-      position: relative;
-      padding-right: 1.4rem;
-      margin-bottom: 0.6rem;
-    }
-
-    .client-list li::before {
-      content: '✔';
-      position: absolute;
-      right: 0;
-      color: var(--emerald);
-      font-weight: bold;
-    }
-
-    /* API Endpoint Cards */
-    .api-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 4rem;
-    }
-
+    /* API Reference Cards */
     .api-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.4rem;
-      transition: all 0.3s;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.85rem;
+      transition: all 0.2s ease;
     }
-
     .api-card:hover {
-      border-color: var(--border-glow);
+      border-color: rgba(56, 189, 248, 0.3);
     }
 
     .api-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .api-method {
       display: inline-block;
-      padding: 0.2rem 0.65rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 6px;
-      font-family: var(--font-en);
-      font-weight: 800;
-      font-size: 0.78rem;
-    }
-
-    .method-get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .method-post { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
-
-    .api-path {
       font-family: var(--font-mono);
-      font-size: 0.92rem;
-      color: var(--text-main);
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 0.6rem;
+    }
+    .method-get { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .method-post { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    .api-endpoint {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #f1f5f9;
       direction: ltr;
       display: inline-block;
     }
 
-    .api-snippet {
-      background: #030712;
-      border-radius: 10px;
-      padding: 0.85rem;
-      margin-top: 0.85rem;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      direction: ltr;
-      text-align: left;
-      color: #94a3b8;
-      overflow-x: auto;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+    .btn-copy {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
-
-    /* TON Observer Strategy Deep Dive */
-    .observer-deep-dive {
-      background: linear-gradient(135deg, rgba(16, 23, 38, 0.9), rgba(15, 23, 42, 0.95));
-      border: 1px solid var(--cyan);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-bottom: 4rem;
-      box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
-    }
-
-    .strategy-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .strategy-box {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 14px;
-      padding: 1.25rem;
-    }
-
-    .strategy-box h5 {
-      font-size: 1rem;
+    .btn-copy:hover {
       color: #fff;
-      margin-bottom: 0.5rem;
+      border-color: var(--cyan);
+    }
+
+    /* Step visual workflow */
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .flow-step-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+    }
+
+    .flow-step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--cyan);
+      color: #000;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
     }
 
     footer {
       text-align: center;
-      margin-top: 5rem;
+      padding-top: 3rem;
       color: var(--text-dim);
-      font-size: 0.92rem;
+      font-size: 0.82rem;
       border-top: 1px solid var(--border-color);
-      padding-top: 2rem;
-    }
-
-    @media (max-width: 768px) {
-      .flow-steps-v::before { right: 26px; }
-      .flow-badge { width: 52px; height: 52px; min-width: 52px; font-size: 1.25rem; }
-      h1.hero-title { font-size: 2.1rem; }
-      .nav-links { display: none; }
+      margin-top: 4rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Sticky Top Navigation -->
+  <!-- Sticky Top Navigation Bar -->
   <nav class="top-nav">
     <div class="nav-container">
       <a href="#" class="brand-logo">
         <div class="brand-icon">⚡</div>
-        <span>Crypto Service Architecture</span>
+        <div>
+          <span>Crypto Payment & Treasury Gateway</span>
+          <div style="font-size: 0.72rem; color: var(--text-dim); font-weight: 500;">Go Clean Architecture + PostgreSQL + React 19</div>
+        </div>
       </a>
       <ul class="nav-links">
-        <li><a href="#layers">لایه‌ها</a></li>
-        <li><a href="#solid">اصول SOLID</a></li>
-        <li><a href="#database">دیتابیس ۷ جدولی</a></li>
-        <li><a href="#simulator">شبیه‌ساز پرداخت</a></li>
-        <li><a href="#flowchart">فلوچارت اجرا</a></li>
-        <li><a href="#clients">فرانت‌اند و ربات</a></li>
-        <li><a href="#observer">ناظر بلاکچین (TON)</a></li>
-        <li><a href="#api">اندپوینت‌ها</a></li>
+        <li><a href="#overview">🌟 معرفی و اصول</a></li>
+        <li><a href="#dual-networks">⚖️ مقایسه شبکه‌ها</a></li>
+        <li><a href="#key-security">🔐 امنیت کلیدها و ریبالانسینگ</a></li>
+        <li><a href="#database">🐘 دیتابیس ۸ جدولی</a></li>
+        <li><a href="#observer">🔄 رصد خودکار پس‌زمینه</a></li>
+        <li><a href="#simulator" style="color: var(--cyan-glow);">🎮 شبیه‌ساز پرداخت</a></li>
+        <li><a href="#api-docs">📡 مستندات API</a></li>
       </ul>
     </div>
   </nav>
 
   <div class="container">
-    
+
     <!-- Hero Header -->
     <header class="hero">
       <div class="badge-hero">
         <div class="badge-pulse"></div>
-        معماری صددرصد ماژولار (SRP + Clean Architecture) | Go 1.22+ Standard HTTP & PostgreSQL
+        معماری انترپرایز درگاه کریپتو بدون واسطه (In-House & Non-Custodial) | Zero Mock
       </div>
-      <h1 class="hero-title">داشبورد جامع معماری و فلوچارت پرداخت کریپتو</h1>
+      <h1 class="hero-title">داشبورد جامع معماری، مدیریت خزانه‌داری و شبیه‌ساز پرداخت</h1>
       <p class="hero-subtitle">
-        ارتباط بدون واسطه با ولیدیتورهای بلاکچین (Direct Node)، دیتابیس نرمال ۷ جدولی، رعایت دقیق اصول سالید و آمادگی کامل برای فرانت‌ند React و ربات تلگرام.
+        ارتباط ۱۰۰٪ مستقیم با نودهای بلاکچین (BSC JSON-RPC و TON L1)، مدیریت امن کلیدها بر پایه استاندارد BIP-44 با اشتقاق صرفاً در RAM، پایگاه داده سازمانی ۸ جدولی، موتور ریبالانسینگ خزانه‌داری و رصدگر خودکار تسویه آنچین.
       </p>
 
-      <!-- Real-time Status Grid -->
+      <!-- Key Metrics & Architecture Specs Banner -->
       <div class="status-banner">
-        <div class="status-card" style="--accent: var(--emerald)">
-          <div class="status-label">
-            <span>لایه‌های وب (Delivery)</span>
-            <span class="status-tag tag-active">تک‌مسئولیتی (SRP) ✅</span>
-          </div>
-          <div class="status-value">۳ کنترلر + ۳ میدلور</div>
-          <div class="status-desc">`catalog_handler`, `invoice_handler`, `health_handler` و روتر تفکیک‌شده</div>
-        </div>
-
         <div class="status-card" style="--accent: var(--cyan)">
-          <div class="status-label">
-            <span>لایه‌های بیزینس (Usecases)</span>
-            <span class="status-tag tag-active">سرویس‌های مجزا ✅</span>
-          </div>
-          <div class="status-value">۳ یوزکیس تخصصی</div>
-          <div class="status-desc">`catalog_usecase`, `invoice_usecase`, `settlement_usecase`</div>
+          <div class="status-label"><span>🌐 نوع معماری درگاه</span></div>
+          <div class="status-value"><span>In-House (بدون واسطه)</span></div>
         </div>
 
-        <div class="status-card" style="--accent: var(--indigo)">
-          <div class="status-label">
-            <span>لایه‌های دیتابیس (Postgres)</span>
-            <span class="status-tag tag-clean">۷ ریپازیتوری تفکیک‌شده ✅</span>
-          </div>
-          <div class="status-value">۷ جدول نرمالایز</div>
-          <div class="status-desc">کاربران، خدمات، شبکه‌ها، ارزها، آدرس‌ها، فاکتورها، تراکنش‌های رصدشده</div>
+        <div class="status-card" style="--accent: var(--emerald)">
+          <div class="status-label"><span>🔐 مدل نگهداری کلیدها</span></div>
+          <div class="status-value"><span>Zero DB (RAM-Only)</span></div>
         </div>
 
         <div class="status-card" style="--accent: var(--amber)">
-          <div class="status-label">
-            <span>موتور ناظر (Observer Engine)</span>
-            <span class="status-tag tag-future">آماده اتصال ولیدیتور TON ⏳</span>
-          </div>
-          <div class="status-value">Direct Node Listener</div>
-          <div class="status-desc">پایش مستقیم واریزها به والت اصلی بر اساس شناسه یکتای Memo / Comment</div>
+          <div class="status-label"><span>🐘 پایگاه داده</span></div>
+          <div class="status-value"><span>PostgreSQL (۸ جدول)</span></div>
+        </div>
+
+        <div class="status-card" style="--accent: var(--sky)">
+          <div class="status-label"><span>⚡ شبکه‌های فعال</span></div>
+          <div class="status-value"><span>BSC (USDT, BNB) & TON</span></div>
         </div>
       </div>
     </header>
 
-    <!-- Section 0: Clean Architecture Layered Map -->
-    <div id="layers" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">0</span>
-        لایه‌بندی معماری تمیز (Clean Architecture Overview)
+    <!-- Section 1: Overview & Vision -->
+    <section id="overview">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">1</span>
+          چشم‌انداز و تمایزات درگاه درون‌سازمانی (Enterprise Vision)
+        </div>
+        <span class="section-tag">استقلال کامل از سیستم‌های متفرقه</span>
       </div>
-      <span class="status-tag tag-clean">جداسازی کامل دامنه‌ها و جریان داده یک‌طرفه</span>
-    </div>
 
-    <div class="arch-layers-wrap">
-      
-      <!-- 1. Delivery Layer -->
-      <div class="arch-layer-card">
-        <span class="layer-badge delivery">Delivery / Presentation Layer (لایه تحویل و وب)</span>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-          مسئول دریافت درخواست‌های HTTP، اعتبارسنجی اولیه فرمت داده‌ها، مدیریت هدرهای CORS، لاگینگ متمرکز، ریکاوری از پنیک و فرمت‌بندی پاسخ‌های JSON بدون داشتن ذره‌ای منطق بیزینس یا دیتابیس.
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #38bdf8; margin-bottom: 0.75rem; font-size: 1.15rem;">🛑 چرا درگاه‌های شخص ثالث (NOWPayments / CoinPayments) رد شدند؟</h3>
+          <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.85; padding-right: 1.25rem;">
+            <li><strong>کارمزدهای سنگین:</strong> کسر ۰.۵٪ تا ۲٪ از ارزش کل تراکنش‌ها توسط درگاه‌های تجاری.</li>
+            <li><strong>ریسک تحریم و مسدودسازی:</strong> امکان بلوکه شدن دارایی‌ها به دلیل احراز هویت یا تحریم‌های بین‌المللی.</li>
+            <li><strong>تاخیر در تسویه:</strong> وابستگی به زمان‌بندی تسویه شرکت‌های واسط برای دریافت مبالغ.</li>
+            <li><strong>افشای اطلاعات کاربران:</strong> ارسال متادیتای خریدها به سرورهای شرکت‌های ثالث.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: #34d399; margin-bottom: 0.75rem; font-size: 1.15rem;">🛡️ مزایای معماری اختصاصی توسعه‌داده‌شده (In-House):</h3>
+          <ul style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.85; padding-right: 1.25rem;">
+            <li><strong>صفر کارمزد اضافه:</strong> تنها هزینه پرداختی، کارمزد واقعی نود بلاکچین است.</li>
+            <li><strong>مالکیت مطلق کلیدها:</strong> کنترل ۱۰۰٪ کلیدها در سرورهای امن خودمان بدون هیچ‌گونه واسطه.</li>
+            <li><strong>تسویه آنی آنچین:</strong> تایید فاکتور بلافاصله پس از نشستن در نود بدون معطلی برای ریبالانس.</li>
+            <li><strong>انتزاع برای کسب‌وکار:</strong> سایر سرویس‌ها تنها با یک کال ساده <code>POST /api/v1/invoices</code> فاکتور صادر می‌کنند.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Dual-Network Strategy Matrix -->
+    <section id="dual-networks">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">2</span>
+          استراتژی دوگانه شبکه‌ها و مدیریت والت‌ها (Dual-Network Matrix)
+        </div>
+        <span class="section-tag">بهینه‌سازی بر اساس ساختار EVM و TON</span>
+      </div>
+
+      <div class="matrix-table-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>ویژگی / پارامتر</th>
+              <th>شبکه بایننس اسمارت چین (BSC / BEP-20)</th>
+              <th>شبکه تون (The Open Network / TON)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ارزهای فعال</strong></td>
+              <td><span class="badge-bsc">USDT (BEP-20)</span> &nbsp; <span class="badge-bsc">BNB (بومی)</span></td>
+              <td><span class="badge-ton">TON (کوین بومی شبکه)</span></td>
+            </tr>
+            <tr>
+              <td><strong>مدل تخصیص والت</strong></td>
+              <td><strong>تولید داینامیک آدرس اختصاصی (<code>0x...</code>)</strong></td>
+              <td><strong>تک‌والت خزانه‌داری متمرکز (Master Vault)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>شیوه تفکیک واریزی‌ها</strong></td>
+              <td>بر اساس آدرس منحصر‌به‌فرد مقصد (بدون نیاز به ممو)</td>
+              <td>بر اساس فیلد کامنت / مموی یکتای سفارش (<code>ORD-XXXXX</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>مسیر اشتقاق کلید</strong></td>
+              <td>استاندارد BIP-44: <code>m/44'/60'/0'/0/index</code></td>
+              <td>یک مستر والت ۲۴ کلمه‌ای رسمی</td>
+            </tr>
+            <tr>
+              <td><strong>قرارداد هوشمند و اعشار</strong></td>
+              <td>قرارداد رسمی تتر <code>0x55d3...</code> (۱۸ رقم اعشار)</td>
+              <td>کوین اصلی شبکه (۹ رقم اعشار)</td>
+            </tr>
+            <tr>
+              <td><strong>حداقل واریز مجاز</strong></td>
+              <td>۱.۰ تتر (USDT) / ۰.۰۰۱ بی‌ان‌بی (BNB)</td>
+              <td>۰.۱ تون (TON)</td>
+            </tr>
+            <tr>
+              <td><strong>فرآیند ریبالانسینگ</strong></td>
+              <td>سوئیپ BEP-20 (تتر و BNB) با الگوی Gas Station، اشتقاق RAM-Only و پشتیبانی از برادکست زنده و شبیه‌سازی پیش‌پرواز</td>
+              <td>بدون نیاز به ریبالانسینگ (Zero-Gas Inflow)؛ واریز مستقیم کاربران به والت خزانه‌داری مرکزی با Memo یکتا</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 3: Key Security & Gas Station Engine -->
+    <section id="key-security">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">3</span>
+          معماری امنیت کلیدها و الگوی ایستگاه سوخت‌رسانی گس (Gas Station)
+        </div>
+        <span class="section-tag">Zero Private Key in DB | RAM-Only Derivation</span>
+      </div>
+
+      <!-- Domain Principle Alert -->
+      <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 1.8rem;">💡</span>
+        <div style="font-size: 0.88rem; line-height: 1.8; color: #e2e8f0;">
+          <strong style="color: #38bdf8;">قانون قطعی دامنه (Domain Principle):</strong> فرآیند ریبالانسینگ و سوئیپ دارایی‌ها منحصراً مختص <strong>شبکه BSC (بایننس اسمارت چین)</strong> است. در شبکه TON به دلیل معماری تک‌والت با Memo، تمامی مبالغ مستقیماً در والت خزانه‌داری مرکزی می‌نشیند و هیچ‌گونه ریبالانسینگ یا کارمزد گس ثانویه وجود ندارد (Zero-Gas Inflow).
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #fbbf24; margin-bottom: 0.75rem; font-size: 1.15rem;">🔐 الگوی اشتقاق موقت در رم (On-Demand Derivation):</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; margin-bottom: 1rem;">
+            در پایگاه داده، در جدول <code>deposit_addresses</code> صرفاً آدرس عمومی و شماره اندیس (مثلاً <code>1</code>, <code>2</code>) ذخیره می‌شود. هیچ ستونی برای کلید خصوصی وجود ندارد. در لحظه سوئیپ:
+          </p>
+          <div style="background: rgba(0,0,0,0.5); padding: 0.85rem; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; color: #38bdf8; direction: ltr; margin-bottom: 0.75rem;">
+            BIP-44 Path = m / 44' / 60' / 0' / 0 / {index}<br>
+            // Index 0: Reserved strictly for Master Gas Station Wallet<br>
+            // Index 1..N: Assigned to user invoice deposit addresses
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">
+            کلید خصوصی فقط در RAM محاسبه شده، تراکنش با <code>secp256k1</code> امضا می‌شود و بلافاصله پس از برادکست بایت‌های خام به نود، از حافظه پاک می‌گردد.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="color: #38bdf8; margin-bottom: 0.75rem; font-size: 1.15rem;">⛽ الگوی ایستگاه سوخت‌رسانی تتر (Gas Station Pattern):</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; margin-bottom: 1rem;">
+            هنگامی که کاربر تتر به آدرس فاکتور واریز می‌کند، موجودی BNB والت صفر است و نمی‌تواند کارمزد انتقال تتر را پرداخت کند:
+          </p>
+          <div class="flow-steps" style="grid-template-columns: 1fr; gap: 0.6rem; margin: 0;">
+            <div style="background: rgba(15,23,42,0.8); padding: 0.6rem 0.9rem; border-radius: 8px; border-right: 3px solid #f59e0b; font-size: 0.82rem;">
+              <strong>۱. بررسی موجودی نود:</strong> استعلام همزمان BNB و تتر از نود BSC
+            </div>
+            <div style="background: rgba(15,23,42,0.8); padding: 0.6rem 0.9rem; border-radius: 8px; border-right: 3px solid #38bdf8; font-size: 0.82rem;">
+              <strong>۲. تزریق خودکار سوخت:</strong> در صورت کمبود BNB، کیف پول اندیس ۰ مقدار گس لازم را واریز می‌کند
+            </div>
+            <div style="background: rgba(15,23,42,0.8); padding: 0.6rem 0.9rem; border-radius: 8px; border-right: 3px solid #10b981; font-size: 0.82rem;">
+              <strong>۳. سوئیپ تتر به خزانه‌داری:</strong> کل تتر به والت امن خزانه‌داری منتقل می‌شود
+            </div>
+            <div style="background: rgba(15,23,42,0.8); padding: 0.6rem 0.9rem; border-radius: 8px; border-right: 3px solid #c084fc; font-size: 0.82rem;">
+              <strong>۴. ثبت در دیتابیس (Dual Mode):</strong> ثبت با پرچم <code>is_simulated = false</code> برای برادکست زنده آنچین، یا <code>is_simulated = true</code> برای شبیه‌سازی پیش‌پرواز در جدول <code>rebalance_records</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Database 8 Tables ERD -->
+    <section id="database">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">4</span>
+          پایگاه داده استاندارد ۸ جدولی (PostgreSQL Live ERD & Schema)
+        </div>
+        <span class="section-tag">روی هر جدول کلیک کنید تا ارتباطات آن برجسته شود</span>
+      </div>
+
+      <div class="db-grid">
+        <!-- Table 1: users -->
+        <div class="db-card" id="card-users" onclick="highlightTable('users')">
+          <div class="db-card-header">
+            <span class="db-table-title">1. users</span>
+            <span style="font-size: 0.72rem; color: #34d399;">مشتریان</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">پروفایل کلاینت‌های وب و تلگرام</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="uk">telegram_id</span>: BIGINT UNIQUE<br>
+            username: VARCHAR(128)<br>
+            first_name: VARCHAR(128)<br>
+            created_at: TIMESTAMPTZ
+          </div>
+        </div>
+
+        <!-- Table 2: networks -->
+        <div class="db-card" id="card-networks" onclick="highlightTable('networks')">
+          <div class="db-card-header">
+            <span class="db-table-title">2. networks</span>
+            <span style="font-size: 0.72rem; color: #38bdf8;">شبکه‌ها</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">بلاکچین‌های فعال ('bsc', 'ton')</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: VARCHAR(32) PRIMARY KEY<br>
+            name: VARCHAR(128)<br>
+            native_currency: VARCHAR(16)<br>
+            rpc_endpoint: TEXT<br>
+            is_testnet: BOOLEAN<br>
+            is_active: BOOLEAN
+          </div>
+        </div>
+
+        <!-- Table 3: currencies -->
+        <div class="db-card" id="card-currencies" onclick="highlightTable('currencies')">
+          <div class="db-card-header">
+            <span class="db-table-title">3. currencies</span>
+            <span style="font-size: 0.72rem; color: #fbbf24;">ارزها و توکن‌ها</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">کوین‌های بومی و توکن رسمی تتر</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            symbol: VARCHAR(16)<br>
+            <span class="fk">network_id</span>: FK -> networks.id<br>
+            contract_address: VARCHAR(128)<br>
+            decimals: INT (18 bsc, 9 ton)<br>
+            min_deposit: NUMERIC(36, 18)<br>
+            is_active: BOOLEAN
+          </div>
+        </div>
+
+        <!-- Table 4: deposit_addresses -->
+        <div class="db-card" id="card-addresses" onclick="highlightTable('addresses')">
+          <div class="db-card-header">
+            <span class="db-table-title">4. deposit_addresses</span>
+            <span style="font-size: 0.72rem; color: #c084fc;">آدرس‌ها و ممو</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">تخصیص آدرس BIP-44 یا مموی متمرکز</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="fk">user_id</span>: FK -> users.id<br>
+            <span class="fk">network_id</span>: FK -> networks.id<br>
+            address: TEXT<br>
+            <span class="uk">memo</span>: VARCHAR(128) UNIQUE<br>
+            derivation_index: INT<br>
+            is_assigned: BOOLEAN
+          </div>
+        </div>
+
+        <!-- Table 5: invoices -->
+        <div class="db-card" id="card-invoices" onclick="highlightTable('invoices')">
+          <div class="db-card-header">
+            <span class="db-table-title">5. invoices</span>
+            <span style="font-size: 0.72rem; color: #34d399;">فاکتورها و سفارشات</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">هسته مالی، نرخ کریپتو و مهلت ۳۰ دقیقه‌ای</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="uk">invoice_number</span>: VARCHAR(64) UNIQUE<br>
+            <span class="fk">user_id</span>: FK -> users.id<br>
+            <span class="fk">currency_id</span>: FK -> currencies.id<br>
+            <span class="fk">network_id</span>: FK -> networks.id<br>
+            amount_usd: NUMERIC(18, 4)<br>
+            crypto_amount: NUMERIC(36, 18)<br>
+            exchange_rate: NUMERIC(18, 8)<br>
+            pay_address: TEXT<br>
+            pay_memo: VARCHAR(128)<br>
+            status: PENDING, PAID, EXPIRED<br>
+            order_id: VARCHAR(128)<br>
+            callback_url: TEXT<br>
+            expires_at: TIMESTAMPTZ
+          </div>
+        </div>
+
+        <!-- Table 6: observed_transactions -->
+        <div class="db-card" id="card-transactions" onclick="highlightTable('transactions')">
+          <div class="db-card-header">
+            <span class="db-table-title">6. observed_transactions</span>
+            <span style="font-size: 0.72rem; color: #f43f5e;">تراکنش‌های آنچین</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">جلوگیری قطعی از خرج دوباره (Double-Spend)</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="fk">invoice_id</span>: FK -> invoices.id<br>
+            <span class="fk">network_id</span>: FK -> networks.id<br>
+            tx_hash: TEXT<br>
+            amount: NUMERIC(36, 18)<br>
+            status: DETECTED, CONFIRMED<br>
+            <span class="uk">UQ(network_id, tx_hash)</span>
+          </div>
+        </div>
+
+        <!-- Table 7: admins -->
+        <div class="db-card" id="card-admins" onclick="highlightTable('admins')">
+          <div class="db-card-header">
+            <span class="db-table-title">7. admins</span>
+            <span style="font-size: 0.72rem; color: #a5b4fc;">مدیران و اپراتورها</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">احراز هویت Bcrypt و دسترسی به پنل</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="uk">username</span>: VARCHAR(64) UNIQUE<br>
+            password_hash: VARCHAR(255)<br>
+            role: VARCHAR(32) 'SUPER_ADMIN'<br>
+            created_at: TIMESTAMPTZ
+          </div>
+        </div>
+
+        <!-- Table 8: rebalance_records -->
+        <div class="db-card" id="card-rebalance" onclick="highlightTable('rebalance')">
+          <div class="db-card-header">
+            <span class="db-table-title">8. rebalance_records</span>
+            <span style="font-size: 0.72rem; color: #38bdf8;">سوابق ریبالانسینگ BSC</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">ثبت دائمی و تفکیک‌شده کلیه سوئیپ‌های والت‌های اشتقاقی BSC به خزانه‌داری مرکزی</p>
+          <div class="db-fields-list">
+            <span class="pk">id</span>: UUID PRIMARY KEY<br>
+            <span class="fk">network_id</span>: 'bsc'<br>
+            derivation_index: INT<br>
+            from_address: TEXT<br>
+            to_address: TEXT<br>
+            asset: 'USDT', 'BNB'<br>
+            amount: NUMERIC(36, 18)<br>
+            gas_fee_bnb: NUMERIC(36, 18)<br>
+            tx_hash: TEXT<br>
+            status: 'CONFIRMED' / 'SIMULATED'<br>
+            is_simulated: BOOLEAN
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Background Payment Observer -->
+    <section id="observer">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">5</span>
+          موتور رصد خودکار بلاکچین در پس‌زمینه (Background On-Chain Observer)
+        </div>
+        <span class="section-tag">پایش مداوم زنجیره هر ۱۰ ثانیه یکبار</span>
+      </div>
+
+      <div class="card" style="background: rgba(12, 18, 30, 0.9);">
+        <h3 style="color: #38bdf8; font-size: 1.15rem; margin-bottom: 0.75rem;">چگونه تسویه حساب به صورت کاملاً خودکار و بدون نیاز به تایید دستی انجام می‌شود؟</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.85; margin-bottom: 1.25rem;">
+          در بدنه سرویس Go، یک ورکر دائم‌کار (Goroutine) هر ۱۰ ثانیه یکبار اجرا شده و علاوه بر آن، هر بار که فرانت‌اند وضعیت فاکتور را استعلام می‌کند، نود بلاکچین فوراً بازرسی می‌شود:
         </p>
-        <div class="layer-components">
-          <div class="layer-item">
-            <strong>router.go</strong>
-            <span>مسیریابی با net/http Go 1.22</span>
-          </div>
-          <div class="layer-item">
-            <strong>catalog_handler.go</strong>
-            <span>خدمات، شبکه‌ها و ارزها</span>
-          </div>
-          <div class="layer-item">
-            <strong>invoice_handler.go</strong>
-            <span>صدور و استعلام فاکتورها</span>
-          </div>
-          <div class="layer-item">
-            <strong>health_handler.go</strong>
-            <span>بررسی سلامت سرور و DB</span>
-          </div>
-          <div class="layer-item">
-            <strong>middleware.go</strong>
-            <span>CORS, Logger, Recovery</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- 2. UseCase Layer -->
-      <div class="arch-layer-card">
-        <span class="layer-badge usecase">UseCases / Application Layer (لایه کاربرد و منطق بیزینس)</span>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-          مغز متفکر سیستم. ارکستراسیون بیزینس، محاسبه مقدار کریپتو بر اساس نرخ لحظه‌ای، تولید Memo اختصاصی برای هر فاکتور، بررسی عدم وجود Double-Spending و تغییر وضعیت فاکتورها.
-        </p>
-        <div class="layer-components">
-          <div class="layer-item">
-            <strong>catalog_usecase.go</strong>
-            <span>واکشی و فیلتر کاتالوگ فعال</span>
+        <div class="flow-steps">
+          <div class="flow-step-box">
+            <div class="flow-step-num">۱</div>
+            <h4 style="font-size: 0.92rem; color: #fff; margin-bottom: 0.4rem;">فراخوانی فاکتورهای PENDING</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">لیست کلیه فاکتورهای منتظر پرداخت از جدول دیتابیس دریافت می‌شود.</p>
           </div>
-          <div class="layer-item">
-            <strong>invoice_usecase.go</strong>
-            <span>محاسبه قیمت، تخصیص آدرس و صدور فاکتور</span>
+
+          <div class="flow-step-box">
+            <div class="flow-step-num">۲</div>
+            <h4 style="font-size: 0.92rem; color: #fff; margin-bottom: 0.4rem;">استعلام نود BSC</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">موجودی BNB و تتر آدرس کاربر بررسی می‌شود؛ در صورت دریافت واریزی یا نانس مثبت (Swept)، فاکتور PAID می‌گردد.</p>
           </div>
-          <div class="layer-item">
-            <strong>settlement_usecase.go</strong>
-            <span>تطبیق واریز ناظر، جلوگیری از کلاهبرداری و تسویه</span>
+
+          <div class="flow-step-box">
+            <div class="flow-step-num">۳</div>
+            <h4 style="font-size: 0.92rem; color: #fff; margin-bottom: 0.4rem;">استعلام نود TON</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">تراکنش‌های خزانه پایش شده، پیام ممو دیکود گردیده و در صورت تطابق ممو و مقدار، فاکتور تسویه می‌شود.</p>
+          </div>
+
+          <div class="flow-step-box">
+            <div class="flow-step-num">۴</div>
+            <h4 style="font-size: 0.92rem; color: #fff; margin-bottom: 0.4rem;">ثبت ضد Double-Spend</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">هش تراکنش در <code>observed_transactions</code> ثبت شده و امکان استفاده مجدد از آن غیرممکن می‌گردد.</p>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- 3. Domain Layer -->
-      <div class="arch-layer-card">
-        <span class="layer-badge domain">Domain / Core Entities Layer (هسته کسب‌وکار و اینترفیس‌ها)</span>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-          مستقل از هرگونه فریمورک، دیتابیس یا ابزار خارجی. شامل ساختار موجودیت‌ها (Entities)، انواع وضعیت فاکتور (PENDING, PAID, ...) و قراردادهای اینترفیس ریپازیتوری‌ها.
-        </p>
-        <div class="layer-components">
-          <div class="layer-item">
-            <strong>domain/payment.go</strong>
-            <span>۷ موجودیت دیتابیس + DTOها</span>
+    <!-- Section 6: Live Interactive Payment Simulator -->
+    <section id="simulator">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">6</span>
+          شبیه‌ساز زنده پرداخت و تست تعاملی سناریوها (Live Simulator)
+        </div>
+        <span class="section-tag" style="background: rgba(6, 182, 212, 0.15); color: var(--cyan-glow);">ویژه پرزنتیشن و دمو زنده به تیم فنی</span>
+      </div>
+
+      <div class="sim-panel">
+        <div class="sim-controls-grid">
+          <div class="form-group">
+            <label>انتخاب شبکه بلاکچین:</label>
+            <select id="simNetwork" class="form-control" onchange="onSimNetworkChange()">
+              <option value="bsc">🟡 BNB Smart Chain (BSC)</option>
+              <option value="ton">💎 The Open Network (TON)</option>
+            </select>
           </div>
-          <div class="layer-item">
-            <strong>domain/repository.go</strong>
-            <span>قرارداد ۷ ریپازیتوری مجزا</span>
+
+          <div class="form-group">
+            <label>ارز پرداختی:</label>
+            <select id="simCurrency" class="form-control">
+              <option value="USDT">USDT (BEP-20) - 1.00 USD</option>
+              <option value="BNB">BNB (بومی) - 610.00 USD</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>مبلغ فاکتور (USD):</label>
+            <input type="number" id="simAmount" class="form-control" value="15.00" step="1.0" min="1">
+          </div>
+
+          <div class="form-group">
+            <label>شناسه سفارش (Order ID):</label>
+            <input type="text" id="simOrderId" class="form-control" value="WALLEX-ORD-101">
+          </div>
+        </div>
+
+        <div class="sim-actions-bar">
+          <button class="btn-sim btn-sim-primary" onclick="simCreateInvoice()">
+            <span>➕</span> صدور فاکتور جدید (POST /invoices)
+          </button>
+          <button class="btn-sim btn-sim-success" onclick="simExecuteTx('SUCCESS')">
+            <span>✅</span> شبیه‌سازی پرداخت موفق (Settlement)
+          </button>
+          <button class="btn-sim btn-sim-danger" onclick="simExecuteTx('DOUBLE_SPEND')">
+            <span>🛑</span> تست حمله Double-Spending
+          </button>
+          <button class="btn-sim btn-sim-warning" onclick="simExecuteTx('UNDERPAID')">
+            <span>⚠️</span> تست کسری واریز (Underpaid)
+          </button>
+          <button class="btn-sim" style="background: rgba(255,255,255,0.08); color: #cbd5e1;" onclick="simExecuteTx('EXPIRE')">
+            <span>⌛</span> تست انقضای ۳۰ دقیقه
+          </button>
+        </div>
+
+        <div class="sim-display-grid">
+          <!-- Left: Invoice Preview Card -->
+          <div class="invoice-preview-card">
+            <div class="inv-hero">
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-dim); display: block;">شناسه فاکتور:</span>
+                <strong id="dispInvNumber" style="font-family: var(--font-mono); color: #fff; font-size: 0.95rem;">INV-2026-9A9436</strong>
+              </div>
+              <div id="dispBadgeStatus" class="badge-status status-pending">در انتظار پرداخت ⏳</div>
+            </div>
+
+            <div style="text-align: center; margin: 1rem 0; background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 10px;">
+              <div id="dispCryptoAmount" style="font-size: 1.5rem; font-weight: 800; color: var(--cyan-glow); font-family: var(--font-mono);">15.00 USDT</div>
+              <div id="dispAmountUsd" style="font-size: 0.82rem; color: var(--text-muted);">$15.00 USD</div>
+            </div>
+
+            <div class="inv-detail-row">
+              <span>آدرس واریز:</span>
+              <span id="dispAddress" title="آدرس واریز">0x3C76...88F4</span>
+            </div>
+            <div class="inv-detail-row" id="dispMemoRow" style="display: none;">
+              <span>ممو / Comment:</span>
+              <span id="dispMemo" style="color: #fbbf24; font-weight: 700;">ORD-89241</span>
+            </div>
+            <div class="inv-detail-row">
+              <span>مهلت باقیمانده:</span>
+              <span id="dispTimer" style="color: #38bdf8; font-weight: 700;">⏱ 29:59</span>
+            </div>
+          </div>
+
+          <!-- Right: Terminal Console Output -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.75rem; color: var(--text-dim);">🖥️ لاگ آنچین و وقایع رویدادهای سرور (Console Log):</span>
+              <button class="btn-copy" onclick="document.getElementById('simConsole').innerHTML=''">پاکسازی</button>
+            </div>
+            <div id="simConsole" class="terminal-console">
+[READY] شبیه‌ساز آماده اجرای دمو است. روی دکمه‌های سناریو کلیک فرمایید.
+            </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- 4. Infrastructure & Repository Layer -->
-      <div class="arch-layer-card">
-        <span class="layer-badge repo">Infrastructure & Repository Layer (زیرساخت دیتابیس و نود)</span>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-          پیاده‌سازی واقعی اینترفیس‌های دامنه با درایور پرسرعت pgxpool برای PostgreSQL و در آینده کلاینت RPC نود TON جهت رصد بدون واسطه تراکنش‌های والت مستر.
-        </p>
-        <div class="layer-components">
-          <div class="layer-item">
-            <strong>service_repo.go</strong>
-            <span>کوئری‌های جدول services</span>
-          </div>
-          <div class="layer-item">
-            <strong>invoice_repo.go</strong>
-            <span>کوئری‌های جدول invoices</span>
-          </div>
-          <div class="layer-item">
-            <strong>transaction_repo.go</strong>
-            <span>ثبت و تطبیق tx_hash بلاکچین</span>
-          </div>
-          <div class="layer-item">
-            <strong>address_repo.go</strong>
-            <span>تخصیص آدرس و مموی یکتا</span>
-          </div>
-          <div class="layer-item">
-            <strong>postgres.go / migrations</strong>
-            <span>مایگریشن‌های 000001 تا 000008</span>
-          </div>
+    <!-- Section 7: API Reference Catalog -->
+    <section id="api-docs">
+      <div class="section-title-wrap">
+        <div class="section-title">
+          <span class="number">7</span>
+          مستندات کامل اندپوینت‌های وب‌سرویس (REST API Reference)
         </div>
+        <span class="section-tag">Base URL: http://localhost:8080</span>
       </div>
 
-    </div>
-
-    <!-- Section 1: SOLID Mapping Table -->
-    <div id="solid" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">1</span>
-        تطبیق دقیق فایل‌های پروژه با اصول SOLID و Clean Architecture
-      </div>
-      <span class="status-tag tag-active">تک‌مسئولیتی کامل (بدون فایل‌های هیولایی / God Objects)</span>
-    </div>
-
-    <div class="mapping-table-wrap">
-      <table class="mapping-table">
-        <thead>
-          <tr>
-            <th>مسیر فایل در پروژه</th>
-            <th>معادل معماری / الگو</th>
-            <th>مسئولیت تک‌گانه (Single Responsibility)</th>
-            <th>وضعیت پیاده‌سازی</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="code-badge">cmd/api/main.go</span></td>
-            <td><strong>نقطه ورود (Composition Root)</strong></td>
-            <td>لود کانفیگ، ایجاد pgxpool، تزریق وابستگی‌ها (DI) به شکل ماژولار و راه‌اندازی سرور با Graceful Shutdown</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">delivery/http/catalog_handler.go</span></td>
-            <td><strong>کنترلر کاتالوگ (Catalog Controller)</strong></td>
-            <td>پاسخگویی به درخواست‌های لیست خدمات، شبکه‌ها و ارزها برای فرانت‌ند و ربات</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">delivery/http/invoice_handler.go</span></td>
-            <td><strong>کنترلر فاکتور (Invoice Controller)</strong></td>
-            <td>صدور فاکتور جدید، استعلام وضعیت با شناسه و استعلام با شماره فاکتور</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">delivery/http/health_handler.go</span></td>
-            <td><strong>کنترلر سلامت (Health Controller)</strong></td>
-            <td>بررسی وضعیت زنده بودن سرور بدون تداخل با منطق‌های مالی</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">delivery/http/middleware.go</span></td>
-            <td><strong>میدلورها (Middlewares)</strong></td>
-            <td>لاگینگ اختصاصی <code>log/slog</code>، ریکاوری خطاها و تنظیم هدرهای CORS</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">delivery/http/router.go</span></td>
-            <td><strong>مسیریاب تمیز (Routing)</strong></td>
-            <td>صرفاً اتصال مسیرهای URL به کنترلرهای مجزا بدون آلودگی منطق</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">usecase/catalog_usecase.go</span></td>
-            <td><strong>سرویس کاتالوگ (Catalog Service)</strong></td>
-            <td>منطق بیزینس واکشی خدمات، شبکه‌های مجاز و ارزهای فعال</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">usecase/invoice_usecase.go</span></td>
-            <td><strong>سرویس فاکتورها (Invoice Service)</strong></td>
-            <td>محاسبه نرخ لحظه‌ای، رزرو آدرس و ممو، تولید شناسه یکتا و ایجاد فاکتور</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">usecase/settlement_usecase.go</span></td>
-            <td><strong>سرویس تسویه حساب (Settlement Service)</strong></td>
-            <td>تطابق تراکنش‌های ورودی با فاکتورهای PENDING، جلوگیری از Double-Spending و تغییر وضعیت به PAID</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">repository/postgres/*_repo.go</span></td>
-            <td><strong>۷ ریپازیتوری تفکیک‌شده (Repositories)</strong></td>
-            <td>تفکیک مجزای کوئری‌های هر جدول: <code>service_repo</code>, <code>network_repo</code>, <code>currency_repo</code>, <code>user_repo</code>, <code>address_repo</code>, <code>invoice_repo</code>, <code>transaction_repo</code></td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-          <tr>
-            <td><span class="code-badge">migrations/000001..000008_*.sql</span></td>
-            <td><strong>مایگریشن‌های گام‌به‌گام (Step-by-Step)</strong></td>
-            <td>تفکیک ساخت هر جدول در یک فایل SQL جداگانه به همراه Down migrations</td>
-            <td><span class="status-tag tag-active">تکمیل شده ✅</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Section 2: Database Schema Explorer -->
-    <div id="database" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">2</span>
-        پایگاه داده بازطراحی‌شده (۷ جدول تفکیک‌شده با کلیدهای خارجی)
-      </div>
-      <span class="status-tag tag-clean">کلیک روی هر جدول ارتباطات آن را برجسته می‌کند</span>
-    </div>
-
-    <div class="db-grid">
-      
-      <!-- Table 1: users -->
-      <div class="db-card" id="card-users" onclick="highlightTable('users')">
-        <div class="db-header">
-          <span class="db-table-name">1. users</span>
-          <span class="status-tag tag-active">کاربران</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">پروفایل مشترک کلاینت‌ها (فرانت‌ند و ربات تلگرام)</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          <span class="uk">telegram_id</span>: BIGINT (UNIQUE, NULLABLE)<br>
-          username: VARCHAR(128)<br>
-          first_name: VARCHAR(128)<br>
-          created_at: TIMESTAMPTZ
-        </div>
-      </div>
-
-      <!-- Table 2: services -->
-      <div class="db-card" id="card-services" onclick="highlightTable('services')">
-        <div class="db-header">
-          <span class="db-table-name">2. services</span>
-          <span class="status-tag tag-active">کاتالوگ خدمات</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">پلن‌های اشتراک، شارژ اکانت و مبالغ پایه دلاری</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          <span class="uk">code</span>: VARCHAR(64) (UNIQUE)<br>
-          title: VARCHAR(255)<br>
-          description: TEXT<br>
-          price_usd: <span class="type">NUMERIC(18, 4)</span><br>
-          is_active: BOOLEAN
-        </div>
-      </div>
-
-      <!-- Table 3: networks -->
-      <div class="db-card" id="card-networks" onclick="highlightTable('networks')">
-        <div class="db-header">
-          <span class="db-table-name">3. networks</span>
-          <span class="status-tag tag-active">شبکه‌ها</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">بلاکچین‌های تحت پشتیبانی سیستم (TON, TRON)</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: VARCHAR(32) (PRIMARY KEY - 'ton')<br>
-          name: VARCHAR(128)<br>
-          native_currency: VARCHAR(16)<br>
-          rpc_endpoint: TEXT<br>
-          is_testnet: BOOLEAN<br>
-          is_active: BOOLEAN
-        </div>
-      </div>
-
-      <!-- Table 4: currencies -->
-      <div class="db-card" id="card-currencies" onclick="highlightTable('currencies')">
-        <div class="db-header">
-          <span class="db-table-name">4. currencies</span>
-          <span class="status-tag tag-active">کوین‌ها و توکن‌ها</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">کوین‌های بومی و توکن‌ها (USDT, TON) به همراه دسی‌مال</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          symbol: VARCHAR(16)<br>
-          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
-          contract_address: VARCHAR(128)<br>
-          decimals: INT (6, 9, 18)<br>
-          min_deposit: <span class="type">NUMERIC(36, 18)</span>
-        </div>
-      </div>
-
-      <!-- Table 5: deposit_addresses -->
-      <div class="db-card" id="card-addresses" onclick="highlightTable('addresses')">
-        <div class="db-header">
-          <span class="db-table-name">5. deposit_addresses</span>
-          <span class="status-tag tag-active">آدرس‌ها و ممو</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">تخصیص والت متمرکز با ممو اختصاصی یا والت یکتا</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          <span class="fk">user_id</span>: UUID (FK -> users.id)<br>
-          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
-          address: TEXT<br>
-          <span class="uk">memo</span>: VARCHAR(128) (UNIQUE)<br>
-          is_assigned: BOOLEAN
-        </div>
-      </div>
-
-      <!-- Table 6: invoices -->
-      <div class="db-card" id="card-invoices" onclick="highlightTable('invoices')">
-        <div class="db-header">
-          <span class="db-table-name">6. invoices</span>
-          <span class="status-tag tag-active">فاکتورها</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">هسته مالی با نرخ تبدیل، مهلت ۳۰ دقیقه‌ای و استاتوس</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          <span class="uk">invoice_number</span>: VARCHAR(64) (UNIQUE)<br>
-          <span class="fk">service_id</span>: UUID (FK -> services.id)<br>
-          <span class="fk">currency_id</span>: UUID (FK -> currencies.id)<br>
-          amount_usd: <span class="type">NUMERIC(18, 4)</span><br>
-          crypto_amount: <span class="type">NUMERIC(36, 18)</span><br>
-          status: VARCHAR(32) ('PENDING', 'PAID')<br>
-          expires_at: TIMESTAMPTZ
-        </div>
-      </div>
-
-      <!-- Table 7: observed_transactions -->
-      <div class="db-card" id="card-transactions" onclick="highlightTable('transactions')">
-        <div class="db-header">
-          <span class="db-table-name">7. observed_transactions</span>
-          <span class="status-tag tag-active">تراکنش‌های رصدشده</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">جلوگیری قطعی از Double-Spending با قید یکتایی هش</p>
-        <div class="db-fields-list">
-          <span class="pk">id</span>: UUID (PRIMARY KEY)<br>
-          <span class="fk">invoice_id</span>: UUID (FK -> invoices.id)<br>
-          <span class="fk">network_id</span>: VARCHAR(32) (FK -> networks.id)<br>
-          tx_hash: TEXT<br>
-          amount: <span class="type">NUMERIC(36, 18)</span><br>
-          <span class="uk">CONSTRAINT uq_network_tx_hash</span> UNIQUE(network_id, tx_hash)
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Section 3: Interactive Live Simulator Pro -->
-    <div id="simulator" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">3</span>
-        شبیه‌ساز تعاملی و زنده‌ی چرخه پرداخت (Live Interactive Simulator Pro)
-      </div>
-      <span class="status-tag tag-active">تست سناریوهای پرداخت، کسری واریز، انقضا و حمله تراکنش تکراری</span>
-    </div>
-
-    <div class="simulator-panel">
-      
-      <!-- Control Settings -->
-      <div class="sim-controls-grid">
-        <div class="sim-control-group">
-          <label>انتخاب خدمت (Service)</label>
-          <select id="simServiceSelect" class="sim-select" onchange="updateSimEstimate()">
-            <option value="VIP_1M" data-price="5.00">اشتراک ۱ ماهه VIP کانال ($5.00)</option>
-            <option value="VIP_3M" data-price="12.00">اشتراک ۳ ماهه VIP کانال ($12.00)</option>
-            <option value="TOPUP_20" data-price="20.00">شارژ اعتبار کیف پول ($20.00)</option>
-          </select>
-        </div>
-
-        <div class="sim-control-group">
-          <label>انتخاب شبکه بلاکچین (Network)</label>
-          <select id="simNetworkSelect" class="sim-select" onchange="updateSimCurrencies()">
-            <option value="ton">The Open Network (TON)</option>
-            <option value="tron">TRON Blockchain (TRX/TRC20)</option>
-          </select>
-        </div>
-
-        <div class="sim-control-group">
-          <label>انتخاب ارز پرداختی (Currency)</label>
-          <select id="simCurrencySelect" class="sim-select" onchange="updateSimEstimate()">
-            <option value="TON" data-rate="5.00">TON Coin (نرخ: $5.00)</option>
-            <option value="USDT" data-rate="1.00">USDT - Tether (نرخ: $1.00)</option>
-          </select>
-        </div>
-
-        <div class="sim-control-group">
-          <label>شناسه تلگرام کاربر (اختیاری)</label>
-          <input type="text" id="simTelegramId" class="sim-input" value="84920194" placeholder="مثال: 84920194">
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="sim-action-buttons">
-        <button id="btnCreateInvoice" class="btn-sim btn-primary" onclick="simCreateInvoice()">
-          <span>⚡ صدور فاکتور جدید (POST /invoices)</span>
-        </button>
-
-        <button id="btnSimPaySuccess" class="btn-sim btn-scenario" onclick="simExecuteTx('SUCCESS')">
-          <span>🟢 شبیه‌سازی واریز موفق (Paid)</span>
-        </button>
-
-        <button id="btnSimUnderpaid" class="btn-sim btn-scenario" onclick="simExecuteTx('UNDERPAID')">
-          <span>🟡 شبیه‌سازی کسری واریز (Underpaid)</span>
-        </button>
-
-        <button id="btnSimDoubleSpend" class="btn-sim btn-scenario" onclick="simExecuteTx('DOUBLE_SPEND')">
-          <span>🛡️ شبیه‌سازی حمله تراکنش تکراری (Double-Spend)</span>
-        </button>
-
-        <button id="btnSimExpire" class="btn-sim btn-scenario" onclick="simExecuteTx('EXPIRE')">
-          <span>⌛ شبیه‌سازی انقضای فاکتور (Expired)</span>
-        </button>
-      </div>
-
-      <!-- Invoice Card & Visual QR -->
-      <div class="sim-display-grid">
-        
-        <div class="invoice-mock-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span id="invStatusBadge" class="invoice-badge-status status-pending">PENDING (در انتظار پرداخت)</span>
-            <span id="invTimer" style="font-family: var(--font-mono); color: #fbbf24; font-weight: 700; font-size: 0.95rem;">⏱ 29:59</span>
-          </div>
-
-          <div class="inv-detail-row">
-            <span class="label">شماره فاکتور:</span>
-            <span class="val" id="invNumber">INV-2026-A82F9</span>
-          </div>
-          <div class="inv-detail-row">
-            <span class="label">خدمت درخواستی:</span>
-            <span class="val" id="invServiceTitle">اشتراک ۱ ماهه VIP ($5.00)</span>
-          </div>
-          <div class="inv-detail-row">
-            <span class="label">مبلغ دلاری:</span>
-            <span class="val" id="invAmountUsd">$5.00 USD</span>
-          </div>
-          <div class="inv-detail-row">
-            <span class="label">مبلغ پرداختی کریپتو:</span>
-            <span class="val" id="invCryptoAmount" style="color: var(--cyan-glow); font-size: 1.05rem;">1.000000000 TON</span>
-          </div>
-          <div class="inv-detail-row">
-            <span class="label">آدرس واریز والت:</span>
-            <span class="val" id="invAddress" style="font-size: 0.78rem;">EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury</span>
-          </div>
-          <div class="inv-detail-row">
-            <span class="label">کامنت / ممو اجباری (Memo):</span>
-            <span class="val" id="invMemo" style="color: #fbbf24; font-size: 1rem; font-weight: 800;">ORD-89241</span>
-          </div>
-
-          <div class="memo-highlight-box">
-            ⚠️ <strong>هشدار حیاتی:</strong> بدون وارد کردن ممو (Comment)، واریزی شناسایی نخواهد شد و به فاکتور تخصیص نمی‌یابد!
-          </div>
-
-          <div class="qr-and-pay-wrap">
-            <svg class="qr-svg" viewBox="0 0 100 100">
-              <rect width="100" height="100" fill="#ffffff"/>
-              <!-- Corner 1 -->
-              <rect x="5" y="5" width="26" height="26" fill="#000000"/>
-              <rect x="9" y="9" width="18" height="18" fill="#ffffff"/>
-              <rect x="13" y="13" width="10" height="10" fill="#000000"/>
-              <!-- Corner 2 -->
-              <rect x="69" y="5" width="26" height="26" fill="#000000"/>
-              <rect x="73" y="9" width="18" height="18" fill="#ffffff"/>
-              <rect x="77" y="13" width="10" height="10" fill="#000000"/>
-              <!-- Corner 3 -->
-              <rect x="5" y="69" width="26" height="26" fill="#000000"/>
-              <rect x="9" y="73" width="18" height="18" fill="#ffffff"/>
-              <rect x="13" y="77" width="10" height="10" fill="#000000"/>
-              <!-- Center pattern -->
-              <rect x="38" y="10" width="8" height="8" fill="#000000"/>
-              <rect x="52" y="15" width="6" height="6" fill="#000000"/>
-              <rect x="36" y="36" width="28" height="28" fill="#06b6d4"/>
-              <rect x="42" y="42" width="16" height="16" fill="#ffffff"/>
-              <rect x="46" y="46" width="8" height="8" fill="#6366f1"/>
-              <rect x="15" y="42" width="12" height="6" fill="#000000"/>
-              <rect x="75" y="45" width="15" height="8" fill="#000000"/>
-              <rect x="40" y="75" width="12" height="12" fill="#000000"/>
-              <rect x="60" y="70" width="25" height="18" fill="#000000"/>
-            </svg>
+      <div>
+        <!-- API 1: Health -->
+        <div class="api-card">
+          <div class="api-header">
             <div>
-              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">اسکن سریع با والت</div>
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">پشتیبانی مستقیم از Tonkeeper و تلگرام ولت</p>
-              <a href="javascript:void(0)" onclick="alert('لینک پرداخت مستقیم دیپ‌لینک: ton://transfer/... با مموی فاکتور باز خواهد شد')" style="display: inline-block; font-size: 0.8rem; color: var(--cyan); margin-top: 0.4rem; font-weight: 600;">
-                🔗 باز کردن مستقیم در Tonkeeper
-              </a>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/health</span>
             </div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">بررسی زنده سلامت سیستم و دیتابیس</span>
           </div>
         </div>
 
-        <!-- Real-time Console Logs -->
-        <div>
-          <div class="sim-steps-strip">
-            <div class="sim-step-node" id="simStep1">
-              <div class="sim-step-number">Step 01</div>
-              <div class="sim-step-title">درخواست فاکتور</div>
+        <!-- API 2: Login -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-post">POST</span>
+              <span class="api-endpoint">/api/v1/auth/login</span>
             </div>
-            <div class="sim-step-node" id="simStep2">
-              <div class="sim-step-number">Step 02</div>
-              <div class="sim-step-title">محاسبه و ممو</div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">ورود مدیر با هش Bcrypt (محدودیت ۵ تلاش در دقیقه)</span>
+          </div>
+        </div>
+
+        <!-- API 3: Create Invoice -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-post">POST</span>
+              <span class="api-endpoint">/api/v1/invoices</span>
             </div>
-            <div class="sim-step-node" id="simStep3">
-              <div class="sim-step-number">Step 03</div>
-              <div class="sim-step-title">ثبت PENDING</div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">صدور فاکتور کریپتو همراه با نرخ روز و تخصیص والت</span>
+          </div>
+        </div>
+
+        <!-- API 4: Get Invoice by ID -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/invoices/{id}</span>
             </div>
-            <div class="sim-step-node" id="simStep4">
-              <div class="sim-step-number">Step 04</div>
-              <div class="sim-step-title">رصد ولیدیتور</div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">استعلام وضعیت فاکتور با بررسی خودکار آنچین</span>
+          </div>
+        </div>
+
+        <!-- API 5: Get Invoice by Number -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/invoices/number/{number}</span>
             </div>
-            <div class="sim-step-node" id="simStep5">
-              <div class="sim-step-number">Step 05</div>
-              <div class="sim-step-title">تسویه و تایید</div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">استعلام فاکتور با شماره خوانا (INV-2026-...)</span>
+          </div>
+        </div>
+
+        <!-- API 6: Rebalance Wallets List -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/rebalance/wallets</span>
             </div>
-          </div>
-
-          <div class="sim-log-box" id="simLogs">
-            [READY] سیستم آماده است. روی «صدور فاکتور جدید» کلیک کنید تا عملیات آغاز شود.
+            <span style="font-size: 0.8rem; color: var(--text-dim);">لیست والت‌های مشتق‌شده BSC و موجودی لایو زنجیره</span>
           </div>
         </div>
 
-      </div>
-
-    </div>
-
-    <!-- Section 4: Detailed Flowchart -->
-    <div id="flowchart" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">4</span>
-        فلوچارت گام‌به‌گام عملکرد واقعی سیستم (End-to-End Processing Flow)
-      </div>
-      <span class="status-tag tag-clean">اتصال یکپارچه از کلاینت تا نود بلاکچین</span>
-    </div>
-
-    <div class="flowchart-wrapper">
-      <div class="flow-steps-v">
-        
-        <div class="flow-node">
-          <div class="flow-badge">1</div>
-          <div class="flow-card">
-            <h4>
-              درخواست صدور فاکتور توسط کاربر (Invoice Creation Request)
-              <span class="role-tag">Client (React / Telegram Bot) ➔ invoice_handler</span>
-            </h4>
-            <p>
-              کلاینت متد <code>POST /api/v1/invoices</code> را صدا می‌زند و فیلدهای <code>service_id</code>, <code>currency_id</code>, <code>network_id</code> و شناسه تلگرام اختیاری را ارسال می‌کند. هندلر با استفاده از Go 1.22 JSON streaming داده‌ها را اعتبارسنجی می‌کند.
-            </p>
+        <!-- API 7: Sweep Wallet -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-post">POST</span>
+              <span class="api-endpoint">/api/v1/rebalance/sweep</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">سوئیپ والت BSC (برادکست زنده یا شبیه‌سازی پیش‌پرواز)</span>
           </div>
         </div>
 
-        <div class="flow-node">
-          <div class="flow-badge">2</div>
-          <div class="flow-card">
-            <h4>
-              محاسبه نرخ کریپتو و رزرو Memo اختصاصی (Invoice Orchestration)
-              <span class="role-tag">invoice_usecase ➔ address_repo & currency_repo</span>
-            </h4>
-            <p>
-              یوزکیس قیمت خدمت را واکشی کرده و با نرخ لحظه‌ای ارز انتخابی، مقدار دقیق کریپتو را با دقت ۱۸ رقم اعشار (برای جلوگیری از خطای Float) محاسبه می‌کند. سپس آدرس والت اصلی سیستم به همراه یک Comment / Memo یکتا تولید و به فاکتور الصاق می‌گردد.
-            </p>
+        <!-- API 8: TON Treasury -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/rebalance/ton</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">اطلاعات خزانه‌داری متمرکز TON (اثبات عدم نیاز به ریبالانسینگ)</span>
           </div>
         </div>
 
-        <div class="flow-node">
-          <div class="flow-badge">3</div>
-          <div class="flow-card">
-            <h4>
-              ثبت فاکتور در وضعیت PENDING (Ledger Persistence)
-              <span class="role-tag">invoice_repo ➔ PostgreSQL invoices Table</span>
-            </h4>
-            <p>
-              رکورد جدید با وضعیت <code>PENDING</code>، زمان انقضای ۳۰ دقیقه‌ای و شماره فاکتور منحصربه‌فرد در جدول <code>invoices</code> ذخیره می‌شود. پاسخ JSON شامل آدرس، ممو و QR Code برای کاربر ارسال می‌شود.
-            </p>
+        <!-- API 9: BSC Gas Estimation -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/rebalance/estimate</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">تخمین زنده گس‌فی و وضعیت سوخت‌رسانی از نود BSC</span>
           </div>
         </div>
 
-        <div class="flow-node">
-          <div class="flow-badge">4</div>
-          <div class="flow-card">
-            <h4>
-              پایش مستقیم ولیدیتور نود TON (Direct Blockchain Observer)
-              <span class="role-tag">Background Observer Worker ➔ Validator RPC / TonAPI</span>
-            </h4>
-            <p>
-              ماژول Observer در یک Goroutine پس‌زمینه بدون واسطه‌هایی مثل NowPayments، تراکنش‌های والت مستر را پایش می‌کند. به محض دریافت تراکنش ورودی جدید، فیلد متن Comment را استخراج و با لیست فاکتورهای PENDING تطبیق می‌دهد.
-            </p>
+        <!-- API 10: Rebalance Records -->
+        <div class="api-card">
+          <div class="api-header">
+            <div>
+              <span class="api-method method-get">GET</span>
+              <span class="api-endpoint">/api/v1/rebalance/records</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">دریافت سوابق رسمی ریبالانسینگ BSC از جدول rebalance_records</span>
           </div>
         </div>
-
-        <div class="flow-node">
-          <div class="flow-badge">5</div>
-          <div class="flow-card">
-            <h4>
-              بررسی Double-Spending، تسویه حساب و اعلان (Settlement & Protection)
-              <span class="role-tag">settlement_usecase ➔ transaction_repo & invoice_repo</span>
-            </h4>
-            <p>
-              پیش از هر تغییری، هش تراکنش در <code>observed_transactions</code> با قید یکتایی <code>uq_network_tx_hash</code> بررسی می‌شود. اگر تراکنش تکراری نباشد، ثبت شده، وضعیت فاکتور به <code>PAID</code> تغییر کرده و وب‌هوک به فرانت‌ند یا ربات تلگرام ارسال می‌شود تا خدمت فوراً فعال گردد.
-            </p>
-          </div>
-        </div>
-
       </div>
-    </div>
-
-    <!-- Section 5: React Frontend & Telegram Bot Dual Clients -->
-    <div id="clients" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">5</span>
-        پشتیبانی دوگانه همزمان: اپلیکیشن تست React + ربات تلگرام
-      </div>
-      <span class="status-tag tag-active">بدون نیاز به تغییر حتی یک خط از کدهای بک‌اند</span>
-    </div>
-
-    <div class="clients-dual-grid">
-      
-      <!-- Client 1: React Test Web App -->
-      <div class="client-card">
-        <div class="client-header">
-          <div class="client-icon" style="background: rgba(6, 182, 212, 0.2); color: var(--cyan);">⚛️</div>
-          <div>
-            <h3 style="font-size: 1.2rem; color: #fff;">اپلیکیشن وب React</h3>
-            <span style="font-size: 0.8rem; color: var(--text-dim);">محیط تست دسکتاپ و موبایل</span>
-          </div>
-        </div>
-        <ul class="client-list">
-          <li>اتصال از طریق کلاینت ساده Axios یا TanStack Query</li>
-          <li>دریافت لیست خدمات از <code>GET /api/v1/services</code> به صورت کش‌شده</li>
-          <li>صدور فاکتور با <code>POST /api/v1/invoices</code> و رندر QR کد اختصاصی</li>
-          <li>پولینگ ساده ۵ ثانیه‌ای یا SSE از <code>GET /api/v1/invoices/{id}</code> تا زمان PAID شدن</li>
-          <li>دکمه اتصال مستقیم 1-Click به Tonkeeper یا Telegram Wallet وب</li>
-        </ul>
-      </div>
-
-      <!-- Client 2: Telegram Bot -->
-      <div class="client-card">
-        <div class="client-header">
-          <div class="client-icon" style="background: rgba(99, 102, 241, 0.2); color: var(--indigo);">🤖</div>
-          <div>
-            <h3 style="font-size: 1.2rem; color: #fff;">ربات تلگرام (Telegram Bot)</h3>
-            <span style="font-size: 0.8rem; color: var(--text-dim);">خرید اشتراک و تحویل اتوماتیک</span>
-          </div>
-        </div>
-        <ul class="client-list">
-          <li>استفاده از کیبوردهای اینلاین (Inline Keyboards) برای انتخاب پلن</li>
-          <li>ارسال <code>telegram_id</code> به اندپوینت فاکتور جهت ایجاد پروفایل در <code>users</code></li>
-          <li>تولید دکمه پرداخت با فرمت دیپ‌لینک: <code>ton://transfer/ADDRESS?amount=X&text=MEMO</code></li>
-          <li>ارسال پیام تبریک و لینک جوین یکبار مصرف به کانال VIP بلافاصله پس از تسویه فاکتور</li>
-        </ul>
-      </div>
-
-    </div>
-
-    <!-- Section 6: TON Direct Node Strategy Deep Dive -->
-    <div id="observer" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">6</span>
-        معماری ناظر مستقیم بلاکچین TON (Direct Node Observer Engine)
-      </div>
-      <span class="status-tag tag-active">کارمزد صفر واسطه‌ها + امنیت ۱۰۰٪ سازمانی</span>
-    </div>
-
-    <div class="observer-deep-dive">
-      <h3 style="font-size: 1.35rem; color: #fff; margin-bottom: 0.5rem;">چرا اتصال مستقیم به نود TON به جای درگاه‌های شخص ثالث؟</h3>
-      <p style="color: var(--text-muted); font-size: 0.95rem;">
-        در این معماری تمامی مبالغ مستقیماً به والت مستر شما در شبکه TON واریز می‌شود و هیچ شرکت واسطه‌ای مثل NowPayments دخل و تصرفی در دارایی‌ها ندارد.
-      </p>
-
-      <div class="strategy-grid">
-        <div class="strategy-box">
-          <h5>🔑 استراتژی Master Wallet + Unique Memo</h5>
-          <p style="font-size: 0.88rem; color: var(--text-muted);">
-            به جای ساخت صدها والت و پرداخت کارمزد گزاف برای جابه‌جایی موجودی، یک والت امن مستر استفاده شده و برای هر سفارش یک Memo متنی یکتا (مانند <code>ORD-9821</code>) تولید می‌گردد.
-          </p>
-        </div>
-
-        <div class="strategy-box">
-          <h5>⚡ نحوه استخراج واریزی از بلاک‌ها</h5>
-          <p style="font-size: 0.88rem; color: var(--text-muted);">
-            ناظر با متد <code>getTransactions</code> یا سابسکرایب وب‌سوکت، پیام‌های ورودی (InMsg) را دریافت و فیلد Comment / Memo را از ساختار باینری BOC دیکود می‌کند.
-          </p>
-        </div>
-
-        <div class="strategy-box">
-          <h5>🛡️ محافظت دو لایه در برابر Double-Spending</h5>
-          <p style="font-size: 0.88rem; color: var(--text-muted);">
-            یک لایه در لایه UseCase و لایه دوم در سطح دیتابیس با کلید ترکیبی <code>UNIQUE(network_id, tx_hash)</code> تضمین می‌کند که هیچ هش تراکنشی نمی‌تواند دو بار پردازش شود.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 7: API Endpoints Quick Reference -->
-    <div id="api" class="section-title-wrap">
-      <div class="section-title">
-        <span class="number">7</span>
-        اندپوینت‌های فعال REST API
-      </div>
-      <span class="status-tag tag-clean">ساده، استاندارد و با قابلیت اجرا در ترمینال</span>
-    </div>
-
-    <div class="api-grid">
-      
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-get">GET</span>
-            <span class="api-path">/health</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">بررسی سلامت</span>
-        </div>
-        <div class="api-snippet">
-curl -X GET http://localhost:8080/health
-// {"success":true,"data":{"service":"crypto-service","status":"healthy"}}
-        </div>
-      </div>
-
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-get">GET</span>
-            <span class="api-path">/api/v1/services</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">لیست خدمات</span>
-        </div>
-        <div class="api-snippet">
-curl -X GET http://localhost:8080/api/v1/services
-// لیست پلن‌های فعال همراه با قیمت دلاری
-        </div>
-      </div>
-
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-get">GET</span>
-            <span class="api-path">/api/v1/networks</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">لیست شبکه‌ها</span>
-        </div>
-        <div class="api-snippet">
-curl -X GET http://localhost:8080/api/v1/networks
-// خروجی شبکه‌های فعال (ton, tron)
-        </div>
-      </div>
-
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-get">GET</span>
-            <span class="api-path">/api/v1/networks/{id}/currencies</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">ارزهای شبکه</span>
-        </div>
-        <div class="api-snippet">
-curl -X GET http://localhost:8080/api/v1/networks/ton/currencies
-// لیست توکن‌ها و کوین‌های شبکه TON (مانند TON, USDT)
-        </div>
-      </div>
-
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-post">POST</span>
-            <span class="api-path">/api/v1/invoices</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">صدور فاکتور</span>
-        </div>
-        <div class="api-snippet">
-curl -X POST http://localhost:8080/api/v1/invoices \
-  -H "Content-Type: application/json" \
-  -d '{"service_id":"...","currency_id":"...","network_id":"ton","telegram_id":849201}'
-        </div>
-      </div>
-
-      <div class="api-card">
-        <div class="api-header">
-          <div>
-            <span class="api-method method-get">GET</span>
-            <span class="api-path">/api/v1/invoices/{id}</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-dim);">استعلام وضعیت</span>
-        </div>
-        <div class="api-snippet">
-curl -X GET http://localhost:8080/api/v1/invoices/b1c2-984a-431f
-// وضعیت PENDING, PAID و جزئیات پرداخت
-        </div>
-      </div>
-
-    </div>
+    </section>
 
     <footer>
-      <p>© 2026 Crypto Service | Enterprise Clean Architecture + SOLID (SRP) & Direct TON Blockchain Observer</p>
+      <p>© 2026 Crypto Payment Service | Enterprise In-House Architecture (Go + PostgreSQL + React 19)</p>
     </footer>
 
   </div>
 
-  <!-- JavaScript Logic for Live Simulator and Interactive Schema -->
+  <!-- Interactive JavaScript Logic -->
   <script>
-    // State
-    let currentInvoice = {
-      number: 'INV-2026-A82F9',
-      serviceTitle: 'اشتراک ۱ ماهه VIP ($5.00)',
-      amountUsd: 5.00,
-      cryptoAmount: 1.000000000,
-      currency: 'TON',
-      network: 'ton',
-      address: 'EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury',
-      memo: 'ORD-89241',
-      status: 'PENDING',
-      timerSeconds: 1799
-    };
-
-    let timerInterval = null;
-    let processedHashes = new Set(['0x9812a...already_paid']);
-
-    // Elements
-    const logsEl = document.getElementById('simLogs');
-    const statusBadge = document.getElementById('invStatusBadge');
-    const timerEl = document.getElementById('invTimer');
-    const invNumberEl = document.getElementById('invNumber');
-    const invServiceTitleEl = document.getElementById('invServiceTitle');
-    const invAmountUsdEl = document.getElementById('invAmountUsd');
-    const invCryptoAmountEl = document.getElementById('invCryptoAmount');
-    const invAddressEl = document.getElementById('invAddress');
-    const invMemoEl = document.getElementById('invMemo');
-
-    const simSteps = [
-      document.getElementById('simStep1'),
-      document.getElementById('simStep2'),
-      document.getElementById('simStep3'),
-      document.getElementById('simStep4'),
-      document.getElementById('simStep5')
-    ];
-
-    function appendLog(msg, color = '#38bdf8') {
-      const time = new Date().toLocaleTimeString();
-      const line = document.createElement('div');
-      line.style.color = color;
-      line.style.marginBottom = '4px';
-      line.innerHTML = `[${time}] ${msg}`;
-      logsEl.appendChild(line);
-      logsEl.scrollTop = logsEl.scrollHeight;
-    }
-
-    function startTimer() {
-      clearInterval(timerInterval);
-      currentInvoice.timerSeconds = 1799;
-      timerInterval = setInterval(() => {
-        if (currentInvoice.status !== 'PENDING') {
-          clearInterval(timerInterval);
-          return;
-        }
-        currentInvoice.timerSeconds--;
-        if (currentInvoice.timerSeconds <= 0) {
-          clearInterval(timerInterval);
-          simExecuteTx('EXPIRE');
-          return;
-        }
-        const mins = Math.floor(currentInvoice.timerSeconds / 60);
-        const secs = currentInvoice.timerSeconds % 60;
-        timerEl.innerText = `⏱ ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-      }, 1000);
-    }
-
-    function updateSimEstimate() {
-      const sSelect = document.getElementById('simServiceSelect');
-      const cSelect = document.getElementById('simCurrencySelect');
-      const price = parseFloat(sSelect.options[sSelect.selectedIndex].getAttribute('data-price') || '5.00');
-      const rate = parseFloat(cSelect.options[cSelect.selectedIndex].getAttribute('data-rate') || '5.00');
-      const symbol = cSelect.value;
-      const cryptoVal = (price / rate).toFixed(6);
-      appendLog(`💡 تخمین محاسبه: قیمت $${price} / نرخ $${rate} = ${cryptoVal} ${symbol}`, '#94a3b8');
-    }
-
-    function updateSimCurrencies() {
-      const netSelect = document.getElementById('simNetworkSelect').value;
-      const cSelect = document.getElementById('simCurrencySelect');
-      cSelect.innerHTML = '';
-      if (netSelect === 'ton') {
-        cSelect.innerHTML = `
-          <option value="TON" data-rate="5.00">TON Coin (نرخ: $5.00)</option>
-          <option value="USDT" data-rate="1.00">USDT - TON Jetton (نرخ: $1.00)</option>
-        `;
-      } else {
-        cSelect.innerHTML = `
-          <option value="TRX" data-rate="0.15">TRX - TRON (نرخ: $0.15)</option>
-          <option value="USDT" data-rate="1.00">USDT - TRC20 (نرخ: $1.00)</option>
-        `;
-      }
-      updateSimEstimate();
-    }
-
-    async function simCreateInvoice() {
-      const sSelect = document.getElementById('simServiceSelect');
-      const cSelect = document.getElementById('simCurrencySelect');
-      const netSelect = document.getElementById('simNetworkSelect').value;
-      const telegramId = document.getElementById('simTelegramId').value || null;
-
-      const price = parseFloat(sSelect.options[sSelect.selectedIndex].getAttribute('data-price') || '5.00');
-      const rate = parseFloat(cSelect.options[cSelect.selectedIndex].getAttribute('data-rate') || '5.00');
-      const symbol = cSelect.value;
-      const cryptoVal = (price / rate).toFixed(symbol === 'USDT' ? 2 : 6);
-
-      // Reset step highlights
-      simSteps.forEach(s => s.classList.remove('active', 'completed'));
-
-      appendLog('🚀 ارسال درخواست HTTP POST /api/v1/invoices به سرور...', '#fff');
-      simSteps[0].classList.add('active');
-      await sleep(500);
-      simSteps[0].classList.remove('active');
-      simSteps[0].classList.add('completed');
-
-      // Step 2: UseCase
-      simSteps[1].classList.add('active');
-      const rndMemo = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
-      const rndInvNum = 'INV-2026-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-      appendLog(`⚙️ سرویس invoice_usecase: تولید شناسه ${rndInvNum} و انتساب مموی یکتا: "${rndMemo}"`);
-      await sleep(500);
-      simSteps[1].classList.remove('active');
-      simSteps[1].classList.add('completed');
-
-      // Step 3: DB Repo
-      simSteps[2].classList.add('active');
-      appendLog(`🐘 ریپازیتوری invoice_repo: درج رکورد در جدول invoices با وضعیت PENDING`);
-      await sleep(500);
-      simSteps[2].classList.remove('active');
-      simSteps[2].classList.add('completed');
-
-      // Update UI state
-      currentInvoice = {
-        number: rndInvNum,
-        serviceTitle: sSelect.options[sSelect.selectedIndex].text,
-        amountUsd: price,
-        cryptoAmount: cryptoVal,
-        currency: symbol,
-        network: netSelect,
-        address: netSelect === 'ton' ? 'EQBvW8Z5huBkMJYdnfAEM5JqTN1SR59mZ7W2VjN2_Treasury' : 'TYDzsYUEpvnYmQK4zGPj29sdgyFvP4k67x',
-        memo: rndMemo,
-        status: 'PENDING',
-        timerSeconds: 1799
-      };
-
-      invNumberEl.innerText = currentInvoice.number;
-      invServiceTitleEl.innerText = currentInvoice.serviceTitle;
-      invAmountUsdEl.innerText = `$${price.toFixed(2)} USD`;
-      invCryptoAmountEl.innerText = `${cryptoVal} ${symbol}`;
-      invAddressEl.innerText = currentInvoice.address;
-      invMemoEl.innerText = currentInvoice.memo;
-
-      statusBadge.className = 'invoice-badge-status status-pending';
-      statusBadge.innerText = 'PENDING (در انتظار پرداخت)';
-
-      startTimer();
-      appendLog(`✅ فاکتور با موفقیت صادر شد! آدرس و Memo آماده واریز است. مهلت: ۳۰ دقیقه`, '#10b981');
-    }
-
-    async function simExecuteTx(scenario) {
-      if (currentInvoice.status !== 'PENDING' && scenario !== 'DOUBLE_SPEND') {
-        appendLog(`⚠️ فاکتور فعلی در وضعیت ${currentInvoice.status} است. ابتدا فاکتور جدید صادر کنید.`, '#f59e0b');
-        return;
-      }
-
-      const rndTx = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-
-      if (scenario === 'EXPIRE') {
-        currentInvoice.status = 'EXPIRED';
-        statusBadge.className = 'invoice-badge-status status-expired';
-        statusBadge.innerText = 'EXPIRED (منقضی شده)';
-        clearInterval(timerInterval);
-        timerEl.innerText = '⏱ 00:00';
-        appendLog(`⌛ ۳۰ دقیقه مهلت واریز به پایان رسید. وضعیت فاکتور به EXPIRED تغییر یافت.`, '#94a3b8');
-        return;
-      }
-
-      if (scenario === 'DOUBLE_SPEND') {
-        appendLog(`🚨 تلاش برای ثبت مجدد هش تراکنش مصرف‌شده: ${rndTx.substring(0, 16)}...`, '#f43f5e');
-        appendLog(`🛑 خطای پایگاه داده: خطای قید یکتایی uq_network_tx_hash! تراکنش تکراری رد شد.`, '#f43f5e');
-        return;
-      }
-
-      // Step 4: Observer Node Detection
-      simSteps[3].classList.add('active');
-      appendLog(`💎 اسکنر نود ${currentInvoice.network.toUpperCase()}: تراکنش ورودی کشف شد! Tx: ${rndTx.substring(0, 16)}...`, '#38bdf8');
-      appendLog(`🔍 اعتبارسنجی Memo: دریافت شد "${currentInvoice.memo}" ➔ مطابقت دارد!`, '#a855f7');
-      await sleep(700);
-      simSteps[3].classList.remove('active');
-      simSteps[3].classList.add('completed');
-
-      // Step 5: Settlement
-      simSteps[4].classList.add('active');
-      if (scenario === 'SUCCESS') {
-        currentInvoice.status = 'PAID';
-        statusBadge.className = 'invoice-badge-status status-paid';
-        statusBadge.innerText = 'PAID (پرداخت و تسویه کامل ✅)';
-        clearInterval(timerInterval);
-        appendLog(`🔒 سرویس settlement_usecase: هش در observed_transactions ذخیره شد.`, '#10b981');
-        appendLog(`🎉 فاکتور با موفقیت تسویه شد! اشتراک کاربر فوراً فعال و پیام تلگرام ارسال گردید.`, '#34d399');
-      } else if (scenario === 'UNDERPAID') {
-        currentInvoice.status = 'UNDERPAID';
-        statusBadge.className = 'invoice-badge-status status-underpaid';
-        statusBadge.innerText = 'UNDERPAID (کسری مبلغ واریزی ⚠️)';
-        appendLog(`⚠️ هشدار کسری واریز: کاربر مبلغ کمتری واریز کرده است. فاکتور به وضعیت UNDERPAID رفت.`, '#fb7185');
-      }
-      await sleep(500);
-      simSteps[4].classList.remove('active');
-      simSteps[4].classList.add('completed');
-    }
-
     // Database Table Highlight Relation
     function highlightTable(tableKey) {
       document.querySelectorAll('.db-card').forEach(c => c.classList.remove('highlighted'));
       const activeCard = document.getElementById(`card-${tableKey}`);
       if (activeCard) activeCard.classList.add('highlighted');
 
-      // Relationship mapping
       const relations = {
-        'invoices': ['card-users', 'card-services', 'card-currencies', 'card-networks', 'card-addresses', 'card-transactions'],
+        'invoices': ['card-users', 'card-currencies', 'card-networks', 'card-addresses', 'card-transactions'],
         'users': ['card-invoices', 'card-addresses'],
-        'services': ['card-invoices'],
-        'networks': ['card-currencies', 'card-addresses', 'card-invoices', 'card-transactions'],
+        'networks': ['card-currencies', 'card-addresses', 'card-invoices', 'card-transactions', 'card-rebalance'],
         'currencies': ['card-networks', 'card-invoices'],
-        'addresses': ['card-users', 'card-networks', 'card-invoices'],
-        'transactions': ['card-invoices', 'card-networks']
+        'addresses': ['card-users', 'card-networks', 'card-invoices', 'card-rebalance'],
+        'transactions': ['card-invoices', 'card-networks'],
+        'admins': [],
+        'rebalance': ['card-networks', 'card-addresses']
       };
 
       if (relations[tableKey]) {
@@ -2059,12 +1371,145 @@ curl -X GET http://localhost:8080/api/v1/invoices/b1c2-984a-431f
           const el = document.getElementById(id);
           if (el) el.classList.add('highlighted');
         });
-        appendLog(`🔗 جدول ${tableKey} با کلیدهای خارجی با جدول‌های دیگر مرتبط است.`, '#c084fc');
+        appendLog(`[ERD] جدول ${tableKey} انتخاب شد؛ روابط کلیدهای خارجی روی دیاگرام هایلایت شدند.`, '#c084fc');
       }
     }
 
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+    // Simulator State
+    let simTimerInterval = null;
+    let simTimerSeconds = 1799;
+    let simInvoice = {
+      invoiceNumber: 'INV-2026-9A9436',
+      amountUsd: 15.00,
+      cryptoAmount: 15.00,
+      currency: 'USDT',
+      network: 'bsc',
+      address: '0x3C767afb6798977934E3727a6EC5B838359488F4',
+      memo: null,
+      status: 'PENDING'
+    };
+
+    function appendLog(msg, color = '#38bdf8') {
+      const consoleEl = document.getElementById('simConsole');
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.style.color = color;
+      div.style.marginBottom = '4px';
+      div.innerText = `[${time}] ${msg}`;
+      consoleEl.appendChild(div);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function onSimNetworkChange() {
+      const net = document.getElementById('simNetwork').value;
+      const currSelect = document.getElementById('simCurrency');
+      currSelect.innerHTML = '';
+      if (net === 'bsc') {
+        currSelect.innerHTML = `
+          <option value="USDT">USDT (BEP-20) - 1.00 USD</option>
+          <option value="BNB">BNB (بومی) - 610.00 USD</option>
+        `;
+      } else {
+        currSelect.innerHTML = `
+          <option value="TON">TON (بومی) - 5.20 USD</option>
+        `;
+      }
+    }
+
+    function simCreateInvoice() {
+      const net = document.getElementById('simNetwork').value;
+      const curr = document.getElementById('simCurrency').value;
+      const amount = parseFloat(document.getElementById('simAmount').value) || 15.0;
+      const orderId = document.getElementById('simOrderId').value;
+
+      let rate = 1.0;
+      if (curr === 'BNB') rate = 610.0;
+      if (curr === 'TON') rate = 5.20;
+
+      const cryptoAmt = (amount / rate).toFixed(curr === 'USDT' ? 2 : 4);
+      const invNum = 'INV-2026-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const isTon = net === 'ton';
+      const memo = isTon ? 'ORD-' + Math.floor(10000 + Math.random() * 90000) : null;
+      const address = isTon ? 'UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw' : '0x3C767afb6798977934E3727a6EC5B838359488F4';
+
+      simInvoice = {
+        invoiceNumber: invNum,
+        amountUsd: amount,
+        cryptoAmount: cryptoAmt,
+        currency: curr,
+        network: net,
+        address: address,
+        memo: memo,
+        status: 'PENDING'
+      };
+
+      document.getElementById('dispInvNumber').innerText = invNum;
+      document.getElementById('dispCryptoAmount').innerText = `${cryptoAmt} ${curr}`;
+      document.getElementById('dispAmountUsd').innerText = `$${amount.toFixed(2)} USD`;
+      document.getElementById('dispAddress').innerText = address.substring(0, 10) + '...' + address.substring(address.length - 8);
+      document.getElementById('dispAddress').title = address;
+
+      const memoRow = document.getElementById('dispMemoRow');
+      if (memo) {
+        memoRow.style.display = 'flex';
+        document.getElementById('dispMemo').innerText = memo;
+      } else {
+        memoRow.style.display = 'none';
+      }
+
+      const statusBadge = document.getElementById('dispBadgeStatus');
+      statusBadge.className = 'badge-status status-pending';
+      statusBadge.innerText = 'در انتظار پرداخت ⏳';
+
+      clearInterval(simTimerInterval);
+      simTimerSeconds = 1799;
+      simTimerInterval = setInterval(() => {
+        if (simInvoice.status !== 'PENDING') return;
+        simTimerSeconds--;
+        const m = Math.floor(simTimerSeconds / 60);
+        const s = simTimerSeconds % 60;
+        document.getElementById('dispTimer').innerText = `⏱ ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }, 1000);
+
+      appendLog(`🚀 فاکتور جدید ${invNum} برای سفارش ${orderId} صادر شد. مبلغ: ${cryptoAmt} ${curr} | وضعیت: PENDING`, '#38bdf8');
+    }
+
+    function simExecuteTx(scenario) {
+      if (simInvoice.status !== 'PENDING' && scenario !== 'DOUBLE_SPEND') {
+        appendLog(`⚠️ فاکتور فعلی در وضعیت ${simInvoice.status} است. ابتدا فاکتور جدید صادر فرمایید.`, '#fbbf24');
+        return;
+      }
+
+      const txHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+
+      if (scenario === 'SUCCESS') {
+        simInvoice.status = 'PAID';
+        const badge = document.getElementById('dispBadgeStatus');
+        badge.className = 'badge-status status-paid';
+        badge.innerText = 'پرداخت و تسویه تایید شد ✅';
+        clearInterval(simTimerInterval);
+
+        appendLog(`💎 [Observer] تراکنش ورودی کشف شد! هش: ${txHash.substring(0, 16)}...`, '#34d399');
+        appendLog(`🔒 [Double-Spend Check] بررسی قید یکتایی uq_network_tx_hash ➔ تایید شد.`, '#10b981');
+        appendLog(`🎉 [Settlement] فاکتور ${simInvoice.invoiceNumber} به وضعیت PAID تغییر یافت و وب‌هوک به مرچنت ارسال شد!`, '#34d399');
+      } else if (scenario === 'DOUBLE_SPEND') {
+        appendLog(`🚨 [Double-Spend Test] تلاش برای مصرف مجدد هش تراکنش: ${txHash.substring(0, 16)}...`, '#f43f5e');
+        appendLog(`🛑 [DB Error] خطای قید یکتایی UNIQUE(network_id, tx_hash) در جدول observed_transactions! تراکنش تکراری رد شد.`, '#f43f5e');
+      } else if (scenario === 'UNDERPAID') {
+        simInvoice.status = 'UNDERPAID';
+        const badge = document.getElementById('dispBadgeStatus');
+        badge.className = 'badge-status status-underpaid';
+        badge.innerText = 'کسری مبلغ واریزی ⚠️';
+        appendLog(`⚠️ [Underpaid] کاربر کمتر از سقف مجاز فاکتور واریز کرد. فاکتور به وضعیت UNDERPAID رفت.`, '#fbbf24');
+      } else if (scenario === 'EXPIRE') {
+        simInvoice.status = 'EXPIRED';
+        const badge = document.getElementById('dispBadgeStatus');
+        badge.className = 'badge-status status-expired';
+        badge.innerText = 'فاکتور منقضی شد ⌛';
+        clearInterval(simTimerInterval);
+        document.getElementById('dispTimer').innerText = '⏱ 00:00';
+        appendLog(`⌛ [Expiry] مهلت ۳۰ دقیقه‌ای فاکتور به پایان رسید. وضعیت به EXPIRED تغییر یافت.`, '#94a3b8');
+      }
     }
   </script>
 </body>

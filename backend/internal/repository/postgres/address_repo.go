@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	"wallet-observer/internal/domain"
@@ -63,7 +64,10 @@ func (r *DepositAddressRepository) AssignAddress(ctx context.Context, networkID 
 	}
 
 	// Default / TON: Single Master Treasury Wallet + Unique Memo
-	treasuryWallet := "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N"
+	treasuryWallet := os.Getenv("TON_TREASURY_WALLET")
+	if treasuryWallet == "" {
+		treasuryWallet = "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw"
+	}
 	memoBytes := make([]byte, 4)
 	_, _ = rand.Read(memoBytes)
 	uniqueMemo := fmt.Sprintf("ORD-%s", hex.EncodeToString(memoBytes))

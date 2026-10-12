@@ -21,22 +21,24 @@ func NewRouter(
 	loginLimiter := NewRateLimiter(5, 1*time.Minute)
 	mux.Handle("POST /api/v1/auth/login", loginLimiter(http.HandlerFunc(authH.Login)))
 
-	// 3. Catalog routes (Services, Networks, Currencies)
-	mux.HandleFunc("GET /api/v1/services", catalogH.ListServices)
+	// 3. Catalog routes (Networks, Currencies)
 	mux.HandleFunc("GET /api/v1/networks", catalogH.ListNetworks)
 	mux.HandleFunc("GET /api/v1/networks/{network_id}/currencies", catalogH.ListCurrencies)
 
 	// 4. Invoice routes
+	mux.HandleFunc("GET /api/v1/invoices", invoiceH.ListInvoices)
 	mux.HandleFunc("POST /api/v1/invoices", invoiceH.CreateInvoice)
 	mux.HandleFunc("GET /api/v1/invoices/{id}", invoiceH.GetInvoice)
 	mux.HandleFunc("GET /api/v1/invoices/number/{number}", invoiceH.GetInvoiceByNumber)
 
 	// 5. HD-Wallet & Rebalancing routes
 	mux.HandleFunc("GET /api/v1/rebalance/wallets", rebalanceH.ListWallets)
+	mux.HandleFunc("GET /api/v1/rebalance/ton", rebalanceH.GetTONTreasury)
 	mux.HandleFunc("POST /api/v1/rebalance/sweep", rebalanceH.SweepWallet)
 	mux.HandleFunc("POST /api/v1/rebalance/sweep-batch", rebalanceH.SweepBatch)
 	mux.HandleFunc("GET /api/v1/rebalance/estimate", rebalanceH.EstimateGas)
 	mux.HandleFunc("GET /api/v1/rebalance/security", rebalanceH.SecuritySpecs)
+	mux.HandleFunc("GET /api/v1/rebalance/records", rebalanceH.ListRecords)
 
 	// Apply Middlewares in chain
 	var handler http.Handler = mux

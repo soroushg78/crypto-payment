@@ -107,11 +107,12 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
           <span className="val">{invoice.invoice_number}</span>
         </div>
 
-        {(invoice.telegram_username || invoice.user_id) && (
+        {(invoice.telegram_username || invoice.telegram_id || invoice.user_id) && (
           <div className="info-row">
             <span className="label">کاربر تلگرام:</span>
             <span className="val" style={{ color: 'var(--cyan-glow)', fontWeight: 700 }}>
-              {invoice.telegram_username ? `@${invoice.telegram_username.replace(/^@/, '')}` : `ID: ${invoice.user_id}`}
+              {invoice.telegram_username ? `@${invoice.telegram_username.replace(/^@/, '')}` : ''}
+              {invoice.telegram_id ? ` (ID: ${invoice.telegram_id})` : (!invoice.telegram_username && invoice.user_id ? `ID: ${invoice.user_id}` : '')}
             </span>
           </div>
         )}
@@ -142,15 +143,6 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
               >
                 کپی Memo
               </button>
-            </span>
-          </div>
-        )}
-
-        {invoice.order_id && (
-          <div className="info-row">
-            <span className="label">شناسه سفارش پذیرنده (Order ID):</span>
-            <span className="val" style={{ color: '#a7f3d0', fontFamily: 'monospace' }}>
-              {invoice.order_id}
             </span>
           </div>
         )}

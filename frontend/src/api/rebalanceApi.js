@@ -6,8 +6,8 @@ export const rebalanceApi = {
     return apiClient.get('/api/v1/rebalance/wallets');
   },
 
-  // اجرای عملیات سوئیپ و ریبالانسینگ (شبیه‌سازی امن یا برادکست واقعی)
-  sweepWallet: async ({ derivationIndex, asset = 'USDT', treasuryAddress, realBroadcast = false }) => {
+  // اجرای عملیات سوئیپ و ریبالانسینگ واقعی آنچین
+  sweepWallet: async ({ derivationIndex, asset = 'USDT', treasuryAddress, realBroadcast = true }) => {
     return apiClient.post('/api/v1/rebalance/sweep', {
       derivation_index: derivationIndex,
       asset: asset,
@@ -34,5 +34,15 @@ export const rebalanceApi = {
       treasury_address: treasuryAddress || undefined,
       real_broadcast: realBroadcast
     });
+  },
+
+  // دریافت اطلاعات خزانه‌داری متمرکز و ریبالانسینگ شبکه TON
+  getTONTreasury: async () => {
+    return apiClient.get('/api/v1/rebalance/ton');
+  },
+
+  // دریافت سوابق جامع عملیات ریبالانسینگ از دیتابیس PostgreSQL
+  getRebalanceRecords: async (limit = 100) => {
+    return apiClient.get(`/api/v1/rebalance/records?limit=${limit}`);
   }
 };

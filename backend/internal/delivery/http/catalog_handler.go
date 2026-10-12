@@ -14,18 +14,6 @@ func NewCatalogHandler(catalogUC *usecase.CatalogUseCase) *CatalogHandler {
 	return &CatalogHandler{catalogUC: catalogUC}
 }
 
-func (h *CatalogHandler) ListServices(w http.ResponseWriter, r *http.Request) {
-	services, err := h.catalogUC.ListServices(r.Context())
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	writeJSON(w, http.StatusOK, APIResponse{
-		Success: true,
-		Data:    services,
-	})
-}
-
 func (h *CatalogHandler) ListNetworks(w http.ResponseWriter, r *http.Request) {
 	networks, err := h.catalogUC.ListNetworks(r.Context())
 	if err != nil {

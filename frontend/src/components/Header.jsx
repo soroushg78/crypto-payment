@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { healthApi } from '../api/healthApi';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ activeTab, setActiveTab, historyCount = 0 }) {
+export default function Header({ activeTab, setActiveTab, historyCount = 0, rebalanceCount = 0 }) {
   const { user, logout } = useAuth();
   const [isHealthy, setIsHealthy] = useState(null);
 
@@ -31,8 +31,8 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0 }) {
         <div className="brand-section">
           <div className="brand-icon-box">⚡</div>
           <div>
-            <h1 className="brand-title">درگاه پرداخت کریپتو و ناظر بلاکچین</h1>
-            <div className="brand-sub">محیط واقعی تست و اعتبارسنجی فاکتورها | Go Backend + PostgreSQL</div>
+            <h1 className="brand-title">درگاه پرداخت کریپتو و مدیریت خزانه‌داری</h1>
+            <div className="brand-sub">سامانه سازمانی پرداخت غیرحضانتی و تسویه آنی | Go Backend + PostgreSQL</div>
           </div>
         </div>
 
@@ -73,25 +73,25 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0 }) {
           className={`tab-btn ${activeTab === 'checkout' ? 'active' : ''}`}
           onClick={() => setActiveTab('checkout')}
         >
-          💳 صدور و پرداخت فاکتور
+          💳 درگاه پرداخت و صدور فاکتور
         </button>
         <button
           className={`tab-btn ${activeTab === 'rebalance' ? 'active' : ''}`}
           onClick={() => setActiveTab('rebalance')}
         >
-          ⚡ معماری کلیدها و ریبالانسینگ (Wallex Ops)
+          🏦 خزانه‌داری و ریبالانسینگ
         </button>
         <button
-          className={`tab-btn ${activeTab === 'apidocs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('apidocs')}
+          className={`tab-btn ${activeTab === 'rebalance-records' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rebalance-records')}
         >
-          📖 مستندات تعاملی API و وب‌هوک (Sandbox)
+          📊 سوابق ریبالانسینگ ({rebalanceCount})
         </button>
         <button
           className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          📜 سوابق سفارشات ({historyCount})
+          📜 سوابق سفارشات و تراکنش‌ها ({historyCount})
         </button>
       </div>
     </div>

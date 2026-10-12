@@ -9,8 +9,7 @@ export default function ApiDocsPage({ onShowToast }) {
   const [testNetwork, setTestNetwork] = useState('bsc');
   const [testCurrency, setTestCurrency] = useState('usdt');
   const [testAmount, setTestAmount] = useState('15.00');
-  const [testOrderId, setTestOrderId] = useState('WLX-ORD-9901');
-  const [testCallback, setTestCallback] = useState('https://exchange.wallex.ir/api/payments/crypto-webhook');
+  const [testTelegramUser, setTestTelegramUser] = useState('babasoroush');
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
@@ -19,12 +18,13 @@ export default function ApiDocsPage({ onShowToast }) {
       setIsTesting(true);
       setTestResult(null);
 
+      const isNumeric = /^\d+$/.test(testTelegramUser.trim());
       const res = await invoiceApi.createInvoice({
         amount_usd: parseFloat(testAmount),
         network: testNetwork,
         currency: testCurrency,
-        order_id: testOrderId,
-        callback_url: testCallback
+        telegramId: isNumeric ? parseInt(testTelegramUser.trim(), 10) : undefined,
+        username: !isNumeric ? testTelegramUser.trim() : undefined
       });
 
       setTestResult(res);
@@ -40,11 +40,10 @@ export default function ApiDocsPage({ onShowToast }) {
   const curlExample = `curl -X POST http://localhost:8080/api/v1/invoices \\
   -H "Content-Type: application/json" \\
   -d '{
-    "order_id": "${testOrderId}",
     "amount_usd": ${testAmount},
     "network": "${testNetwork}",
     "currency": "${testCurrency}",
-    "callback_url": "${testCallback}"
+    "username": "${testTelegramUser}"
   }'`;
 
   return (
@@ -137,16 +136,10 @@ export default function ApiDocsPage({ onShowToast }) {
                     <td style={{ padding: '0.5rem', color: '#cbd5e1' }}>نماد ارز: "usdt"، "bnb"، "ton"</td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '0.5rem', color: 'var(--cyan)' }}>order_id</td>
-                    <td style={{ padding: '0.5rem' }}>string</td>
-                    <td style={{ padding: '0.5rem', color: '#34d399' }}>اختیاری</td>
-                    <td style={{ padding: '0.5rem', color: '#cbd5e1' }}>شناسه سفارش در سیستم بک‌اند شما</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.5rem', color: 'var(--cyan)' }}>callback_url</td>
-                    <td style={{ padding: '0.5rem' }}>string</td>
-                    <td style={{ padding: '0.5rem', color: '#34d399' }}>اختیاری</td>
-                    <td style={{ padding: '0.5rem', color: '#cbd5e1' }}>آدرس ارسال وب‌هوک پس از تایید تراکنش</td>
+                    <td style={{ padding: '0.5rem', color: 'var(--cyan)' }}>username / telegram_id</td>
+                    <td style={{ padding: '0.5rem' }}>string / int</td>
+                    <td style={{ padding: '0.5rem', color: '#fb7185' }}>بله (الزامی)</td>
+                    <td style={{ padding: '0.5rem', color: '#cbd5e1' }}>شناسه عددی تلگرام یا نام کاربری خریدار</td>
                   </tr>
                 </tbody>
               </table>
@@ -230,26 +223,15 @@ export default function ApiDocsPage({ onShowToast }) {
               </div>
 
               <div>
-                <label className="selector-label">شناسه سفارش (order_id):</label>
+                <label className="selector-label">آی‌دی تلگرام (username / id):</label>
                 <input
                   type="text"
                   className="input-custom"
-                  value={testOrderId}
-                  onChange={(e) => setTestOrderId(e.target.value)}
+                  value={testTelegramUser}
+                  onChange={(e) => setTestTelegramUser(e.target.value)}
                   style={{ direction: 'ltr' }}
                 />
               </div>
-            </div>
-
-            <div style={{ marginBottom: '1.25rem' }}>
-              <label className="selector-label">آدرس وب‌هوک (callback_url):</label>
-              <input
-                type="text"
-                className="input-custom"
-                value={testCallback}
-                onChange={(e) => setTestCallback(e.target.value)}
-                style={{ direction: 'ltr', fontSize: '0.85rem' }}
-              />
             </div>
 
             <button
@@ -294,7 +276,7 @@ export default function ApiDocsPage({ onShowToast }) {
           </h3>
           <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
             به محض اینکه ناظر بلاکچین تراکنش واریزی کاربر را در شبکه کشف و به حدنصاب تاییدیه‌ها برساند، یک درخواست{' '}
-            <code>POST</code> به <code>callback_url</code> ثبت شده در فاکتور ارسال می‌شود. جهت جلوگیری از جعل (Tampering)، امضای هش در هدر{' '}
+            <code>POST</code> به اندپوینت مرچنت ارسال می‌شود. جهت جلوگیری از جعل (Tampering)، امضای هش در هدر{' '}
             <code>X-Signature</code> قرار می‌گیرد.
           </p>
 
@@ -318,7 +300,7 @@ export default function ApiDocsPage({ onShowToast }) {
   "event": "PAYMENT_CONFIRMED",
   "invoice_id": "0f0a9ee1-edf7-4650-b8c1-4f212ce63775",
   "invoice_number": "INV-2026-6117d9",
-  "order_id": "WLX-ORD-9901",
+  "telegram_username": "babasoroush",
   "status": "PAID",
   "amount_usd": 15.00,
   "crypto_amount": 15.00,
