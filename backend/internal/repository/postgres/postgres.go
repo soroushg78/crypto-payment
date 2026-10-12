@@ -199,20 +199,25 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	);
 	DELETE FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0;
 
+	-- Migrate legacy TON currency completely to GRAM
+	UPDATE networks SET native_currency = 'GRAM' WHERE id = 'ton';
+	UPDATE currencies SET symbol = 'GRAM' WHERE network_id = 'ton' AND symbol = 'TON';
+	DELETE FROM currencies WHERE network_id = 'ton' AND symbol = 'TON';
+
 	-- Seed actual supported networks (TON & BSC)
 	INSERT INTO networks (id, name, native_currency, rpc_endpoint, is_testnet, is_active)
 	VALUES 
-		('ton', 'The Open Network (TON)', 'TON', 'https://ton.org/global.config.json', false, true),
+		('ton', 'The Open Network (TON)', 'GRAM', 'https://ton.org/global.config.json', false, true),
 		('bsc', 'BNB Smart Chain (BSC)', 'BNB', 'https://bsc-dataseed.binance.org', false, true)
 	ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, native_currency = EXCLUDED.native_currency, rpc_endpoint = EXCLUDED.rpc_endpoint;
 
 	-- Clean up legacy mock currency UUIDs (like 11111111-...)
 	DELETE FROM currencies WHERE id IN ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333');
 
-	-- Seed actual supported currencies (TON on ton, BNB on bsc, USDT on bsc)
+	-- Seed actual supported currencies (GRAM on ton, BNB on bsc, USDT on bsc)
 	INSERT INTO currencies (symbol, network_id, contract_address, decimals, min_deposit, is_active)
 	VALUES 
-		('TON', 'ton', NULL, 9, 0.1, true),
+		('GRAM', 'ton', NULL, 9, 0.1, true),
 		('BNB', 'bsc', NULL, 18, 0.001, true),
 		('USDT', 'bsc', '0x55d398326f99059fF775485246999027B3197955', 18, 1.0, true)
 	ON CONFLICT (symbol, network_id) DO NOTHING;

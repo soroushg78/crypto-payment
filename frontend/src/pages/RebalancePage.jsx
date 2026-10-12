@@ -313,7 +313,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
           }}
         >
           <span>💎</span>
-          <span>شبکه تون‌کوین و گرام (TON Master Treasury & Memo)</span>
+          <span>شبکه گرام (TON Master Treasury & Memo)</span>
           <span style={{ fontSize: '0.78rem', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px' }}>
             {tonData?.items?.length || 0} تراکنش
           </span>
@@ -585,7 +585,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>موجودی زنده والت در نود TON:</span>
                 <strong style={{ fontSize: '1.15rem', color: '#38bdf8', direction: 'ltr', display: 'inline-block' }}>
-                  {(tonData?.balance_ton || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })} TON / گرام
+                  {(tonData?.balance_ton || 0).toLocaleString('en-US', { maximumFractionDigits: 4 })} GRAM
                 </strong>
               </div>
 
@@ -606,7 +606,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>کل واریزی تسویه‌شده به خزانه:</span>
                 <strong style={{ fontSize: '1.15rem', color: '#fbbf24', direction: 'ltr', display: 'inline-block' }}>
-                  {(tonData?.total_collected_ton || 0).toFixed(4)} TON
+                  {(tonData?.total_collected_ton || 0).toFixed(4)} GRAM
                 </strong>
               </div>
             </div>
@@ -635,7 +635,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
                   <thead>
                     <tr style={{ background: 'rgba(30, 41, 59, 0.7)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                       <th style={{ width: '22%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>شناسه ممو (Memo / Comment)</th>
-                      <th style={{ width: '15%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>مبلغ (TON / گرام)</th>
+                      <th style={{ width: '15%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>مبلغ (GRAM)</th>
                       <th style={{ width: '13%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>مبلغ دلاری</th>
                       <th style={{ width: '16%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>وضعیت واریز</th>
                       <th style={{ width: '17%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>زمان ایجاد فاکتور</th>
@@ -679,7 +679,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
                           </div>
                         </td>
                         <td style={{ padding: '0.65rem 0.5rem', fontFamily: 'monospace', color: '#38bdf8', direction: 'ltr', fontWeight: 700, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          {item.crypto_amount} TON
+                          {item.crypto_amount} {item.currency || 'GRAM'}
                         </td>
                         <td style={{ padding: '0.65rem 0.5rem', direction: 'ltr', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>
                           ${item.amount_usd}
@@ -755,11 +755,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
               </button>
             </div>
 
-            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '8px', marginBottom: '1.2rem' }}>
-              <div style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>والت مبدأ (User Deposit): </span>
-                <code style={{ color: 'var(--cyan-glow)', direction: 'ltr' }}>{selectedWallet.address}</code>
-              </div>
+            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.8rem 1rem', borderRadius: '8px', marginBottom: '1.2rem' }}>
               <div style={{ fontSize: '0.85rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>اندیس اشتقاق: </span>
                 <strong style={{ color: '#fbbf24' }}>Index #{selectedWallet.derivation_index}</strong> (Path: {selectedWallet.derivation_path})
@@ -781,10 +777,7 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
             </div>
 
             <div style={{ marginBottom: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                <label className="selector-label" style={{ margin: 0 }}>آدرس والت خزانه مقصد (Master Treasury Cold/Hot Wallet):</label>
-                <span style={{ fontSize: '0.74rem', color: '#38bdf8' }}>قابل تغییر به هر آدرس دلخواه ✏️</span>
-              </div>
+              <label className="selector-label" style={{ marginBottom: '0.4rem', display: 'block' }}>آدرس والت خزانه مقصد (Master Treasury Cold/Hot Wallet):</label>
               <input
                 type="text"
                 className="input-custom"
@@ -796,9 +789,6 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
                 }}
                 style={{ direction: 'ltr', fontSize: '0.85rem' }}
               />
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', display: 'block', marginTop: '0.3rem', lineHeight: 1.4 }}>
-                💡 هر آدرس معتبر EVM در شبکه بایننس اسمارت چین (مثل والت شخصی متامسک یا والت سرد صرافی) را می‌توانید در اینجا وارد کنید؛ وجوه مستقیماً به همین آدرس واریز می‌شود.
-              </span>
             </div>
 
             {/* Live Balance Summary & Zero-Balance Guard */}
@@ -839,9 +829,11 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
                 <span style={{ fontSize: '0.82rem', color: '#38bdf8', fontWeight: 'bold' }}>
                   ⛽ تحلیل زنده کارمزد و سوخت‌رسانی از نود BSC (eth_estimateGas):
                 </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {estimatingGas ? 'در حال استعلام نود...' : 'Direct RPC Calculation'}
-                </span>
+                {estimatingGas && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    در حال استعلام نود...
+                  </span>
+                )}
               </div>
 
               {gasEstimate ? (
@@ -866,16 +858,6 @@ export default function RebalancePage({ onShowToast, onNavigateToRecords }) {
                       </strong>
                     </div>
                   </div>
-
-                  {gasEstimate.needs_refuel ? (
-                    <div style={{ color: '#fbbf24', fontSize: '0.78rem', marginTop: '0.3rem', lineHeight: 1.5 }}>
-                      💡 <strong>الگوی ایستگاه سوخت‌رسانی (Gas Station):</strong> والت مستر صرافی برای اجرای این تراکنش باید دقیقاً مبلغ <strong>{gasEstimate.deficit_bnb.toFixed(8)} BNB</strong> به این والت تزریق کند.
-                    </div>
-                  ) : (
-                    <div style={{ color: '#34d399', fontSize: '0.78rem', marginTop: '0.3rem' }}>
-                      ✅ موجودی BNB این والت برای پرداخت کارمزد تراکنش در شبکه BSC کافی است.
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>در حال محاسبه کارمزد از نود...</div>

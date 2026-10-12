@@ -21,6 +21,29 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [liveRates, setLiveRates] = useState({});
+
+  // استعلام نرخ‌های زنده لحظه‌ای از والکس (Wallex Live Market API)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRates = async () => {
+      try {
+        const res = await invoiceApi.getRates();
+        const data = res?.data || res;
+        if (isMounted && data && typeof data === 'object') {
+          setLiveRates(data);
+        }
+      } catch (err) {
+        console.warn('Could not fetch live Wallex rates:', err);
+      }
+    };
+    fetchRates();
+    const interval = setInterval(fetchRates, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // 1. دریافت لیست شبکه‌های بلاکچین از بک‌اند Go
   useEffect(() => {
@@ -82,12 +105,10 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
     const val = parseFloat(amountUSD);
     if (isNaN(val) || val <= 0 || !selectedCurrency) return null;
 
-    let rate = 1.0;
-    if (selectedCurrency.symbol === 'TON') rate = 5.20;
-    else if (selectedCurrency.symbol === 'BNB') rate = 610.0;
-    else if (selectedCurrency.symbol === 'USDT') rate = 1.0;
+    const sym = selectedCurrency.symbol?.toUpperCase();
+    let rate = liveRates[sym] || (sym === 'GRAM' ? 1.39 : sym === 'BNB' ? 745.0 : 1.0);
 
-    const crypto = (val / rate).toFixed(selectedCurrency.symbol.includes('USDT') ? 2 : 6);
+    const crypto = (val / rate).toFixed(sym.includes('USDT') ? 2 : 6);
     return `${crypto} ${selectedCurrency.symbol}`;
   };
 
@@ -110,7 +131,6 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
     const cleanUser = telegramUser.trim();
     if (!cleanUser) {
       setErrorMsg('وارد کردن شناسه یا نام کاربری تلگرام ضروری است.');
-      onShowToast?.('وارد کردن شناسه یا نام کاربری تلگرام ضروری است ⚠️', 'error');
       return;
     }
 
@@ -231,18 +251,36 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
             ))}
           </div>
 
-          {/* تخمین کریپتو */}
+          {/* تخمین کریپتو بر اساس نرخ زنده والکس */}
           {getEstimatedCrypto() && (
             <div
               style={{
-                marginTop: '0.6rem',
+                marginTop: '0.65rem',
                 fontSize: '0.86rem',
                 color: 'var(--cyan-glow)',
-                direction: 'ltr',
-                textAlign: 'left'
+                direction: 'rtl',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.5rem'
               }}
             >
-              💡 معادل تقریبی: <strong>{getEstimatedCrypto()}</strong>
+              <span>
+                💡 معادل تقریبی: <strong style={{ direction: 'ltr', display: 'inline-block' }}>{getEstimatedCrypto()}</strong>
+              </span>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  color: '#38bdf8',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(56, 189, 248, 0.25)'
+                }}
+              >
+                ⚡ استعلام زنده از والکس (Wallex)
+              </span>
             </div>
           )}
         </div>

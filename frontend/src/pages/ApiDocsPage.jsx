@@ -179,7 +179,7 @@ export default function ApiDocsPage({ onShowToast }) {
                   onChange={(e) => {
                     const net = e.target.value;
                     setTestNetwork(net);
-                    if (net === 'ton') setTestCurrency('ton');
+                    if (net === 'ton') setTestCurrency('gram');
                     else setTestCurrency('usdt');
                   }}
                   style={{ background: '#0f172a' }}
@@ -203,7 +203,7 @@ export default function ApiDocsPage({ onShowToast }) {
                       <option value="bnb">BNB (Native Coin)</option>
                     </>
                   ) : (
-                    <option value="ton">TON (Native Coin)</option>
+                    <option value="gram">GRAM (کوین اصلی گرام)</option>
                   )}
                 </select>
               </div>

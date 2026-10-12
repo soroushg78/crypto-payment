@@ -13,6 +13,7 @@ import (
 	"wallet-observer/internal/domain"
 	"wallet-observer/pkg/bscrpc"
 	"wallet-observer/pkg/tonrpc"
+	"wallet-observer/pkg/wallex"
 )
 
 type InvoiceUseCase struct {
@@ -24,6 +25,7 @@ type InvoiceUseCase struct {
 	transactionRepo domain.ObservedTransactionRepository
 	bscClient       *bscrpc.Client
 	tonClient       *tonrpc.Client
+	wallexClient    *wallex.Client
 }
 
 func NewInvoiceUseCase(
@@ -35,6 +37,7 @@ func NewInvoiceUseCase(
 	transactionRepo domain.ObservedTransactionRepository,
 	bscClient *bscrpc.Client,
 	tonClient *tonrpc.Client,
+	wallexClient *wallex.Client,
 ) *InvoiceUseCase {
 	return &InvoiceUseCase{
 		invoiceRepo:     invoiceRepo,
@@ -45,6 +48,7 @@ func NewInvoiceUseCase(
 		transactionRepo: transactionRepo,
 		bscClient:       bscClient,
 		tonClient:       tonClient,
+		wallexClient:    wallexClient,
 	}
 }
 
@@ -81,12 +85,16 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 			return nil, fmt.Errorf("currency not found: %w", err)
 		}
 	} else if input.Currency != "" {
-		curr, err = u.currencyRepo.GetBySymbolAndNetwork(ctx, input.Currency, net.ID)
+		curSymbol := strings.ToUpper(strings.TrimSpace(input.Currency))
+		if curSymbol == "TON" || curSymbol == "TONCOIN" {
+			curSymbol = "GRAM"
+		}
+		curr, err = u.currencyRepo.GetBySymbolAndNetwork(ctx, curSymbol, net.ID)
 		if err != nil {
 			return nil, fmt.Errorf("currency '%s' not supported on network '%s': %w", input.Currency, net.ID, err)
 		}
 	} else {
-		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, ton)")
+		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, gram)")
 	}
 
 	// 4. Resolve / Create User (MANDATORY)
@@ -114,15 +122,10 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		}
 	}
 
-	// 5. Calculate Crypto Pricing (Oracle / Live Rates)
-	exchangeRate := 1.0
-	switch strings.ToUpper(curr.Symbol) {
-	case "TON":
-		exchangeRate = 5.20 // ~ $5.20 / TON
-	case "BNB":
-		exchangeRate = 610.0 // ~ $610.00 / BNB
-	case "USDT":
-		exchangeRate = 1.0 // 1 USD = 1 USDT
+	// 5. Calculate Crypto Pricing (Wallex Live Market Oracle)
+	exchangeRate, err := u.wallexClient.GetPriceUSD(ctx, curr.Symbol)
+	if err != nil || exchangeRate <= 0 {
+		exchangeRate = 1.0
 	}
 	cryptoAmount := amountUSD / exchangeRate
 	multiplier := math.Pow(10, float64(curr.Decimals))
@@ -344,4 +347,10 @@ func (u *InvoiceUseCase) StartBackgroundObserver(ctx context.Context, interval t
 	}()
 	slog.Info("🚀 Background payment observer started (BSC & TON)", "interval", interval.String())
 }
+
+// GetLiveRates returns dynamic crypto exchange rates queried from Wallex API
+func (u *InvoiceUseCase) GetLiveRates(ctx context.Context) map[string]float64 {
+	return u.wallexClient.GetAllRates(ctx)
+}
+
 

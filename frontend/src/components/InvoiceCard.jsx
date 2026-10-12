@@ -147,12 +147,6 @@ export default function InvoiceCard({ invoice, onStatusChange, onCopy, onReset }
           </div>
         )}
 
-        <div className="info-row">
-          <span className="label">شناسه یکتای سیستم:</span>
-          <span className="val" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-            {invoice.id}
-          </span>
-        </div>
       </div>
 
       {/* Memo Alert Banner for TON vs Unique Address Note for BSC */}

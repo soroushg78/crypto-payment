@@ -116,3 +116,13 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		Data:    invoices,
 	})
 }
+
+// GetRates handles GET /api/v1/rates - returns live crypto prices from Wallex
+func (h *InvoiceHandler) GetRates(w http.ResponseWriter, r *http.Request) {
+	rates := h.invoiceUC.GetLiveRates(r.Context())
+	writeJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data:    rates,
+	})
+}
+

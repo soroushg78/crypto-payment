@@ -19,6 +19,7 @@ import (
 	"wallet-observer/pkg/hdwallet"
 	"wallet-observer/pkg/logger"
 	"wallet-observer/pkg/tonrpc"
+	"wallet-observer/pkg/wallex"
 )
 
 func main() {
@@ -74,6 +75,10 @@ func main() {
 	tonClient := tonrpc.NewClient(tonEndpoint, tonAPIKey)
 	slog.Info("TON RPC Client initialized (Toncenter live node connector)")
 
+	// 6.7 Initialize Wallex Price Oracle Client (Public Market API)
+	wallexClient := wallex.NewClient()
+	slog.Info("Wallex Live Price Oracle initialized (wallex.ir public market data)")
+
 	// 7. Initialize Separated Use Cases (SOLID - SRP)
 	catalogUC := usecase.NewCatalogUseCase(networkRepo, currencyRepo)
 	invoiceUC := usecase.NewInvoiceUseCase(
@@ -85,6 +90,7 @@ func main() {
 		transactionRepo,
 		bscClient,
 		tonClient,
+		wallexClient,
 	)
 	authUC := usecase.NewAuthUseCase(adminRepo)
 	rebalanceUC := usecase.NewRebalanceUseCase(addressRepo, hdManager, bscClient, invoiceRepo, tonClient, rebalanceRecordRepo)

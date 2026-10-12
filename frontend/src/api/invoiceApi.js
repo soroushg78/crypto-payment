@@ -45,6 +45,11 @@ export const invoiceApi = {
   // دریافت لیست تمام فاکتورهای واقعی از دیتابیس PostgreSQL
   listInvoices: async (limit = 100) => {
     return apiClient.get(`/api/v1/invoices?limit=${limit}`);
+  },
+
+  // استعلام نرخ‌های زنده ارزها از صرافی والکس (Wallex)
+  getRates: async () => {
+    return apiClient.get('/api/v1/rates');
   }
 };
 

@@ -25,7 +25,8 @@ func NewRouter(
 	mux.HandleFunc("GET /api/v1/networks", catalogH.ListNetworks)
 	mux.HandleFunc("GET /api/v1/networks/{network_id}/currencies", catalogH.ListCurrencies)
 
-	// 4. Invoice routes
+	// 4. Invoice & Rates routes
+	mux.HandleFunc("GET /api/v1/rates", invoiceH.GetRates)
 	mux.HandleFunc("GET /api/v1/invoices", invoiceH.ListInvoices)
 	mux.HandleFunc("POST /api/v1/invoices", invoiceH.CreateInvoice)
 	mux.HandleFunc("GET /api/v1/invoices/{id}", invoiceH.GetInvoice)
