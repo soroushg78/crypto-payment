@@ -320,7 +320,7 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 				}
 			}
 		} else if err != nil {
-			slog.Debug("TON on-chain check error", "memo", *inv.PayMemo, "err", err)
+			slog.Warn("TON on-chain check error", "memo", *inv.PayMemo, "address", inv.PayAddress, "err", err)
 		}
 	}
 }

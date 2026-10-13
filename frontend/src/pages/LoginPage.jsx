@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -51,9 +51,6 @@ export default function LoginPage() {
           <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', marginBottom: '0.4rem' }}>
             ورود به داشبورد درگاه پرداخت
           </h2>
-          <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)' }}>
-            جهت دسترسی به محیط تست، صدور فاکتور و مشاهده تراکنش‌ها وارد شوید
-          </p>
         </div>
 
         {error && (
@@ -107,20 +104,6 @@ export default function LoginPage() {
             {loading ? 'در حال بررسی...' : 'ورود به پنل ➔'}
           </button>
         </form>
-
-        <div
-          style={{
-            marginTop: '1.5rem',
-            padding: '0.75rem',
-            background: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: '10px',
-            fontSize: '0.8rem',
-            color: 'var(--text-dim)',
-            textAlign: 'center'
-          }}
-        >
-          🔑 دسترسی پیش‌فرض مدیر: <code>admin</code> / <code>admin123</code>
-        </div>
       </div>
     </div>
   );

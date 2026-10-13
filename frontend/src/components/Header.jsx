@@ -32,7 +32,6 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0, reba
           <div className="brand-icon-box">⚡</div>
           <div>
             <h1 className="brand-title">درگاه پرداخت کریپتو و مدیریت خزانه‌داری</h1>
-            <div className="brand-sub">سامانه سازمانی پرداخت غیرحضانتی و تسویه آنی | Go Backend + PostgreSQL</div>
           </div>
         </div>
 

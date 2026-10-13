@@ -73,6 +73,9 @@ func NewClient(baseURL, apiKey string) *Client {
 		baseURL = DefaultToncenterURL
 	}
 	baseURL = strings.TrimRight(baseURL, "/")
+	baseURL = strings.TrimSuffix(baseURL, "/jsonRPC")
+	baseURL = strings.TrimSuffix(baseURL, "/jsonrpc")
+	baseURL = strings.TrimRight(baseURL, "/")
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
@@ -192,9 +195,9 @@ func (c *Client) CheckPayment(ctx context.Context, address string, expectedMemo 
 			continue
 		}
 
-		// Verify transaction timestamp (at or after invoice created - allow 2 minutes buffer)
+		// Verify transaction timestamp (at or after invoice created - allow 10 minutes buffer for clock skew)
 		txTime := time.Unix(tx.UTime, 0)
-		if txTime.Before(invoiceCreatedAt.Add(-2 * time.Minute)) {
+		if txTime.Before(invoiceCreatedAt.Add(-10 * time.Minute)) {
 			continue
 		}
 

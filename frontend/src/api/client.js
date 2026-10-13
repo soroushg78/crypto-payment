@@ -1,6 +1,8 @@
 // Base API Client for Go Crypto Service backend
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+export const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined
+  ? import.meta.env.VITE_API_URL
+  : (import.meta.env.DEV ? 'http://localhost:8080' : '');
 
 class ApiClient {
   constructor(baseUrl = API_BASE_URL) {

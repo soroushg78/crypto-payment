@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"wallet-observer/internal/config"
@@ -54,8 +55,7 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	);
 
-	-- Drop legacy services table and service_id column if still existing
-	ALTER TABLE invoices DROP COLUMN IF EXISTS service_id CASCADE;
+	-- Drop legacy services table if still existing
 	DROP TABLE IF EXISTS services CASCADE;
 
 	-- 2. Networks Table (Blockchain Networks)
@@ -118,6 +118,7 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	DROP INDEX IF EXISTS idx_invoices_order_id;
 	ALTER TABLE invoices DROP COLUMN IF EXISTS order_id;
 	ALTER TABLE invoices DROP COLUMN IF EXISTS callback_url;
+	ALTER TABLE invoices DROP COLUMN IF EXISTS service_id CASCADE;
 
 	-- 6. Observed Transactions Table (Double-Spend Prevention)
 	CREATE TABLE IF NOT EXISTS observed_transactions (
@@ -232,17 +233,26 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	// Seed default super admin (admin / admin123) with real bcrypt hash
+	// Seed super admin from environment variables or secure default with real bcrypt hash
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	if adminUsername == "" {
+		adminUsername = "admin"
+	}
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		adminPassword = "C4ypt0_Adm!n#2026$X9z"
+	}
+
 	var adminExists bool
-	_ = pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM admins WHERE username = 'admin')").Scan(&adminExists)
+	_ = pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM admins WHERE username = $1)", adminUsername).Scan(&adminExists)
 	if !adminExists {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 		if err == nil {
 			_, _ = pool.Exec(ctx,
 				"INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, 'SUPER_ADMIN')",
-				"admin", string(hashedPassword),
+				adminUsername, string(hashedPassword),
 			)
-			slog.Info("Default super admin seeded (username: admin, password: admin123)")
+			slog.Info("Super admin seeded successfully", "username", adminUsername)
 		}
 	}
 
