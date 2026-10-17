@@ -3,6 +3,7 @@ import { catalogApi } from '../api/catalogApi';
 import { invoiceApi } from '../api/invoiceApi';
 import NetworkSelector from '../components/NetworkSelector';
 import InvoiceCard from '../components/InvoiceCard';
+import { CreditCard, AlertTriangle, Calculator, Send, Receipt, Loader2 } from 'lucide-react';
 
 export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
   // Lists from backend
@@ -56,7 +57,6 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
 
         if (Array.isArray(data) && data.length > 0) {
           setNetworks(data);
-          // شبکه اول را به صورت پیش‌فرض انتخاب نمی‌کنیم تا کاربر خود دراپ‌داون را باز کند
         }
       } catch (err) {
         if (isMounted) {
@@ -73,7 +73,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
     };
   }, []);
 
-  // 2. دریافت ارزهای شبکه انتخاب شده (فعال‌سازی دراپ‌داون دوم)
+  // 2. دریافت ارزهای شبکه انتخاب شده
   const handleNetworkChange = async (networkId) => {
     setSelectedNetworkId(networkId);
     setSelectedCurrencyId('');
@@ -156,7 +156,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
 
       setActiveInvoice(fullInvoice);
       onInvoiceCreated?.(fullInvoice);
-      onShowToast?.('فاکتور جدید در دیتابیس صادر شد! ⚡', 'success');
+      onShowToast?.('فاکتور جدید در دیتابیس صادر شد', 'success');
     } catch (err) {
       setErrorMsg(err.message || 'خطا در ایجاد فاکتور');
       onShowToast?.(err.message, 'error');
@@ -167,7 +167,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
 
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);
-    onShowToast?.(`${label} کپی شد! ✅`, 'success');
+    onShowToast?.(`${label} کپی شد`, 'success');
   };
 
   const handleStatusChange = (newStatus, updatedData) => {
@@ -182,10 +182,12 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
 
   return (
     <div className="checkout-grid">
-      {/* فرم پرداخت: ابتدا شبکه و کارنسی، سپس مبلغ دلاری */}
+      {/* فرم پرداخت */}
       <div className="card-panel">
         <div className="card-title-wrap">
-          <div className="card-step-num">⚡</div>
+          <div className="card-step-num">
+            <CreditCard size={16} />
+          </div>
           <h2 className="card-title">درگاه پرداخت و ایجاد فاکتور</h2>
         </div>
 
@@ -193,15 +195,19 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           <div
             style={{
               padding: '0.75rem',
-              background: 'rgba(244, 63, 94, 0.15)',
+              background: 'var(--rose-subtle)',
               border: '1px solid var(--rose)',
               borderRadius: '8px',
               fontSize: '0.85rem',
               color: '#fda4af',
-              marginBottom: '1.25rem'
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
-            ⚠️ {errorMsg}
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
           </div>
         )}
 
@@ -217,7 +223,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           loadingCurrencies={loadingCurrencies}
         />
 
-        {/* ۲. ورود مبلغ پرداختی به دلار (جایگزین انتخاب خدمت) */}
+        {/* ۲. ورود مبلغ پرداختی به دلار */}
         <div className="selector-group" style={{ marginTop: '1.5rem' }}>
           <label className="selector-label">
             ۳. مبلغ پرداختی به دلار آمریکا (USD Amount):
@@ -241,8 +247,8 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
                 type="button"
                 className="btn-sim-action"
                 style={{
-                  background: amountUSD === preset ? 'rgba(6, 182, 212, 0.2)' : undefined,
-                  borderColor: amountUSD === preset ? 'var(--cyan)' : undefined
+                  background: amountUSD === preset ? 'rgba(37, 99, 235, 0.2)' : undefined,
+                  borderColor: amountUSD === preset ? 'var(--primary)' : undefined
                 }}
                 onClick={() => setAmountUSD(preset)}
               >
@@ -257,7 +263,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
               style={{
                 marginTop: '0.65rem',
                 fontSize: '0.86rem',
-                color: 'var(--cyan-glow)',
+                color: '#93c5fd',
                 direction: 'rtl',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -266,26 +272,27 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
                 gap: '0.5rem'
               }}
             >
-              <span>
-                💡 معادل تقریبی: <strong style={{ direction: 'ltr', display: 'inline-block' }}>{getEstimatedCrypto()}</strong>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Calculator size={14} />
+                معادل تقریبی: <strong style={{ direction: 'ltr', display: 'inline-block', color: '#fff' }}>{getEstimatedCrypto()}</strong>
               </span>
               <span
                 style={{
                   fontSize: '0.72rem',
-                  color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.1)',
+                  color: '#93c5fd',
+                  background: '#172554',
                   padding: '2px 8px',
                   borderRadius: '4px',
-                  border: '1px solid rgba(56, 189, 248, 0.25)'
+                  border: '1px solid #1e3a8a'
                 }}
               >
-                ⚡ استعلام زنده از والکس (Wallex)
+                استعلام زنده از والکس (Wallex)
               </span>
             </div>
           )}
         </div>
 
-        {/* ۴. آی دی تلگرام کاربر */}
+        {/* ۳. آی دی تلگرام کاربر */}
         <div className="selector-group" style={{ marginTop: '1.25rem' }}>
           <label className="selector-label">
             ۴. شناسه کاربری / تلگرام:
@@ -298,6 +305,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
               setTelegramUser(e.target.value);
               if (errorMsg) setErrorMsg('');
             }}
+            placeholder="@username یا شناسه عددی"
             style={{ direction: 'ltr' }}
           />
         </div>
@@ -310,7 +318,17 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           onClick={handleCreateInvoice}
           disabled={creatingInvoice || !selectedNetworkId || !selectedCurrencyId || !amountUSD}
         >
-          {creatingInvoice ? 'در حال صدور فاکتور در دیتابیس...' : '⚡ صدور فاکتور پرداخت (Generate Invoice)'}
+          {creatingInvoice ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              در حال صدور فاکتور در دیتابیس...
+            </>
+          ) : (
+            <>
+              <Send size={16} />
+              صدور فاکتور پرداخت (Generate Invoice)
+            </>
+          )}
         </button>
       </div>
 
@@ -325,7 +343,7 @@ export default function CheckoutPage({ onInvoiceCreated, onShowToast }) {
           />
         ) : (
           <div className="card-panel" style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🧾</div>
+            <Receipt size={44} style={{ color: 'var(--text-dim)', margin: '0 auto 1rem' }} />
             <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>فاکتوری صادر نشده است</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '380px', margin: '0 auto' }}>
               ابتدا شبکه و ارز بلاکچین را از دراپ‌داون انتخاب کرده، مبلغ دلاری مورد نظر را وارد نمایید و روی دکمه صدور فاکتور کلیک کنید.

@@ -112,7 +112,7 @@ function MainApp() {
             onShowToast={showToast}
             onCopy={(text, label) => {
               navigator.clipboard.writeText(text);
-              showToast(`${label} کپی شد! ✅`, 'success');
+              showToast(`${label} کپی شد`, 'success');
             }}
           />
         )}

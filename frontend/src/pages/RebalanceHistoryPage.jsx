@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { rebalanceApi } from '../api/rebalanceApi';
+import {
+  BarChart3,
+  RefreshCw,
+  Activity,
+  Search,
+  AlertTriangle,
+  Loader2,
+  Inbox,
+  Copy,
+  CheckCircle2,
+  XCircle,
+  ExternalLink
+} from 'lucide-react';
 
 export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalance }) {
   const [records, setRecords] = useState([]);
@@ -25,7 +38,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
       setRecords(bscList);
 
       if (isManual) {
-        onShowToast?.('سوابق ریبالانسینگ مستقیماً از دیتابیس PostgreSQL به‌روزرسانی شد! 🔄', 'success');
+        onShowToast?.('سوابق ریبالانسینگ مستقیماً از دیتابیس PostgreSQL به‌روزرسانی شد', 'success');
       }
     } catch (err) {
       console.error('Failed to fetch rebalance records:', err);
@@ -46,7 +59,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
   const handleCopy = (text, label) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
-    onShowToast?.(`${label} کپی شد! 📋`, 'success');
+    onShowToast?.(`${label} کپی شد`, 'success');
   };
 
   const formatDate = (dateStr) => {
@@ -63,39 +76,44 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
     if (amt === undefined || amt === null) return '0';
     const num = Number(amt);
     if (isNaN(num)) return amt;
-    if (asset === 'USDT') {
-      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-    }
-    return num.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+    return asset === 'USDT' ? num.toFixed(2) : num.toFixed(6);
   };
 
-  // Filter records by Asset and Search Query only (No mock/sim mode)
+  const isSuccess = (status) => {
+    const s = (status || '').toUpperCase();
+    return s === 'COMPLETED' || s === 'SUCCESS' || s === 'CONFIRMED';
+  };
+
+  // Filter and Search logic
   const filteredRecords = records.filter((r) => {
+    // 1. Asset Filter
     if (assetFilter !== 'ALL' && (r.asset || '').toUpperCase() !== assetFilter) {
       return false;
     }
 
+    // 2. Search Query (Filter by tx_hash, from_address, to_address, derivation_index)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const matchHash = (r.tx_hash || '').toLowerCase().includes(q);
+      const matchTx = (r.tx_hash || '').toLowerCase().includes(q);
       const matchFrom = (r.from_address || '').toLowerCase().includes(q);
       const matchTo = (r.to_address || '').toLowerCase().includes(q);
-      const matchAsset = (r.asset || '').toLowerCase().includes(q);
-      const matchIdx = r.derivation_index !== null && r.derivation_index !== undefined && String(r.derivation_index).includes(q);
-      return matchHash || matchFrom || matchTo || matchAsset || matchIdx;
+      const matchIndex = String(r.derivation_index ?? '').includes(q);
+      return matchTx || matchFrom || matchTo || matchIndex;
     }
+
     return true;
   });
 
-  // Calculate real statistics
+  // Calculate high-level stats
   const totalCount = records.length;
-  const isSuccess = (status) => status === 'SUCCESS' || status === 'COMPLETED';
+  const successfulCount = records.filter((r) => isSuccess(r.status)).length;
+  const failedCount = totalCount - successfulCount;
 
-  const totalUsdtSwept = records
+  const totalSweptUSDT = records
     .filter((r) => (r.asset || '').toUpperCase() === 'USDT' && isSuccess(r.status))
     .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-  const totalBnbSwept = records
+  const totalSweptBNB = records
     .filter((r) => (r.asset || '').toUpperCase() === 'BNB' && isSuccess(r.status))
     .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
@@ -117,7 +135,8 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
       >
         <div>
           <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span>📊</span> سوابق و لاگ ریبالانسینگ بایننس اسمارت چین (BSC Sweeper & Gas Station)
+            <BarChart3 size={20} style={{ color: 'var(--primary)' }} />
+            سوابق و لاگ ریبالانسینگ بایننس اسمارت چین (BSC Sweeper & Gas Station)
           </h2>
         </div>
 
@@ -126,31 +145,41 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
             className="btn-sim-action"
             onClick={() => fetchRecords(true)}
             disabled={loading || refreshing}
-            style={{ padding: '0.6rem 1.25rem', borderColor: 'var(--cyan)' }}
+            style={{ padding: '0.6rem 1.25rem', borderColor: '#334366' }}
           >
-            {refreshing ? 'در حال همگام‌سازی از DB...' : '🔄 به‌روزرسانی زنده از دیتابیس'}
+            {refreshing ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                در حال همگام‌سازی از DB...
+              </>
+            ) : (
+              <>
+                <RefreshCw size={14} />
+                به‌روزرسانی زنده از دیتابیس
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* KPI Stats Bar (Real Production Stats) */}
+      {/* KPI Stats Bar */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           gap: '0.8rem',
           marginBottom: '1.5rem',
-          background: 'rgba(15, 23, 42, 0.7)',
+          background: '#0f172a',
           padding: '1rem',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
+          borderRadius: '10px',
+          border: '1px solid var(--border-color)'
         }}
       >
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>
             کل عملیات ریبالانسینگ BSC:
           </span>
-          <strong style={{ fontSize: '1.15rem', color: 'var(--cyan-glow)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <strong style={{ fontSize: '1.15rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span>{totalCount}</span>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>تراکنش</span>
           </strong>
@@ -158,95 +187,91 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
 
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>
-            وضعیت اجرای عملیات:
+            وضعیت شبکه:
           </span>
-          <strong style={{ fontSize: '0.92rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span>۱۰۰٪ آنچین و زنده 🚀</span>
+          <strong style={{ fontSize: '1.15rem', color: 'var(--emerald-text)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Activity size={16} />
+            <span>۱۰۰٪ آنچین و زنده</span>
           </strong>
         </div>
 
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>
-            مجموع تتر تجمیع شده (USDT):
+            مجموع تتر (USDT) منتقل‌شده:
           </span>
-          <strong style={{ fontSize: '1.15rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span>{totalUsdtSwept.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>USDT</span>
+          <strong style={{ fontSize: '1.15rem', color: 'var(--emerald-text)', direction: 'ltr', display: 'inline-block' }}>
+            ${totalSweptUSDT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </strong>
         </div>
 
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>
-            مجموع BNB تجمیع شده:
+            مجموع کارمزد گس (Gas Paid):
           </span>
-          <strong style={{ fontSize: '1.15rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span>{totalBnbSwept.toFixed(4)}</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>BNB</span>
-          </strong>
-        </div>
-
-        <div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>
-            کارمزد گس مصرفی Gas Station:
-          </span>
-          <strong style={{ fontSize: '1.05rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span>{totalGasBnb.toFixed(6)}</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>BNB</span>
+          <strong style={{ fontSize: '1.15rem', color: 'var(--amber-text)', direction: 'ltr', display: 'inline-block' }}>
+            {totalGasBnb.toFixed(5)} BNB
           </strong>
         </div>
       </div>
 
-      {/* Filter and Search Bar (Clean - No Mock/Mode Filter) */}
+      {/* Filters and Search Toolbar */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '1rem',
-          flexWrap: 'wrap',
+          gap: '0.75rem',
           marginBottom: '1.25rem',
-          background: 'rgba(30, 41, 59, 0.4)',
+          flexWrap: 'wrap',
+          background: '#0f172a',
           padding: '0.75rem 1rem',
-          borderRadius: '10px'
+          borderRadius: '10px',
+          border: '1px solid var(--border-color)'
         }}
       >
-        {/* Asset Filter Only */}
-        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginLeft: '0.3rem' }}>فیلتر دارایی:</span>
+        {/* Asset Filter Tabs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.35rem' }}>فیلتر دارایی:</span>
           <button
-            className="btn-sim-action"
             style={{
-              padding: '0.35rem 0.8rem',
+              padding: '0.3rem 0.8rem',
+              borderRadius: '6px',
               fontSize: '0.78rem',
-              backgroundColor: assetFilter === 'ALL' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-              borderColor: assetFilter === 'ALL' ? 'var(--cyan)' : 'rgba(255, 255, 255, 0.1)',
-              color: assetFilter === 'ALL' ? 'var(--cyan-glow)' : 'var(--text-muted)'
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: assetFilter === 'ALL' ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+              background: assetFilter === 'ALL' ? 'rgba(37, 99, 235, 0.15)' : 'transparent',
+              color: assetFilter === 'ALL' ? '#93c5fd' : 'var(--text-muted)'
             }}
             onClick={() => setAssetFilter('ALL')}
           >
-            همه دارایی‌ها
+            همه موارد
           </button>
           <button
-            className="btn-sim-action"
             style={{
-              padding: '0.35rem 0.8rem',
+              padding: '0.3rem 0.8rem',
+              borderRadius: '6px',
               fontSize: '0.78rem',
-              backgroundColor: assetFilter === 'USDT' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-              borderColor: assetFilter === 'USDT' ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
-              color: assetFilter === 'USDT' ? '#34d399' : 'var(--text-muted)'
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: assetFilter === 'USDT' ? '1px solid var(--emerald)' : '1px solid var(--border-color)',
+              background: assetFilter === 'USDT' ? 'rgba(5, 150, 105, 0.15)' : 'transparent',
+              color: assetFilter === 'USDT' ? 'var(--emerald-text)' : 'var(--text-muted)'
             }}
             onClick={() => setAssetFilter('USDT')}
           >
             تتر (USDT)
           </button>
           <button
-            className="btn-sim-action"
             style={{
-              padding: '0.35rem 0.8rem',
+              padding: '0.3rem 0.8rem',
+              borderRadius: '6px',
               fontSize: '0.78rem',
-              backgroundColor: assetFilter === 'BNB' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-              borderColor: assetFilter === 'BNB' ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)',
-              color: assetFilter === 'BNB' ? '#fbbf24' : 'var(--text-muted)'
+              fontWeight: 700,
+              cursor: 'pointer',
+              border: assetFilter === 'BNB' ? '1px solid var(--amber)' : '1px solid var(--border-color)',
+              background: assetFilter === 'BNB' ? 'rgba(217, 119, 6, 0.15)' : 'transparent',
+              color: assetFilter === 'BNB' ? 'var(--amber-text)' : 'var(--text-muted)'
             }}
             onClick={() => setAssetFilter('BNB')}
           >
@@ -255,21 +280,16 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
         </div>
 
         {/* Search Input */}
-        <div style={{ minWidth: '240px', flex: '1', maxWidth: '380px' }}>
+        <div style={{ minWidth: '240px', flex: '1', maxWidth: '380px', position: 'relative' }}>
           <input
             type="text"
-            className="form-control"
-            placeholder="🔍 جستجو بر اساس هش، آدرس والت یا اندیس..."
+            className="input-custom"
+            placeholder="جستجو بر اساس هش، آدرس والت یا اندیس..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
-              width: '100%',
               padding: '0.45rem 0.85rem',
-              fontSize: '0.82rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              background: 'rgba(15, 23, 42, 0.6)',
-              color: '#fff'
+              fontSize: '0.82rem'
             }}
           />
         </div>
@@ -279,23 +299,27 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
       {error && (
         <div
           style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid #ef4444',
+            background: 'var(--rose-subtle)',
+            border: '1px solid var(--rose)',
             color: '#fca5a5',
             padding: '0.85rem 1rem',
             borderRadius: '8px',
             marginBottom: '1rem',
-            fontSize: '0.85rem'
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}
         >
-          ❌ {error}
+          <AlertTriangle size={16} />
+          <span>{error}</span>
         </div>
       )}
 
       {/* Loading State */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⏳</div>
+          <Loader2 size={28} className="animate-spin" style={{ margin: '0 auto 0.5rem' }} />
           <div>در حال بارگذاری سوابق ریبالانسینگ BSC از دیتابیس PostgreSQL...</div>
         </div>
       ) : filteredRecords.length === 0 ? (
@@ -303,12 +327,12 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
           style={{
             textAlign: 'center',
             padding: '3rem 1rem',
-            background: 'rgba(15, 23, 42, 0.4)',
-            borderRadius: '12px',
-            border: '1px dashed rgba(255, 255, 255, 0.1)'
+            background: '#0f172a',
+            borderRadius: '10px',
+            border: '1px dashed var(--border-color)'
           }}
         >
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
+          <Inbox size={36} style={{ color: 'var(--text-dim)', margin: '0 auto 0.75rem' }} />
           <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>هیچ رکورد ریبالانسینگی یافت نشد</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.4rem' }}>
             {searchQuery
@@ -317,26 +341,21 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
           </p>
         </div>
       ) : (
-        /* Data Table (Fixed width 100%, NO Horizontal Scrolling) */
-        <div style={{ width: '100%', overflow: 'hidden', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        /* Data Table */
+        <div style={{ width: '100%', overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <table
-            className="custom-table"
-            style={{
-              width: '100%',
-              tableLayout: 'fixed',
-              borderCollapse: 'collapse',
-              fontSize: '0.82rem'
-            }}
+            className="history-table"
+            style={{ width: '100%' }}
           >
             <thead>
-              <tr style={{ background: 'rgba(30, 41, 59, 0.7)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                <th style={{ width: '13%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>زمان ثبت</th>
-                <th style={{ width: '21%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>ولت اشتقاقی مبدأ (From)</th>
-                <th style={{ width: '18%', padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>خزانه‌داری مقصد (Master)</th>
-                <th style={{ width: '13%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>دارایی و مقدار</th>
-                <th style={{ width: '12%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>کارمزد سوخت Gas</th>
-                <th style={{ width: '9%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>وضعیت</th>
-                <th style={{ width: '14%', padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>هش تراکنش آنچین</th>
+              <tr>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>زمان ثبت</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>ولت اشتقاقی مبدأ (From)</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>خزانه‌داری مقصد (Master)</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>دارایی و مقدار</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>کارمزد سوخت Gas</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>وضعیت</th>
+                <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>هش تراکنش آنچین</th>
               </tr>
             </thead>
             <tbody>
@@ -347,8 +366,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                   <tr
                     key={r.id || idx}
                     style={{
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                      backgroundColor: idx % 2 === 0 ? 'rgba(15, 23, 42, 0.25)' : 'transparent'
+                      backgroundColor: idx % 2 === 0 ? 'rgba(15, 23, 42, 0.4)' : 'transparent'
                     }}
                   >
                     {/* Date and Time */}
@@ -376,7 +394,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                             style={{
                               fontFamily: 'monospace',
                               fontSize: '0.76rem',
-                              color: 'var(--cyan-glow)',
+                              color: '#93c5fd',
                               direction: 'ltr',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -389,17 +407,10 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                           {r.from_address && (
                             <button
                               onClick={() => handleCopy(r.from_address, 'آدرس ولت مبدأ')}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--cyan)',
-                                cursor: 'pointer',
-                                padding: '1px',
-                                fontSize: '0.72rem'
-                              }}
+                              className="copy-icon-btn"
                               title="کپی آدرس مبدأ"
                             >
-                              📋
+                              <Copy size={11} />
                             </button>
                           )}
                         </div>
@@ -426,17 +437,10 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                         {r.to_address && (
                           <button
                             onClick={() => handleCopy(r.to_address, 'آدرس خزانه‌داری')}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--cyan)',
-                              cursor: 'pointer',
-                              padding: '1px',
-                              fontSize: '0.72rem'
-                            }}
+                            className="copy-icon-btn"
                             title="کپی آدرس خزانه‌داری"
                           >
-                            📋
+                            <Copy size={11} />
                           </button>
                         )}
                       </div>
@@ -444,7 +448,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
 
                     {/* Amount & Asset */}
                     <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 700, color: r.asset === 'USDT' ? '#10b981' : '#fbbf24', fontSize: '0.88rem' }}>
+                      <span style={{ fontWeight: 700, color: r.asset === 'USDT' ? 'var(--emerald-text)' : 'var(--amber-text)', fontSize: '0.88rem' }}>
                         {formatAmount(r.amount, r.asset)}
                       </span>
                       <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginRight: '0.25rem' }}>
@@ -454,7 +458,7 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
 
                     {/* Gas Fee */}
                     <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                      <span style={{ color: '#fbbf24', fontSize: '0.78rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                      <span style={{ color: 'var(--amber-text)', fontSize: '0.78rem', fontFamily: 'monospace', fontWeight: 600 }}>
                         {(Number(r.gas_fee_bnb ?? r.gas_fee) || 0) > 0 ? `${Number(r.gas_fee_bnb ?? r.gas_fee).toFixed(6)}` : '0'}
                       </span>
                       <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginRight: '0.2rem' }}>
@@ -462,20 +466,27 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                       </span>
                     </td>
 
-                    {/* Status Badge (Pure Production Status) */}
+                    {/* Status Badge */}
                     <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
                       <span
+                        className="badge"
                         style={{
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          backgroundColor: isSuccess(r.status) ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                          color: isSuccess(r.status) ? '#34d399' : '#f87171',
-                          border: isSuccess(r.status) ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
+                          backgroundColor: isSuccess(r.status) ? 'var(--emerald-subtle)' : 'var(--rose-subtle)',
+                          color: isSuccess(r.status) ? 'var(--emerald-text)' : 'var(--rose-text)',
+                          border: isSuccess(r.status) ? '1px solid rgba(5, 150, 105, 0.4)' : '1px solid rgba(225, 29, 72, 0.4)'
                         }}
                       >
-                        {isSuccess(r.status) ? 'موفق ✅' : 'ناموفق ❌'}
+                        {isSuccess(r.status) ? (
+                          <>
+                            <CheckCircle2 size={12} />
+                            <span>موفق</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={12} />
+                            <span>ناموفق</span>
+                          </>
+                        )}
                       </span>
                     </td>
 
@@ -489,33 +500,29 @@ export default function RebalanceHistoryPage({ onShowToast, onNavigateToRebalanc
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
-                                color: 'var(--cyan)',
+                                color: '#93c5fd',
                                 textDecoration: 'none',
                                 fontFamily: 'monospace',
                                 fontSize: '0.76rem',
-                                background: 'rgba(6, 182, 212, 0.1)',
+                                background: '#1e293b',
                                 padding: '0.15rem 0.4rem',
                                 borderRadius: '4px',
-                                border: '1px solid rgba(6, 182, 212, 0.25)'
+                                border: '1px solid var(--border-color)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.2rem'
                               }}
                               title="مشاهده در بلاک‌اکسپلورر BscScan"
                             >
                               <span>{r.tx_hash.slice(0, 6)}...{r.tx_hash.slice(-4)}</span>
-                              <span style={{ fontSize: '0.68rem', marginRight: '0.2rem' }}>↗</span>
+                              <ExternalLink size={10} />
                             </a>
                             <button
                               onClick={() => handleCopy(r.tx_hash, 'هش تراکنش')}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--text-muted)',
-                                cursor: 'pointer',
-                                padding: '1px',
-                                fontSize: '0.72rem'
-                              }}
+                              className="copy-icon-btn"
                               title="کپی هش تراکنش"
                             >
-                              📋
+                              <Copy size={11} />
                             </button>
                           </>
                         ) : (

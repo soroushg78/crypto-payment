@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { invoiceApi } from '../api/invoiceApi';
 import { rebalanceApi } from '../api/rebalanceApi';
+import { Bell, BookOpen, Zap, Send, Loader2 } from 'lucide-react';
 
 export default function ApiDocsPage({ onShowToast }) {
   const [activeDocTab, setActiveDocTab] = useState('invoices');
@@ -28,7 +29,7 @@ export default function ApiDocsPage({ onShowToast }) {
       });
 
       setTestResult(res);
-      onShowToast?.('درخواست با موفقیت ارسال شد و فاکتور تولید گردید! ⚡', 'success');
+      onShowToast?.('درخواست با موفقیت ارسال شد و فاکتور تولید گردید!', 'success');
     } catch (err) {
       setTestResult({ error: err.message });
       onShowToast?.(`خطا در ایجاد فاکتور: ${err.message}`, 'error');
@@ -53,7 +54,7 @@ export default function ApiDocsPage({ onShowToast }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ fontSize: '1.6rem' }}>📖</span>
+              <BookOpen size={24} color="var(--primary)" />
               <h2 className="card-title" style={{ margin: 0 }}>
                 مستندات فنی API و سند اتصال وب‌هوک (NowPayments In-House Replacement)
               </h2>
@@ -66,7 +67,7 @@ export default function ApiDocsPage({ onShowToast }) {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               className={`btn-sim-action ${activeDocTab === 'invoices' ? 'active' : ''}`}
-              style={{ borderColor: activeDocTab === 'invoices' ? 'var(--cyan)' : undefined }}
+              style={{ borderColor: activeDocTab === 'invoices' ? 'var(--primary)' : undefined }}
               onClick={() => setActiveDocTab('invoices')}
             >
               ۱. ایجاد فاکتور (Invoices)
@@ -167,7 +168,7 @@ export default function ApiDocsPage({ onShowToast }) {
           {/* Interactive Tester Console */}
           <div className="card-panel">
             <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>⚡</span> کنسول تست زنده اندپوینت (Try It Out)
+              <Zap size={18} color="var(--primary)" /> کنسول تست زنده اندپوینت (Try It Out)
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -238,8 +239,19 @@ export default function ApiDocsPage({ onShowToast }) {
               className="btn-submit"
               onClick={handleTestCreateInvoice}
               disabled={isTesting}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
-              {isTesting ? 'در حال ارسال درخواست و استعلام نرخ روز...' : '🚀 ارسال درخواست به API و مشاهده پاسخ زنده'}
+              {isTesting ? (
+                <>
+                  <Loader2 size={16} className="spin" />
+                  در حال ارسال درخواست و استعلام نرخ روز...
+                </>
+              ) : (
+                <>
+                  <Send size={16} />
+                  ارسال درخواست به API و مشاهده پاسخ زنده
+                </>
+              )}
             </button>
 
             {testResult && (
@@ -271,8 +283,9 @@ export default function ApiDocsPage({ onShowToast }) {
       {/* 3. Webhook Specs Section */}
       {activeDocTab === 'webhook' && (
         <div className="card-panel">
-          <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.8rem' }}>
-            🔔 ساختار وب‌هوک و اعتبارسنجی امضای امنیتی (Webhook HMAC-SHA256)
+          <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Bell size={18} style={{ color: 'var(--primary)' }} />
+            ساختار وب‌هوک و اعتبارسنجی امضای امنیتی (Webhook HMAC-SHA256)
           </h3>
           <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
             به محض اینکه ناظر بلاکچین تراکنش واریزی کاربر را در شبکه کشف و به حدنصاب تاییدیه‌ها برساند، یک درخواست{' '}

@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { healthApi } from '../api/healthApi';
 import { useAuth } from '../context/AuthContext';
+import {
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  User,
+  CreditCard,
+  Landmark,
+  BarChart3,
+  FileText,
+  LogOut
+} from 'lucide-react';
 
 export default function Header({ activeTab, setActiveTab, historyCount = 0, rebalanceCount = 0 }) {
   const { user, logout } = useAuth();
@@ -29,7 +41,9 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0, reba
     <div>
       <header className="app-header">
         <div className="brand-section">
-          <div className="brand-icon-box">⚡</div>
+          <div className="brand-icon-box">
+            <Zap size={22} />
+          </div>
           <div>
             <h1 className="brand-title">درگاه پرداخت کریپتو و مدیریت خزانه‌داری</h1>
           </div>
@@ -41,17 +55,33 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0, reba
             title="وضعیت اتصال به سرور Go"
           >
             <div className="pulse-dot"></div>
-            <span>
-              {isHealthy === true && 'بک‌اند متصل و فعال 🟢'}
-              {isHealthy === false && 'خطا در اتصال به بک‌اند 🔴'}
-              {isHealthy === null && 'در حال بررسی اتصال... ⏳'}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              {isHealthy === true && (
+                <>
+                  <CheckCircle2 size={14} />
+                  بک‌اند متصل و فعال
+                </>
+              )}
+              {isHealthy === false && (
+                <>
+                  <AlertCircle size={14} />
+                  خطا در اتصال به بک‌اند
+                </>
+              )}
+              {isHealthy === null && (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  در حال بررسی اتصال...
+                </>
+              )}
             </span>
           </div>
 
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                👤 {user.username}
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                <User size={14} />
+                {user.username}
               </span>
               <button
                 className="btn-sim-action"
@@ -59,6 +89,7 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0, reba
                 onClick={logout}
                 title="خروج از حساب"
               >
+                <LogOut size={13} />
                 خروج
               </button>
             </div>
@@ -72,25 +103,29 @@ export default function Header({ activeTab, setActiveTab, historyCount = 0, reba
           className={`tab-btn ${activeTab === 'checkout' ? 'active' : ''}`}
           onClick={() => setActiveTab('checkout')}
         >
-          💳 درگاه پرداخت و صدور فاکتور
+          <CreditCard size={16} />
+          درگاه پرداخت و صدور فاکتور
         </button>
         <button
           className={`tab-btn ${activeTab === 'rebalance' ? 'active' : ''}`}
           onClick={() => setActiveTab('rebalance')}
         >
-          🏦 خزانه‌داری و ریبالانسینگ
+          <Landmark size={16} />
+          خزانه‌داری و ریبالانسینگ
         </button>
         <button
           className={`tab-btn ${activeTab === 'rebalance-records' ? 'active' : ''}`}
           onClick={() => setActiveTab('rebalance-records')}
         >
-          📊 سوابق ریبالانسینگ ({rebalanceCount})
+          <BarChart3 size={16} />
+          سوابق ریبالانسینگ ({rebalanceCount})
         </button>
         <button
           className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          📜 سوابق سفارشات و تراکنش‌ها ({historyCount})
+          <FileText size={16} />
+          سوابق سفارشات و تراکنش‌ها ({historyCount})
         </button>
       </div>
     </div>

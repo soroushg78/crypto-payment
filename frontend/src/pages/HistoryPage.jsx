@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { invoiceApi } from '../api/invoiceApi';
+import {
+  FileText,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Copy,
+  Loader2,
+  ExternalLink
+} from 'lucide-react';
 
 export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
   const [invoices, setInvoices] = useState([]);
@@ -19,7 +29,7 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
       onCountUpdated?.(list.length);
 
       if (isManual) {
-        onShowToast?.('سوابق فاکتورها مستقیماً از دیتابیس PostgreSQL به‌روزرسانی شد! 🔄', 'success');
+        onShowToast?.('سوابق فاکتورها مستقیماً از دیتابیس PostgreSQL به‌روزرسانی شد', 'success');
       }
     } catch (err) {
       console.error('Failed to fetch invoices from DB:', err);
@@ -76,7 +86,8 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
       >
         <div>
           <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span>📜</span> سوابق رسمی سفارشات در دیتابیس (PostgreSQL Live Ledger)
+            <FileText size={20} style={{ color: 'var(--primary)' }} />
+            سوابق رسمی سفارشات در دیتابیس (PostgreSQL Live Ledger)
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.3rem 0 0 0' }}>
             تمامی فاکتورها مستقیماً از جدول دیتابیس سرور بارگذاری می‌شوند و وضعیت‌های تسویه آنچین همگام هستند.
@@ -87,9 +98,19 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
           className="btn-sim-action"
           onClick={() => fetchInvoices(true)}
           disabled={loading || refreshing}
-          style={{ padding: '0.6rem 1.2rem', borderColor: 'var(--cyan)' }}
+          style={{ padding: '0.6rem 1.2rem', borderColor: '#334366' }}
         >
-          {refreshing ? 'در حال استعلام نود و DB...' : '🔄 استعلام مستقیم از دیتابیس'}
+          {refreshing ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              در حال استعلام نود و DB...
+            </>
+          ) : (
+            <>
+              <RefreshCw size={14} />
+              استعلام مستقیم از دیتابیس
+            </>
+          )}
         </button>
       </div>
 
@@ -100,31 +121,31 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: '0.8rem',
           marginBottom: '1.5rem',
-          background: 'rgba(15, 23, 42, 0.6)',
+          background: '#0f172a',
           padding: '0.9rem',
           borderRadius: '10px',
-          border: '1px solid rgba(255, 255, 255, 0.06)'
+          border: '1px solid var(--border-color)'
         }}
       >
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>کل فاکتورها:</span>
-          <strong style={{ fontSize: '1.1rem', color: 'var(--cyan-glow)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <strong style={{ fontSize: '1.1rem', color: '#f8fafc', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span>{invoices.length}</span>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>سفارش</span>
           </strong>
         </div>
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>تسویه‌شده آنچین:</span>
-          <strong style={{ fontSize: '1.1rem', color: '#34d399', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--emerald-text)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span>{paidCount} پرداخت‌شده</span>
-            <span>✅</span>
+            <CheckCircle2 size={14} />
           </strong>
         </div>
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.2rem' }}>در انتظار پرداخت:</span>
-          <strong style={{ fontSize: '1.1rem', color: '#fbbf24', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <strong style={{ fontSize: '1.1rem', color: 'var(--amber-text)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span>{pendingCount} فاکتور</span>
-            <span>⏳</span>
+            <Clock size={14} />
           </strong>
         </div>
         <div>
@@ -139,25 +160,30 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
       {error && (
         <div
           style={{
-            background: 'rgba(244, 63, 94, 0.15)',
+            background: 'var(--rose-subtle)',
             border: '1px solid var(--rose)',
             borderRadius: '8px',
             padding: '0.8rem',
             color: '#fda4af',
             marginBottom: '1rem',
-            fontSize: '0.85rem'
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}
         >
-          ⚠️ {error}
+          <AlertTriangle size={16} />
+          <span>{error}</span>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-          در حال دریافت سوابق سفارشات و تراکنش‌ها... ⏳
+        <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+          <Loader2 size={18} className="animate-spin" />
+          <span>در حال دریافت سوابق سفارشات و تراکنش‌ها...</span>
         </div>
       ) : invoices.length > 0 ? (
-        <div style={{ width: '100%', overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <div style={{ width: '100%', overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <table className="history-table" style={{ width: '100%' }}>
             <thead>
               <tr>
@@ -185,7 +211,7 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                   <td style={{ whiteSpace: 'nowrap' }}>
                     {inv.telegram_username ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', direction: 'ltr' }}>
-                        <span style={{ color: 'var(--cyan-glow)', fontWeight: 700, fontSize: '0.82rem' }}>
+                        <span style={{ color: '#93c5fd', fontWeight: 700, fontSize: '0.82rem' }}>
                           @{inv.telegram_username.replace(/^@/, '')}
                         </span>
                         {inv.telegram_id && (
@@ -195,7 +221,7 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                         )}
                       </div>
                     ) : inv.telegram_id ? (
-                      <span style={{ color: 'var(--cyan-glow)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', direction: 'ltr' }}>
+                      <span style={{ color: '#93c5fd', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', direction: 'ltr' }}>
                         ID: {inv.telegram_id}
                       </span>
                     ) : (
@@ -208,7 +234,7 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                     <div
                       style={{
                         fontFamily: 'var(--font-mono)',
-                        color: 'var(--cyan-glow)',
+                        color: '#f8fafc',
                         direction: 'ltr',
                         fontWeight: 700,
                         fontSize: '0.85rem'
@@ -229,9 +255,9 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                         fontSize: '0.76rem',
                         padding: '0.2rem 0.5rem',
                         borderRadius: '4px',
-                        background: inv.network_id?.toLowerCase() === 'ton' ? 'rgba(0, 152, 234, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                        border: inv.network_id?.toLowerCase() === 'ton' ? '1px solid rgba(0, 152, 234, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: inv.network_id?.toLowerCase() === 'ton' ? '#38bdf8' : '#cbd5e1',
+                        background: '#0f172a',
+                        border: '1px solid var(--border-color)',
+                        color: inv.network_id?.toLowerCase() === 'ton' ? '#38bdf8' : '#e2e8f0',
                         fontWeight: 600
                       }}
                     >
@@ -251,9 +277,8 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                             className="copy-icon-btn"
                             onClick={() => onCopy?.(inv.pay_memo, 'ممو')}
                             title="کپی ممو"
-                            style={{ padding: '2px 4px', fontSize: '0.72rem' }}
                           >
-                            📋
+                            <Copy size={12} />
                           </button>
                         </div>
                       ) : (
@@ -266,18 +291,18 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                             href={`https://bscscan.com/address/${inv.pay_address}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ color: 'var(--cyan)', textDecoration: 'underline', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}
+                            style={{ color: '#93c5fd', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
                             title="مشاهده در BscScan"
                           >
                             {inv.pay_address.slice(0, 6)}...{inv.pay_address.slice(-4)}
+                            <ExternalLink size={11} />
                           </a>
                           <button
                             className="copy-icon-btn"
                             onClick={() => onCopy?.(inv.pay_address, 'آدرس کیف پول')}
                             title="کپی آدرس"
-                            style={{ padding: '2px 4px', fontSize: '0.72rem' }}
                           >
-                            📋
+                            <Copy size={12} />
                           </button>
                         </div>
                         {inv.pay_memo && (
@@ -289,9 +314,8 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                               className="copy-icon-btn"
                               onClick={() => onCopy?.(inv.pay_memo, 'ممو')}
                               title="کپی ممو"
-                              style={{ padding: '1px 3px', fontSize: '0.68rem' }}
                             >
-                              📋
+                              <Copy size={11} />
                             </button>
                           </div>
                         )}
@@ -305,44 +329,24 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                   <td style={{ whiteSpace: 'nowrap' }}>
                     {inv.status === 'PAID' ? (
                       <span
-                        className="badge"
-                        style={{
-                          background: 'rgba(52, 211, 153, 0.16)',
-                          color: '#34d399',
-                          border: '1px solid rgba(52, 211, 153, 0.4)',
-                          fontWeight: 700,
-                          padding: '0.28rem 0.65rem',
-                          fontSize: '0.78rem'
-                        }}
+                        className="badge status-PAID"
+                        style={{ fontWeight: 700, fontSize: '0.78rem' }}
                       >
+                        <CheckCircle2 size={13} />
                         <span>پرداخت شد</span>
-                        <span>✅</span>
                       </span>
                     ) : inv.status === 'PENDING' ? (
                       <span
-                        className="badge"
-                        style={{
-                          background: 'rgba(251, 191, 36, 0.16)',
-                          color: '#fbbf24',
-                          border: '1px solid rgba(251, 191, 36, 0.4)',
-                          fontWeight: 600,
-                          padding: '0.28rem 0.65rem',
-                          fontSize: '0.78rem'
-                        }}
+                        className="badge status-PENDING"
+                        style={{ fontWeight: 600, fontSize: '0.78rem' }}
                       >
+                        <Clock size={13} />
                         <span>در انتظار (PENDING)</span>
-                        <span>⏳</span>
                       </span>
                     ) : (
                       <span
-                        className="badge"
-                        style={{
-                          background: 'rgba(148, 163, 184, 0.16)',
-                          color: '#94a3b8',
-                          border: '1px solid rgba(148, 163, 184, 0.3)',
-                          padding: '0.28rem 0.65rem',
-                          fontSize: '0.78rem'
-                        }}
+                        className="badge status-EXPIRED"
+                        style={{ fontSize: '0.78rem' }}
                       >
                         {inv.status}
                       </span>
@@ -355,7 +359,7 @@ export default function HistoryPage({ onCopy, onCountUpdated, onShowToast }) {
                   </td>
 
                   {/* تاریخ پرداخت */}
-                  <td style={{ fontSize: '0.76rem', color: inv.paid_at ? '#34d399' : 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  <td style={{ fontSize: '0.76rem', color: inv.paid_at ? 'var(--emerald-text)' : 'var(--text-dim)', whiteSpace: 'nowrap' }}>
                     {formatDate(inv.paid_at)}
                   </td>
                 </tr>
