@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مستندات فنی API درگاه پرداخت کریپتو | Swagger UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'></polygon></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-card: #131c2e;
+      --bg-surface: #0f172a;
+      --bg-surface-hover: #1e293b;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --emerald: #059669;
+      --amber: #d97706;
+      --rose: #e11d48;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navbar */
+    .custom-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon-box {
+      width: 42px;
+      height: 42px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-badge {
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      color: #60a5fa;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .brand-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-link-btn:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-hover);
+      color: #fff;
+    }
+
+    .nav-link-btn.primary {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: var(--primary);
+      color: #93c5fd;
+    }
+
+    .nav-link-btn.primary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .server-selector-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .server-selector-box select {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .server-selector-box select:focus {
+      border-color: var(--primary);
+    }
+
+    /* Sub-bar KPI / Status */
+    .stats-bar {
+      background: #0d1322;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      direction: rtl;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-pill strong {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--emerald);
+      border-radius: 50%;
+    }
+
+    /* Main Container */
+    #swagger-ui {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+      direction: ltr; /* OpenAPI specification standard */
+    }
+
+    /* Complete Swagger UI Overrides */
+    .swagger-ui {
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .swagger-ui .topbar {
+      display: none !important;
+    }
+
+    .swagger-ui .info {
+      margin: 20px 0 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .swagger-ui .info .title {
+      color: #ffffff !important;
+      font-family: 'Outfit', 'Vazirmatn', sans-serif !important;
+      font-size: 1.8rem !important;
+      font-weight: 700 !important;
+    }
+
+    .swagger-ui .info p,
+    .swagger-ui .info li {
+      color: var(--text-muted) !important;
+      font-size: 0.92rem !important;
+      line-height: 1.7 !important;
+    }
+
+    .swagger-ui .info a {
+      color: var(--primary) !important;
+      text-decoration: underline;
+    }
+
+    .swagger-ui .scheme-container {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 10px !important;
+      box-shadow: none !important;
+      padding: 16px 20px !important;
+      margin-bottom: 24px !important;
+    }
+
+    .swagger-ui .schemes-title,
+    .swagger-ui .servers-title {
+      color: var(--text-muted) !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+    }
+
+    /* Tags / Section Headers */
+    .swagger-ui .opblock-tag-section {
+      margin-bottom: 24px;
+    }
+
+    .swagger-ui .opblock-tag {
+      color: #ffffff !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      font-family: 'Outfit', 'Vazirmatn', sans-serif !important;
+      font-size: 1.2rem !important;
+      font-weight: 700 !important;
+      padding: 14px 0 !important;
+    }
+
+    .swagger-ui .opblock-tag small {
+      color: var(--text-dim) !important;
+      font-size: 0.85rem !important;
+      font-weight: normal !important;
+    }
+
+    /* Operation Blocks */
+    .swagger-ui .opblock {
+      border-radius: 10px !important;
+      margin: 0 0 14px !important;
+      border: 1px solid var(--border-color) !important;
+      background: var(--bg-card) !important;
+      box-shadow: var(--shadow-sm) !important;
+      transition: border-color 0.2s !important;
+    }
+
+    .swagger-ui .opblock:hover {
+      border-color: var(--border-hover) !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary {
+      padding: 12px 18px !important;
+      border-bottom: 1px solid transparent;
+    }
+
+    .swagger-ui .opblock.is-open .opblock-summary {
+      border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary-method {
+      border-radius: 6px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-weight: 700 !important;
+      font-size: 0.78rem !important;
+      min-width: 76px !important;
+      text-align: center !important;
+      padding: 6px 10px !important;
+      color: #ffffff !important;
+      text-shadow: none !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary-path {
+      color: #f1f5f9 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-weight: 600 !important;
+      font-size: 0.9rem !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary-description {
+      color: var(--text-muted) !important;
+      font-size: 0.85rem !important;
+    }
+
+    /* Operation Methods Styling */
+    .swagger-ui .opblock.opblock-get {
+      border-color: rgba(37, 99, 235, 0.25) !important;
+      background: rgba(37, 99, 235, 0.03) !important;
+    }
+    .swagger-ui .opblock.opblock-get .opblock-summary-method {
+      background: var(--primary) !important;
+    }
+
+    .swagger-ui .opblock.opblock-post {
+      border-color: rgba(5, 150, 105, 0.25) !important;
+      background: rgba(5, 150, 105, 0.03) !important;
+    }
+    .swagger-ui .opblock.opblock-post .opblock-summary-method {
+      background: var(--emerald) !important;
+    }
+
+    .swagger-ui .opblock.opblock-put {
+      border-color: rgba(217, 119, 6, 0.25) !important;
+      background: rgba(217, 119, 6, 0.03) !important;
+    }
+    .swagger-ui .opblock.opblock-put .opblock-summary-method {
+      background: var(--amber) !important;
+    }
+
+    .swagger-ui .opblock.opblock-delete {
+      border-color: rgba(225, 29, 72, 0.25) !important;
+      background: rgba(225, 29, 72, 0.03) !important;
+    }
+    .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+      background: var(--rose) !important;
+    }
+
+    /* Body of Opblock */
+    .swagger-ui .opblock-body {
+      background: var(--bg-surface) !important;
+      padding: 16px 20px !important;
+    }
+
+    .swagger-ui .opblock-section-header {
+      background: var(--bg-card) !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      padding: 10px 16px !important;
+      border-radius: 8px !important;
+      box-shadow: none !important;
+    }
+
+    .swagger-ui .opblock-section-header h4 {
+      color: #e2e8f0 !important;
+      font-size: 0.88rem !important;
+      font-weight: 600 !important;
+    }
+
+    .swagger-ui .opblock-description-wrapper p {
+      color: var(--text-muted) !important;
+      font-size: 0.88rem !important;
+      line-height: 1.6 !important;
+    }
+
+    /* Tables */
+    .swagger-ui table {
+      width: 100% !important;
+    }
+
+    .swagger-ui table thead tr td,
+    .swagger-ui table thead tr th {
+      color: var(--text-muted) !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      font-size: 0.8rem !important;
+      font-weight: 600 !important;
+      padding: 10px !important;
+    }
+
+    .swagger-ui table tbody tr td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+      padding: 12px 10px !important;
+      vertical-align: top !important;
+    }
+
+    .swagger-ui .parameter__name {
+      color: #f1f5f9 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-weight: 600 !important;
+      font-size: 0.84rem !important;
+    }
+
+    .swagger-ui .parameter__type {
+      color: var(--text-dim) !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.78rem !important;
+    }
+
+    .swagger-ui .parameter__deprecated {
+      color: var(--rose) !important;
+    }
+
+    .swagger-ui .parameter__in {
+      color: var(--text-dim) !important;
+      font-size: 0.75rem !important;
+      font-style: normal !important;
+    }
+
+    /* Inputs, Selects, Textareas */
+    .swagger-ui input[type="text"],
+    .swagger-ui input[type="password"],
+    .swagger-ui textarea,
+    .swagger-ui select {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--text) !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.82rem !important;
+      outline: none !important;
+      transition: border-color 0.2s !important;
+    }
+
+    .swagger-ui input[type="text"]:focus,
+    .swagger-ui textarea:focus,
+    .swagger-ui select:focus {
+      border-color: var(--primary) !important;
+    }
+
+    /* Buttons */
+    .swagger-ui .btn {
+      border-radius: 6px !important;
+      font-weight: 600 !important;
+      font-size: 0.82rem !important;
+      padding: 6px 14px !important;
+      box-shadow: none !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--text) !important;
+      background: var(--bg-card) !important;
+      transition: all 0.2s !important;
+    }
+
+    .swagger-ui .btn:hover {
+      background: var(--bg-surface-hover) !important;
+      border-color: var(--border-hover) !important;
+    }
+
+    .swagger-ui .btn.execute {
+      background: var(--primary) !important;
+      border-color: var(--primary) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      padding: 8px 24px !important;
+    }
+
+    .swagger-ui .btn.execute:hover {
+      background: var(--primary-hover) !important;
+    }
+
+    .swagger-ui .btn.cancel {
+      border-color: var(--rose) !important;
+      color: #fda4af !important;
+      background: rgba(225, 29, 72, 0.1) !important;
+    }
+
+    .swagger-ui .btn.try-out__btn {
+      color: #93c5fd !important;
+      border-color: rgba(37, 99, 235, 0.4) !important;
+      background: rgba(37, 99, 235, 0.1) !important;
+    }
+
+    /* Response & Code blocks */
+    .swagger-ui .responses-inner {
+      padding: 12px 0 !important;
+    }
+
+    .swagger-ui .response-col_status {
+      color: #60a5fa !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-weight: 700 !important;
+      font-size: 0.9rem !important;
+    }
+
+    .swagger-ui .response-col_description {
+      color: var(--text-muted) !important;
+      font-size: 0.85rem !important;
+    }
+
+    .swagger-ui .highlight-code,
+    .swagger-ui .microlight,
+    .swagger-ui pre {
+      background: #070b12 !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 8px !important;
+      color: #e2e8f0 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.8rem !important;
+      padding: 14px !important;
+    }
+
+    .swagger-ui .copy-to-clipboard {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border-radius: 4px !important;
+    }
+
+    /* Models Section */
+    .swagger-ui section.models {
+      border: 1px solid var(--border-color) !important;
+      border-radius: 12px !important;
+      background: var(--bg-card) !important;
+      box-shadow: var(--shadow-sm) !important;
+      margin-top: 40px !important;
+    }
+
+    .swagger-ui section.models h4 {
+      color: #ffffff !important;
+      font-family: 'Outfit', 'Vazirmatn', sans-serif !important;
+      font-size: 1.1rem !important;
+      font-weight: 700 !important;
+    }
+
+    .swagger-ui .model-box {
+      background: var(--bg-surface) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 8px !important;
+      padding: 14px !important;
+      margin: 8px 0 !important;
+    }
+
+    .swagger-ui .model-title {
+      color: #60a5fa !important;
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.9rem !important;
+    }
+
+    .swagger-ui .prop-type {
+      color: #34d399 !important;
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    .swagger-ui .prop-format {
+      color: var(--text-dim) !important;
+    }
+
+    /* Tabs */
+    .swagger-ui .tab li {
+      font-size: 0.82rem !important;
+    }
+
+    .swagger-ui .tab li button.tablinks {
+      color: var(--text-muted) !important;
+      font-weight: 600 !important;
+    }
+
+    .swagger-ui .tab li button.tablinks.active {
+      color: #ffffff !important;
+    }
+
+    /* Footer */
+    .custom-footer {
+      border-top: 1px solid var(--border-color);
+      padding: 24px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      direction: rtl;
+      background: var(--bg-card);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="custom-header">
+    <div class="brand-section">
+      <div class="brand-icon-box">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">
+          مستندات تعاملی درگاه پرداخت غیرحضانتی کریپتو
+          <span class="brand-badge">OpenAPI 3.0.3</span>
+        </div>
+        <div class="brand-desc">سرویس سازمانی تسویه آنی آنچین، تفکیک خزانه‌داری BSC (BIP-44) و نود TON</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a href="external_services.html" class="nav-link-btn primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        مستندات نودها و اوراکل (External Services)
+      </a>
+
+      <div class="server-selector-box">
+        <span>محیط سرور:</span>
+        <select id="serverSelect" onchange="switchServer(this.value)">
+          <option value="https://crypto.geopooshgroup.ir">Production (crypto.geopooshgroup.ir)</option>
+          <option value="http://localhost:8080">Local Server (localhost:8080)</option>
+          <option value="http://185.126.203.186:8080">Direct VPS IP (185.126.203.186:8080)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Statistics Bar -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <span class="stat-dot"></span>
+      وضعیت سیستم: <strong>آنلاین و پایدار</strong>
+    </div>
+    <div class="stat-pill">
+      معماری امنیتی: <strong>Zero Private-Key Storage (تولید امن در رم)</strong>
+    </div>
+    <div class="stat-pill">
+      شبکه‌ها: <strong>BNB Smart Chain (BEP-20) &amp; TON Network</strong>
+    </div>
+    <div class="stat-pill">
+      ناظر تراکنش‌ها: <strong>Background Observer (چرخه ۱۰ ثانیه)</strong>
+    </div>
+  </div>
+
+  <!-- Swagger UI Container -->
+  <div id="swagger-ui"></div>
+
+  <!-- Footer -->
+  <footer class="custom-footer">
+    مستندات رسمی مستقل درگاه پرداخت ارز دیجیتال | طراحی‌شده برای تیم توسعه و یکپارچه‌سازی وب‌سایت و ربات‌های تلگرام
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+  <script>
+    const openApiSpec = {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "Crypto Payment Gateway & Treasury Engine",
+        "version": "1.0.0",
+        "description": "مستندات کامل تمام روت‌ها و ساختار داده‌های بک‌اند Go درگاه پرداخت غیرحضانتی کریپتو.\n\nاین درگاه از تولید آدرس‌های دترمینستیک بر بستر BIP-44 برای بایننس اسمارت‌چین و ممو اختصاصی برای شبکه تون پشتیبانی می‌کند.",
+        "contact": {
+          "name": "DevOps & Core Gateway Team"
+        }
+      },
+      "servers": [
+        {
+          "url": "https://crypto.geopooshgroup.ir",
+          "description": "سرور پروداکشن اصلی (دامنه امن)"
+        },
+        {
+          "url": "http://localhost:8080",
+          "description": "سرور توسعه محلی (Localhost)"
+        },
+        {
+          "url": "http://185.126.203.186:8080",
+          "description": "اتصال مستقیم سرور ابری (VPS IP)"
+        }
+      ],
+      "tags": [
+        { "name": "System", "description": "بررسی سلامت سرویس و سرور" },
+        { "name": "Authentication", "description": "ورود ادمین و دریافت توکن دسترسی" },
+        { "name": "Catalog", "description": "لیست شبکه‌ها و ارزهای پشتیبانی‌شده" },
+        { "name": "Invoices & Rates", "description": "صدور فاکتور، استعلام نرخ‌های لحظه‌ای و پیگیری سفارشات" },
+        { "name": "Treasury & Rebalancing", "description": "مدیریت ولت‌های مشتق‌شده، ریبالانسینگ BSC، خزانه‌داری TON و برآورد گس" }
+      ],
+      "paths": {
+        "/health": {
+          "get": {
+            "tags": ["System"],
+            "summary": "بررسی سلامت سرور (Health Check)",
+            "description": "بررسی زنده بودن سرور Go و وضعیت اولیه سرویس.",
+            "responses": {
+              "200": {
+                "description": "سرویس فعال و آماده پاسخگویی است.",
+                "content": {
+                  "application/json": {
+                    "example": {
+                      "status": "UP",
+                      "timestamp": "2026-10-13T10:20:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/auth/login": {
+          "post": {
+            "tags": ["Authentication"],
+            "summary": "ورود به پنل مدیریت (Admin Login)",
+            "description": "احراز هویت مدیر با نام کاربری و کلمه عبور. دارای محافظت Rate Limit (۵ تلاش در دقیقه) برای مقابله با Brute Force.",
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LoginInput"
+                  },
+                  "example": {
+                    "username": "admin",
+                    "password": "C4ypt0_Adm!n#2026$X9z"
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "ورود موفق و بازگشت توکن و اطلاعات مدیر",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/LoginResponseWrapper"
+                    }
+                  }
+                }
+              },
+              "401": {
+                "description": "نام کاربری یا کلمه عبور اشتباه است",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              },
+              "429": {
+                "description": "تعداد تلاش بیش از حد مجاز (Rate Limit)"
+              }
+            }
+          }
+        },
+        "/api/v1/networks": {
+          "get": {
+            "tags": ["Catalog"],
+            "summary": "دریافت لیست شبکه‌های بلاکچین فعال",
+            "description": "دریافت فهرست شبکه‌های پشتیبانی‌شده (مانند BSC و TON) به همراه ارز بومی و وضعیت تستی/اصلی بودن.",
+            "responses": {
+              "200": {
+                "description": "لیست شبکه‌ها با موفقیت دریافت شد",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/NetworksResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/networks/{network_id}/currencies": {
+          "get": {
+            "tags": ["Catalog"],
+            "summary": "دریافت ارزهای یک شبکه خاص",
+            "description": "لیست تمام رمزارزها و توکن‌های مجاز روی یک شبکه (مثلاً USDT و BNB روی BSC، یا GRAM روی TON).",
+            "parameters": [
+              {
+                "name": "network_id",
+                "in": "path",
+                "required": true,
+                "description": "شناسه شبکه (مثلاً bsc یا ton)",
+                "schema": { "type": "string", "example": "bsc" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "لیست ارزها بازگردانده شد",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/CurrenciesResponseWrapper"
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "شبکه مورد نظر یافت نشد"
+              }
+            }
+          }
+        },
+        "/api/v1/rates": {
+          "get": {
+            "tags": ["Invoices & Rates"],
+            "summary": "نرخ‌های لحظه‌ای بازار (Wallex Price Oracle)",
+            "description": "دریافت قیمت دلاری رمزارزها به صورت زنده از مارکت عمومی والکس جهت محاسبه مبالغ فاکتورها.",
+            "responses": {
+              "200": {
+                "description": "نرخ‌های زنده ارزها بر حسب دلار",
+                "content": {
+                  "application/json": {
+                    "example": {
+                      "success": true,
+                      "data": {
+                        "USDT": 1.0,
+                        "BNB": 585.4,
+                        "GRAM": 1.40,
+                        "TON": 1.40
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/invoices": {
+          "get": {
+            "tags": ["Invoices & Rates"],
+            "summary": "لیست فاکتورها و سوابق تراکنش‌ها",
+            "description": "دریافت لیست فاکتورهای ثبت‌شده با قابلیت تنظیم سقف تعداد (Limit).",
+            "parameters": [
+              {
+                "name": "limit",
+                "in": "query",
+                "description": "حداکثر تعداد رکوردهای خروجی (پیش‌فرض: 50)",
+                "schema": { "type": "integer", "default": 50 }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "لیست فاکتورها بازگردانده شد",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/InvoicesListResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "post": {
+            "tags": ["Invoices & Rates"],
+            "summary": "صدور فاکتور جدید پرداخت کریپتو",
+            "description": "صدور فاکتور غیرحضانتی جدید. برای شبکه BSC یک آدرس یکتای BIP-44 مشتق می‌شود و برای شبکه TON یک مموی یکتا تولید می‌گردد. همچنین قیمت به صورت خودکار با اریکول والکس محاسبه می‌شود.",
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CreateInvoiceInput"
+                  },
+                  "examples": {
+                    "BSC Invoice": {
+                      "summary": "فاکتور تتر در بایننس اسمارت چین",
+                      "value": {
+                        "network": "bsc",
+                        "currency": "usdt",
+                        "amount_usd": 15.5,
+                        "username": "soroushg78"
+                      }
+                    },
+                    "TON Invoice": {
+                      "summary": "فاکتور تون‌کوین در شبکه TON با ممو",
+                      "value": {
+                        "network": "ton",
+                        "currency": "gram",
+                        "amount_usd": 0.2,
+                        "username": "soroush"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "فاکتور با موفقیت صادر شد و آدرس واریز تخصیص یافت",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/InvoiceResponseWrapper"
+                    }
+                  }
+                }
+              },
+              "400": {
+                "description": "پارامترهای ارسالی ناقص یا نامعتبر است"
+              }
+            }
+          }
+        },
+        "/api/v1/invoices/{id}": {
+          "get": {
+            "tags": ["Invoices & Rates"],
+            "summary": "استعلام فاکتور با شناسه یکتا (UUID)",
+            "description": "دریافت جزئیات کامل و وضعیت پرداخت یک فاکتور با ID اختصاصی دیتابیس.",
+            "parameters": [
+              {
+                "name": "id",
+                "in": "path",
+                "required": true,
+                "description": "شناسه UUID فاکتور",
+                "schema": { "type": "string", "format": "uuid" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "مشخصات فاکتور پیدا شد",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/InvoiceResponseWrapper" }
+                  }
+                }
+              },
+              "404": { "description": "فاکتور پیدا نشد" }
+            }
+          }
+        },
+        "/api/v1/invoices/number/{number}": {
+          "get": {
+            "tags": ["Invoices & Rates"],
+            "summary": "استعلام فاکتور با شماره فاکتور رسمی",
+            "description": "دریافت جزئیات فاکتور از طریق شماره فاکتور کاربرپسند (مثلاً INV-2026-4f7007).",
+            "parameters": [
+              {
+                "name": "number",
+                "in": "path",
+                "required": true,
+                "description": "شماره فاکتور (مانند INV-2026-4f7007)",
+                "schema": { "type": "string", "example": "INV-2026-4f7007" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "اطلاعات فاکتور",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/InvoiceResponseWrapper" }
+                  }
+                }
+              },
+              "404": { "description": "فاکتور با این شماره یافت نشد" }
+            }
+          }
+        },
+        "/api/v1/rebalance/wallets": {
+          "get": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "فهرست ولت‌های مشتق‌شده BSC و موجودی‌های آنچین",
+            "description": "لیست تمام آدرس‌های تولید شده با استانداردهای BIP-44 با استعلام موجودی لایو BNB و USDT و تفکیک وضعیت آماده برای جاروب (READY_USDT / READY_BNB / SWEPT / EMPTY).",
+            "responses": {
+              "200": {
+                "description": "فهرست ولت‌ها",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/WalletsStatusResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/ton": {
+          "get": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "وضعیت خزانه‌داری متمرکز TON و دریافتی‌ها",
+            "description": "دریافت موجودی آنچین کیف‌پول مادر TON از طریق Toncenter و لیست تمامی فاکتورهای متصل شده از طریق ممو.",
+            "responses": {
+              "200": {
+                "description": "وضعیت خزانه‌داری TON",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/TONTreasuryResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/estimate": {
+          "get": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "برآورد گس و کسری سوخت ولت (Estimate Gas)",
+            "description": "محاسبه دقیق هزینه فی گس آنچین بر بستر نود BSC و بررسی اینکه آیا ولت برای انتقال تتر نیاز به شارژ BNB دارد یا خیر.",
+            "parameters": [
+              {
+                "name": "index",
+                "in": "query",
+                "required": true,
+                "description": "ایندکس مشتق‌شده ولت در سلسله مراتب BIP-44",
+                "schema": { "type": "integer", "example": 1 }
+              },
+              {
+                "name": "asset",
+                "in": "query",
+                "required": true,
+                "description": "نماد دارایی مورد نظر برای انتقال (USDT یا BNB)",
+                "schema": { "type": "string", "example": "USDT" }
+              },
+              {
+                "name": "treasury",
+                "in": "query",
+                "description": "آدرس مقصد خزانه‌داری (اختیاری؛ پیش‌فرض از تنظیمات خوانده می‌شود)",
+                "schema": { "type": "string" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "نتیجه برآورد گس و وضعیت کسری BNB",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/GasEstimateResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/sweep": {
+          "post": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "انتقال خودکار موجودی به خزانه (Sweep Single Wallet)",
+            "description": "اجرای فرآیند جاروب و ریبالانس یک آدرس معین. در صورتی که real_broadcast=false باشد، عملیات بدون ارسال به نود شبیه‌سازی امن (Dry-run) می‌شود. در حالت حقیقی (real_broadcast=true)، کلید خصوصی در رم مشتق شده، سوخت‌رسانی BNB از Gas Station (ایندکس 0) انجام و دارایی منتقل می‌گردد.",
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SweepRequest"
+                  },
+                  "example": {
+                    "derivation_index": 1,
+                    "asset": "USDT",
+                    "real_broadcast": false
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "گزارش گام‌به‌گام و هش تراکنش‌های جاروب",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/SweepResultResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/sweep-batch": {
+          "post": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "جاروب دسته‌جمعی ولت‌ها (Batch Rebalancing)",
+            "description": "انتقال یک‌جای موجودی چندین آدرس یا تمام آدرس‌های دارای موجودی به خزانه‌داری مرکزی.",
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BatchSweepRequest"
+                  },
+                  "example": {
+                    "asset": "ALL",
+                    "real_broadcast": false
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "گزارش دسته‌جمعی عملیات‌های ریبالانسینگ",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/BatchSweepResultResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/security": {
+          "get": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "استعلام گواهی امنیتی و معماری کلیدها (Security Specs)",
+            "description": "دریافت مشخصات استاندارد اشتقاق کلید (BIP-44)، آدرس پمپ سوخت‌رسان (Gas Station index 0)، عدم ذخیره‌سازی کلیدها در پایگاه‌داده و وضعیت نودها.",
+            "responses": {
+              "200": {
+                "description": "اطلاعات شفاف معماری امنیتی",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/SecuritySpecsResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/rebalance/records": {
+          "get": {
+            "tags": ["Treasury & Rebalancing"],
+            "summary": "سوابق رسمی ممیزی ریبالانسینگ (Audit Records)",
+            "description": "فهرست تاریخچه تمام عملیات‌های انتقال وجه، سوخت‌رسانی گس و سوابق شبیه‌سازی ذخیره‌شده در PostgreSQL.",
+            "parameters": [
+              {
+                "name": "limit",
+                "in": "query",
+                "description": "تعداد رکوردها (پیش‌فرض: 100)",
+                "schema": { "type": "integer", "default": 100 }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "لیست رکوردهای ثبت‌شده",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/RebalanceRecordsResponseWrapper"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "LoginInput": {
+            "type": "object",
+            "required": ["username", "password"],
+            "properties": {
+              "username": { "type": "string", "example": "admin" },
+              "password": { "type": "string", "example": "C4ypt0_Adm!n#2026$X9z" }
+            }
+          },
+          "Admin": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "username": { "type": "string", "example": "admin" },
+              "role": { "type": "string", "example": "SUPER_ADMIN" },
+              "is_active": { "type": "boolean", "example": true },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "LoginResponse": {
+            "type": "object",
+            "properties": {
+              "token": { "type": "string", "example": "jwt-token-string..." },
+              "admin": { "$ref": "#/components/schemas/Admin" }
+            }
+          },
+          "Network": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "example": "bsc" },
+              "name": { "type": "string", "example": "BNB Smart Chain (BEP20)" },
+              "native_currency": { "type": "string", "example": "BNB" },
+              "is_testnet": { "type": "boolean", "example": false },
+              "is_active": { "type": "boolean", "example": true }
+            }
+          },
+          "Currency": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "symbol": { "type": "string", "example": "USDT" },
+              "network_id": { "type": "string", "example": "bsc" },
+              "contract_address": { "type": "string", "example": "0x55d398326f99059fF775485246999027B3197955" },
+              "decimals": { "type": "integer", "example": 18 },
+              "min_deposit": { "type": "number", "example": 1.0 },
+              "is_active": { "type": "boolean", "example": true }
+            }
+          },
+          "CreateInvoiceInput": {
+            "type": "object",
+            "required": ["amount_usd"],
+            "properties": {
+              "amount_usd": { "type": "number", "description": "مبلغ دلاری فاکتور", "example": 10.0 },
+              "network": { "type": "string", "description": "نماد شبکه (bsc یا ton)", "example": "bsc" },
+              "currency": { "type": "string", "description": "نماد ارز (usdt, bnb, gram)", "example": "usdt" },
+              "username": { "type": "string", "description": "نام کاربری تلگرام یا نام مشتری", "example": "soroushg78" },
+              "telegram_id": { "type": "integer", "description": "شناسه عددی تلگرام کاربر", "example": 987654321 }
+            }
+          },
+          "Invoice": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "invoice_number": { "type": "string", "example": "INV-2026-4f7007" },
+              "currency_id": { "type": "string", "format": "uuid" },
+              "network_id": { "type": "string", "example": "ton" },
+              "amount_usd": { "type": "number", "example": 0.2 },
+              "crypto_amount": { "type": "number", "example": 0.142857 },
+              "exchange_rate": { "type": "number", "example": 1.4 },
+              "pay_address": { "type": "string", "example": "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw" },
+              "pay_memo": { "type": "string", "example": "ORD-bb1395dc" },
+              "status": { "type": "string", "enum": ["PENDING", "PAID", "EXPIRED", "FAILED"], "example": "PAID" },
+              "expires_at": { "type": "string", "format": "date-time" },
+              "paid_at": { "type": "string", "format": "date-time", "nullable": true },
+              "created_at": { "type": "string", "format": "date-time" },
+              "currency_symbol": { "type": "string", "example": "GRAM" },
+              "network_name": { "type": "string", "example": "TON Network" },
+              "telegram_username": { "type": "string", "example": "soroush" }
+            }
+          },
+          "RebalanceWalletStatus": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "derivation_index": { "type": "integer", "example": 1 },
+              "derivation_path": { "type": "string", "example": "m/44'/60'/0'/0/1" },
+              "address": { "type": "string", "example": "0xa24357321074e4c278c2e646f9050904037502ef" },
+              "network_id": { "type": "string", "example": "bsc" },
+              "bnb_balance": { "type": "number", "example": 0.0 },
+              "usdt_balance": { "type": "number", "example": 0.2 },
+              "needs_refuel": { "type": "boolean", "example": true },
+              "sweep_status": { "type": "string", "example": "READY_USDT" },
+              "associated_invoice": { "type": "string", "example": "INV-2026-fed2b6" },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "SweepStepLog": {
+            "type": "object",
+            "properties": {
+              "step": { "type": "integer", "example": 1 },
+              "title": { "type": "string", "example": "Derive HD Private Key" },
+              "description": { "type": "string", "example": "Private key securely derived in volatile memory" },
+              "status": { "type": "string", "example": "SUCCESS" },
+              "tx_hash": { "type": "string" },
+              "details": { "type": "string" }
+            }
+          },
+          "SweepRequest": {
+            "type": "object",
+            "required": ["derivation_index", "asset"],
+            "properties": {
+              "derivation_index": { "type": "integer", "example": 1 },
+              "asset": { "type": "string", "enum": ["USDT", "BNB"], "example": "USDT" },
+              "treasury_address": { "type": "string", "description": "اختیاری" },
+              "real_broadcast": { "type": "boolean", "default": false, "description": "در صورت true تراکنش روی بلاکچین ارسال می‌شود" }
+            }
+          },
+          "SweepResult": {
+            "type": "object",
+            "properties": {
+              "derivation_index": { "type": "integer", "example": 1 },
+              "deposit_address": { "type": "string", "example": "0xa24357321074e4c278c2e646f9050904037502ef" },
+              "treasury_address": { "type": "string", "example": "0xafF24acd08c51cDaACeD358533A01f37634580c5" },
+              "asset_swept": { "type": "string", "example": "USDT" },
+              "amount_swept": { "type": "number", "example": 0.2 },
+              "gas_fee_bnb": { "type": "number", "example": 0.00015 },
+              "refuel_required": { "type": "boolean", "example": true },
+              "is_broadcasted": { "type": "boolean", "example": false },
+              "logs": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SweepStepLog" }
+              },
+              "executed_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "BatchSweepRequest": {
+            "type": "object",
+            "properties": {
+              "derivation_indexes": { "type": "array", "items": { "type": "integer" } },
+              "asset": { "type": "string", "enum": ["ALL", "USDT", "BNB"], "default": "ALL" },
+              "real_broadcast": { "type": "boolean", "default": false }
+            }
+          },
+          "GasEstimateResult": {
+            "type": "object",
+            "properties": {
+              "asset": { "type": "string", "example": "USDT" },
+              "deposit_address": { "type": "string", "example": "0xa243..." },
+              "gas_units": { "type": "integer", "example": 65000 },
+              "gas_price_gwei": { "type": "number", "example": 3.0 },
+              "total_fee_bnb": { "type": "number", "example": 0.000195 },
+              "current_bnb": { "type": "number", "example": 0.0 },
+              "deficit_bnb": { "type": "number", "example": 0.000195 },
+              "needs_refuel": { "type": "boolean", "example": true }
+            }
+          },
+          "TONTreasuryStatus": {
+            "type": "object",
+            "properties": {
+              "treasury_address": { "type": "string", "example": "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw" },
+              "balance_ton": { "type": "number", "example": 0.142857 },
+              "architecture": { "type": "string", "example": "Single Master Treasury + Unique Inbound Memos" },
+              "gas_model": { "type": "string", "example": "Sender Pays Gas (Zero Sweeping Overhead)" },
+              "total_invoices": { "type": "integer", "example": 1 },
+              "paid_invoices": { "type": "integer", "example": 1 },
+              "pending_invoices": { "type": "integer", "example": 0 },
+              "total_collected_ton": { "type": "number", "example": 0.142857 }
+            }
+          },
+          "RebalanceRecord": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "network_id": { "type": "string", "example": "bsc" },
+              "derivation_index": { "type": "integer", "example": 1 },
+              "from_address": { "type": "string" },
+              "to_address": { "type": "string" },
+              "asset": { "type": "string", "example": "USDT" },
+              "amount": { "type": "number", "example": 0.2 },
+              "gas_fee_bnb": { "type": "number", "example": 0.00015 },
+              "status": { "type": "string", "example": "COMPLETED" },
+              "is_simulated": { "type": "boolean", "example": true },
+              "created_at": { "type": "string", "format": "date-time" }
+            }
+          },
+          "ErrorResponse": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": false },
+              "error": { "type": "string", "example": "پیام خطای سیستم" }
+            }
+          },
+          "LoginResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "$ref": "#/components/schemas/LoginResponse" }
+            }
+          },
+          "NetworksResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/Network" } }
+            }
+          },
+          "CurrenciesResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/Currency" } }
+            }
+          },
+          "InvoiceResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "$ref": "#/components/schemas/Invoice" }
+            }
+          },
+          "InvoicesListResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/Invoice" } }
+            }
+          },
+          "WalletsStatusResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/RebalanceWalletStatus" } }
+            }
+          },
+          "TONTreasuryResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "$ref": "#/components/schemas/TONTreasuryStatus" }
+            }
+          },
+          "GasEstimateResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "$ref": "#/components/schemas/GasEstimateResult" }
+            }
+          },
+          "SweepResultResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "$ref": "#/components/schemas/SweepResult" }
+            }
+          },
+          "BatchSweepResultResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/SweepResult" } }
+            }
+          },
+          "RebalanceRecordsResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": { "type": "array", "items": { "$ref": "#/components/schemas/RebalanceRecord" } }
+            }
+          },
+          "SecuritySpecsResponseWrapper": {
+            "type": "object",
+            "properties": {
+              "success": { "type": "boolean", "example": true },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "standard": { "type": "string", "example": "BIP-44 (Multi-Account Hierarchy for Deterministic Wallets)" },
+                  "derivation_path": { "type": "string", "example": "m/44'/60'/0'/0/{index}" },
+                  "supported_evm_chain": { "type": "string", "example": "BNB Smart Chain (Chain ID: 56)" },
+                  "private_key_storage": { "type": "string", "example": "ZERO (Keys never stored in PostgreSQL; derived strictly on-demand in volatile RAM)" },
+                  "gas_station_address": { "type": "string", "example": "0xafF24acd08c51cDaACeD358533A01f37634580c5" },
+                  "ton_standard": { "type": "string", "example": "TON 24-Word Mnemonic (Ed25519 PBKDF2 HMAC-SHA512)" }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    let ui;
+    window.onload = function() {
+      ui = SwaggerUIBundle({
+        spec: openApiSpec,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout",
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
+        docExpansion: "list"
+      });
+    };
+
+    function switchServer(url) {
+      if (ui) {
+        openApiSpec.servers = [
+          { url: url, description: "Selected Server" },
+          ...openApiSpec.servers.filter(s => s.url !== url)
+        ];
+        ui = SwaggerUIBundle({
+          spec: openApiSpec,
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: "BaseLayout",
+          docExpansion: "list"
+        });
+      }
+    }
+  </script>
+</body>
+</html>
