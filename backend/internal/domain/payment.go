@@ -98,8 +98,10 @@ type LoginInput struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
-	Admin *Admin `json:"admin"`
+	Token     string    `json:"token"`
+	Admin     *Admin    `json:"admin"`
+	ExpiresAt time.Time `json:"expires_at"`
+	ExpiresIn int       `json:"expires_in"` // in seconds: 86400 (24 hours)
 }
 
 func (i *Invoice) IsExpired() bool {

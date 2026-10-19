@@ -30,9 +30,27 @@ type Config struct {
 	Database DatabaseConfig
 }
 
-// Load reads configuration from .env file (if present) and environment variables with safe defaults.
+// Load reads configuration from crypto.env or .env file (if present) and environment variables with safe defaults.
 func Load() *Config {
-	loadDotEnv(".env")
+	// Check multiple candidate locations so a single crypto.env in root or backend works seamlessly
+	candidates := []string{
+		os.Getenv("ENV_FILE"),
+		"crypto.env",
+		".env",
+		"../crypto.env",
+		"../.env",
+		"backend/crypto.env",
+		"backend/.env",
+	}
+
+	for _, path := range candidates {
+		if path != "" {
+			if _, err := os.Stat(path); err == nil {
+				loadDotEnv(path)
+				break
+			}
+		}
+	}
 
 	return &Config{
 		Server: ServerConfig{

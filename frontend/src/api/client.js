@@ -16,10 +16,30 @@ class ApiClient {
       ...(options.headers || {})
     };
 
+    // Check token and 24-hour expiration
+    try {
+      const token = localStorage.getItem('crypto_service_auth_token');
+      const expiryStr = localStorage.getItem('crypto_service_auth_expires_at');
+      if (token && expiryStr) {
+        const expiry = parseInt(expiryStr, 10);
+        if (Date.now() >= expiry) {
+          // Token expired, purge storage
+          localStorage.removeItem('crypto_service_auth_token');
+          localStorage.removeItem('crypto_service_auth_user');
+          localStorage.removeItem('crypto_service_auth_expires_at');
+        } else {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include',
         signal: options.signal || AbortSignal.timeout(10000)
       });
 

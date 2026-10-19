@@ -22,10 +22,16 @@ frontend/.vite/
 # Environment & Secrets (Never commit real credentials)
 .env
 .env.*
-!.env.example
+crypto.env
+*.env
 backend/.env
 backend/.env.*
-!backend/.env.example
+
+# Build Archives & Transport Artifacts
+crypto-backend.tar
+crypto-frontend.tar.gz
+*.tar
+*.tar.gz
 
 # Local Documentation & Summary
 project_summary.txt

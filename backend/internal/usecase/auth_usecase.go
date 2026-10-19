@@ -50,15 +50,18 @@ func (u *AuthUseCase) Login(ctx context.Context, input domain.LoginInput) (*doma
 	// Update last login timestamp
 	_ = u.adminRepo.UpdateLastLogin(ctx, admin.ID)
 
-	// Generate secure session token
+	// Generate secure session token with 24-hour expiration
 	tokenBytes := make([]byte, 32)
 	_, _ = rand.Read(tokenBytes)
 	sessionToken := fmt.Sprintf("adm_tok_%s", hex.EncodeToString(tokenBytes))
+	expiresAt := time.Now().Add(24 * time.Hour)
 
-	slog.Info("Admin logged in successfully", "username", admin.Username, "role", admin.Role)
+	slog.Info("Admin logged in successfully", "username", admin.Username, "role", admin.Role, "expires_at", expiresAt)
 
 	return &domain.LoginResponse{
-		Token: sessionToken,
-		Admin: admin,
+		Token:     sessionToken,
+		Admin:     admin,
+		ExpiresAt: expiresAt,
+		ExpiresIn: 86400, // 24 hours in seconds
 	}, nil
 }

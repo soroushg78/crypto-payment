@@ -29,6 +29,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set 24-hour HTTP cookie for browser session persistence
+	http.SetCookie(w, &http.Cookie{
+		Name:     "crypto_admin_session",
+		Value:    res.Token,
+		Path:     "/",
+		MaxAge:   86400, // 24 hours in seconds
+		Expires:  res.ExpiresAt,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	writeJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data:    res,
