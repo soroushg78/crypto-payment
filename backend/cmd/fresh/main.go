@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"wallet-observer/internal/config"
-	"wallet-observer/internal/repository"
+	"wallet-observer/internal/database"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	pool, err := repository.NewPool(ctx, cfg.Database)
+	pool, err := database.NewPool(ctx, cfg.Database)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -35,8 +36,9 @@ func main() {
 		fmt.Println("✅ All test invoices, deposit addresses, observed transactions, and rebalance records truncated successfully.")
 	}
 
-	// Run clean AutoMigrate to re-seed tables, BSC/TON networks, currencies (BNB, USDT, TON), admin, and users
-	if err := repository.AutoMigrate(ctx, pool); err != nil {
+	// Run clean AutoMigrate to re-seed tables, BSC/ETH/TON networks, currencies (BNB, ETH, USDT, GRAM), admin, and users
+	isTestnet := os.Getenv("IS_TESTNET") == "true"
+	if err := database.AutoMigrate(ctx, pool, isTestnet); err != nil {
 		log.Fatalf("❌ AutoMigrate failed: %v", err)
 	}
 
@@ -49,8 +51,8 @@ func main() {
 	_ = pool.QueryRow(ctx, "SELECT COUNT(*) FROM admins").Scan(&adminCount)
 
 	fmt.Println("--------------------------------------------------")
-	fmt.Printf("📊 Networks count        : %d (BSC, TON)\n", netCount)
-	fmt.Printf("📊 Currencies count      : %d (BNB, USDT-BEP20, TON)\n", currCount)
+	fmt.Printf("📊 Networks count        : %d (BSC, ETH, TON)\n", netCount)
+	fmt.Printf("📊 Currencies count      : %d (BNB, ETH, USDT-BEP20, USDT-ERC20, GRAM)\n", currCount)
 	fmt.Printf("📊 Invoices count        : %d (Reset to 0)\n", invCount)
 	fmt.Printf("📊 Deposit addresses     : %d (Reset to 0)\n", addrCount)
 	fmt.Printf("📊 Admins count          : %d (Default: admin / admin123)\n", adminCount)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"wallet-observer/internal/config"
+	"wallet-observer/internal/database"
 	httpDelivery "wallet-observer/internal/delivery/http"
 	"wallet-observer/internal/repository"
 	"wallet-observer/internal/usecase"
@@ -35,15 +36,16 @@ func main() {
 	defer stop()
 
 	// 4. Initialize PostgreSQL Connection Pool
-	pool, err := repository.NewPool(ctx, cfg.Database)
+	pool, err := database.NewPool(ctx, cfg.Database)
 	if err != nil {
 		slog.Error("Failed to initialize database pool", "error", err)
 		os.Exit(1)
 	}
 	defer pool.Close()
 
-	// 5. Run Database Migrations & Seeds
-	if err := repository.AutoMigrate(ctx, pool); err != nil {
+	// 5. Run Database Migrations, Seeds & Sync
+	isTestnet := os.Getenv("IS_TESTNET") == "true"
+	if err := database.AutoMigrate(ctx, pool, isTestnet); err != nil {
 		slog.Warn("Failed running database auto-migrations", "error", err)
 	}
 
@@ -72,7 +74,7 @@ func main() {
 	rebalanceRecordRepo := repository.NewRebalanceRecordRepository(pool)
 
 	// 6.5 Initialize BSC & ETH RPC Clients (Direct Node Connector with Dynamic Testnet Support)
-	isTestnet := os.Getenv("IS_TESTNET") == "true"
+	isTestnet = os.Getenv("IS_TESTNET") == "true"
 	bscRPC := os.Getenv("BSC_RPC_ENDPOINT")
 	bscClient := bscrpc.NewEVMClient("bsc", bscRPC, hdManager, isTestnet)
 	if isTestnet {

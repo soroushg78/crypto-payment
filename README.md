@@ -243,19 +243,33 @@ backend/
 │   └── fresh/main.go               # ابزار پاکسازی کامل داده‌های تست و اجرای مجدد مایگریشن‌ها
 ├── internal/
 │   ├── config/config.go            # بارگذاری تنظیمات محیطی از فایل .env
+│   ├── database/                   # مدیریت زیرساخت پایگاه داده، اتصال، مایگریشن و سیدینگ
+│   │   ├── pool.go                 # راه‌اندازی و تست Connection Pool با pgxpool
+│   │   ├── migrator.go             # ارکستریتور مایگریشن خودکار و اجرای اسکیماهای ترتیبی
+│   │   ├── seed.go                 # سیدینگ شبکه‌ها، رمزارزها، ادمین و رزرو گس استیشن
+│   │   ├── sync.go                 # همگام‌سازی داینامیک Testnet و Mainnet بر اساس IS_TESTNET
+│   │   └── schema/                 # اسکیماهای تفکیک‌شده جداول با قابلیت go:embed
+│   │       ├── 001_users.sql
+│   │       ├── 002_networks.sql
+│   │       ├── 003_currencies.sql
+│   │       ├── 004_deposit_addresses.sql
+│   │       ├── 005_invoices.sql
+│   │       ├── 006_observed_transactions.sql
+│   │       ├── 007_admins.sql
+│   │       ├── 008_rebalance_records.sql
+│   │       └── schema.go           # امبد کردن فایل‌های SQL در باینری نهایی
 │   ├── domain/                     # مدل‌های دامنه، VaultSplit و اینترفیس‌های مخازن داده
 │   │   ├── admin.go
 │   │   ├── catalog.go
 │   │   ├── payment.go              # مدل فاکتور، تراکنش و آدرس
 │   │   ├── rebalance.go            # مدل‌های VaultSplit، SplitTransferResult و RebalanceRecord
 │   │   └── repository.go
-│   ├── repository/                 # مخازن داده با پشتیبانی شبکه‌های BSC, ETH, TON
+│   ├── repository/                 # مخازن داده خالص (Pure Repositories)
 │   │   ├── address_repo.go         # اشتقاق آدرس‌های BIP-44 با مدیریت اندیس
 │   │   ├── admin_repo.go           # احراز هویت و مدیریت ادمین‌ها
 │   │   ├── currency_repo.go        # استعلام و مدیریت رمزارزها
 │   │   ├── invoice_repo.go         # مدیریت صدور و تسویه فاکتورها
 │   │   ├── network_repo.go         # مدیریت و تنظیمات نودهای شبکه
-│   │   ├── postgres.go             # اتصال دیتابیس و AutoMigrate خودکار
 │   │   ├── rebalance_repo.go       # ثبت و استعلام تاریخچه ریبالانسینگ
 │   │   ├── transaction_repo.go     # ثبت تراکنش‌ها جهت جلوگیری از Double-Spend
 │   │   └── user_repo.go            # مدیریت کاربران تلگرام و سیستم
