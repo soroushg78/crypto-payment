@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go binary (statically linked, stripped symbols)
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/crypto-service ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/crypto-service ./cmd/server
 
 # Final runtime stage
 FROM alpine:latest

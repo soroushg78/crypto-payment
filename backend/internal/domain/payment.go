@@ -14,36 +14,6 @@ const (
 	StatusUnderpaid InvoiceStatus = "UNDERPAID"
 )
 
-// User represents a customer (from Web or Telegram Bot)
-type User struct {
-	ID         string    `json:"id"`
-	TelegramID *int64    `json:"telegram_id,omitempty"`
-	Username   string    `json:"username,omitempty"`
-	FirstName  string    `json:"first_name,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
-}
-
-// Network represents a supported blockchain
-type Network struct {
-	ID             string `json:"id"` // e.g. 'bsc', 'ton'
-	Name           string `json:"name"`
-	NativeCurrency string `json:"native_currency"`
-	RPCEndpoint    string `json:"rpc_endpoint,omitempty"`
-	IsTestnet      bool   `json:"is_testnet"`
-	IsActive       bool   `json:"is_active"`
-}
-
-// Currency represents a coin or token on a specific network
-type Currency struct {
-	ID              string  `json:"id"`
-	Symbol          string  `json:"symbol"` // e.g. 'USDT', 'TON'
-	NetworkID       string  `json:"network_id"`
-	ContractAddress *string `json:"contract_address,omitempty"`
-	Decimals        int     `json:"decimals"`
-	MinDeposit      float64 `json:"min_deposit"`
-	IsActive        bool    `json:"is_active"`
-}
-
 // DepositAddress represents a unique or memo-assigned wallet address
 type DepositAddress struct {
 	ID              string    `json:"id"`
@@ -75,33 +45,10 @@ type Invoice struct {
 	UpdatedAt     time.Time     `json:"updated_at"`
 
 	// Joined details for API convenience
-	CurrencySymbol   string  `json:"currency_symbol,omitempty"`
-	NetworkName      string  `json:"network_name,omitempty"`
-	TelegramUsername string  `json:"telegram_username,omitempty"`
-	TelegramID       *int64  `json:"telegram_id,omitempty"`
-}
-
-// Admin represents a dashboard administrator
-type Admin struct {
-	ID          string     `json:"id"`
-	Username    string     `json:"username"`
-	Role        string     `json:"role"`
-	TelegramID  *int64     `json:"telegram_id,omitempty"`
-	IsActive    bool       `json:"is_active"`
-	CreatedAt   time.Time  `json:"created_at"`
-	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
-}
-
-type LoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type LoginResponse struct {
-	Token     string    `json:"token"`
-	Admin     *Admin    `json:"admin"`
-	ExpiresAt time.Time `json:"expires_at"`
-	ExpiresIn int       `json:"expires_in"` // in seconds: 86400 (24 hours)
+	CurrencySymbol   string `json:"currency_symbol,omitempty"`
+	NetworkName      string `json:"network_name,omitempty"`
+	TelegramUsername string `json:"telegram_username,omitempty"`
+	TelegramID       *int64 `json:"telegram_id,omitempty"`
 }
 
 func (i *Invoice) IsExpired() bool {
@@ -125,14 +72,14 @@ type ObservedTransaction struct {
 	ConfirmedAt   *time.Time `json:"confirmed_at,omitempty"`
 }
 
-// DTOs for requests
+// CreateInvoiceInput represents input DTO for creating a new invoice
 type CreateInvoiceInput struct {
-	AmountUSD    float64 `json:"amount_usd"`              // مبلغ دلاری پرداختی
-	CurrencyID   string  `json:"currency_id,omitempty"`   // شناسه ارز (اختیاری اگر currency ارسال شود)
-	NetworkID    string  `json:"network_id,omitempty"`    // شناسه شبکه (اختیاری اگر network ارسال شود)
-	Network      string  `json:"network,omitempty"`       // نماد شبکه مثل bsc یا ton
-	Currency     string  `json:"currency,omitempty"`      // نماد ارز مثل usdt, bnb, ton
-	TelegramID   *int64  `json:"telegram_id,omitempty"`   // شناسه عددی تلگرام (اجباری در صورت خالی بودن username)
-	Username     string  `json:"username,omitempty"`      // نام کاربری تلگرام (اجباری در صورت خالی بودن telegram_id)
-	CustomAmount float64 `json:"custom_amount,omitempty"` // برای سازگاری
+	AmountUSD    float64 `json:"amount_usd"`
+	CurrencyID   string  `json:"currency_id,omitempty"`
+	NetworkID    string  `json:"network_id,omitempty"`
+	Network      string  `json:"network,omitempty"`
+	Currency     string  `json:"currency,omitempty"`
+	TelegramID   *int64  `json:"telegram_id,omitempty"`
+	Username     string  `json:"username,omitempty"`
+	CustomAmount float64 `json:"custom_amount,omitempty"`
 }

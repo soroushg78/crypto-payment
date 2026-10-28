@@ -19,3 +19,4 @@ func Recovery(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+

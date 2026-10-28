@@ -17,7 +17,7 @@ import (
 	"wallet-observer/internal/database"
 	"wallet-observer/internal/repository"
 	"wallet-observer/internal/usecase"
-	"wallet-observer/pkg/bscrpc"
+	"wallet-observer/pkg/evmrpc"
 	"wallet-observer/pkg/hdwallet"
 	"wallet-observer/pkg/logger"
 	"wallet-observer/pkg/tonrpc"
@@ -77,7 +77,7 @@ func main() {
 	// 6.5 Initialize BSC & ETH RPC Clients (Direct Node Connector with Dynamic Testnet Support)
 	isTestnet = os.Getenv("IS_TESTNET") == "true"
 	bscRPC := os.Getenv("BSC_RPC_ENDPOINT")
-	bscClient := bscrpc.NewEVMClient("bsc", bscRPC, hdManager, isTestnet)
+	bscClient := evmrpc.NewEVMClient("bsc", bscRPC, hdManager, isTestnet)
 	if isTestnet {
 		slog.Warn("BSC RPC Client initialized in TESTNET MODE (Chain ID: 97, Free Testnet BNB/USDT)")
 	} else {
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	ethRPC := os.Getenv("ETH_RPC_ENDPOINT")
-	ethClient := bscrpc.NewEVMClient("eth", ethRPC, hdManager, isTestnet)
+	ethClient := evmrpc.NewEVMClient("eth", ethRPC, hdManager, isTestnet)
 	if isTestnet {
 		slog.Warn("Ethereum RPC Client initialized in TESTNET MODE (Chain ID: 11155111 Sepolia, Free Sepolia ETH/USDT)")
 	} else {

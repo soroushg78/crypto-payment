@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"wallet-observer/internal/domain"
-	"wallet-observer/pkg/bscrpc"
+	"wallet-observer/pkg/evmrpc"
 	"wallet-observer/pkg/tonrpc"
 	"wallet-observer/pkg/wallex"
 )
@@ -23,8 +23,8 @@ type InvoiceUseCase struct {
 	userRepo        domain.UserRepository
 	addressRepo     domain.DepositAddressRepository
 	transactionRepo domain.ObservedTransactionRepository
-	bscClient       *bscrpc.Client
-	ethClient       *bscrpc.Client
+	bscClient       *evmrpc.Client
+	ethClient       *evmrpc.Client
 	tonClient       *tonrpc.Client
 	wallexClient    *wallex.Client
 }
@@ -36,8 +36,8 @@ func NewInvoiceUseCase(
 	userRepo domain.UserRepository,
 	addressRepo domain.DepositAddressRepository,
 	transactionRepo domain.ObservedTransactionRepository,
-	bscClient *bscrpc.Client,
-	ethClient *bscrpc.Client,
+	bscClient *evmrpc.Client,
+	ethClient *evmrpc.Client,
 	tonClient *tonrpc.Client,
 	wallexClient *wallex.Client,
 ) *InvoiceUseCase {
@@ -221,7 +221,7 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 	}
 
 	// 2. Real on-chain check for EVM chains (BSC or Ethereum)
-	var evmClient *bscrpc.Client
+	var evmClient *evmrpc.Client
 	if inv.NetworkID == "bsc" {
 		evmClient = u.bscClient
 	} else if inv.NetworkID == "eth" {

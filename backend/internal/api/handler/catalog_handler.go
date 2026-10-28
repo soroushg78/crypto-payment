@@ -43,3 +43,4 @@ func (h *CatalogHandler) ListCurrencies(w http.ResponseWriter, r *http.Request) 
 		Data:    currencies,
 	})
 }
+

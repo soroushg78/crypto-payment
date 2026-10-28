@@ -45,3 +45,4 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Data:    res,
 	})
 }
+

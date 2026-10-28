@@ -23,7 +23,7 @@ func main() {
 	defer pool.Close()
 
 	fmt.Println("==================================================")
-	fmt.Println("🧹 Resetting & Freshing Database (Clean State)...")
+	fmt.Println("🧹 Resetting & Seeding Database (Clean State)...")
 	fmt.Println("==================================================")
 
 	// Truncate tables and cascade to wipe all test invoices, observed txs, addresses, rebalance records, etc.

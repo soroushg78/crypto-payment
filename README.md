@@ -239,8 +239,8 @@ erDiagram
 ```text
 backend/
 ├── cmd/
-│   ├── api/main.go                 # نقطه ورود سرور API و راه‌اندازی کلاینت‌های BSC, ETH, TON
-│   └── fresh/main.go               # ابزار پاکسازی کامل داده‌های تست و اجرای مجدد مایگریشن‌ها
+│   ├── server/main.go              # نقطه ورود سرور API و راه‌اندازی کلاینت‌های EVM (BSC/ETH) و TON
+│   └── seed/main.go                # ابزار پاکسازی کامل داده‌های تست و اجرای مجدد مایگریشن‌ها و سیدینگ
 ├── internal/
 │   ├── config/config.go            # بارگذاری تنظیمات محیطی از فایل .env
 │   ├── database/                   # مدیریت زیرساخت پایگاه داده، اتصال، مایگریشن و سیدینگ
@@ -258,12 +258,13 @@ backend/
 │   │       ├── 007_admins.sql
 │   │       ├── 008_rebalance_records.sql
 │   │       └── schema.go           # امبد کردن فایل‌های SQL در باینری نهایی
-│   ├── domain/                     # مدل‌های دامنه، VaultSplit و اینترفیس‌های مخازن داده
-│   │   ├── admin.go
-│   │   ├── catalog.go
-│   │   ├── payment.go              # مدل فاکتور، تراکنش و آدرس
+│   ├── domain/                     # مدل‌های خالص دامنه، خطاهای بیزنسی و اینترفیس‌های مخازن داده
+│   │   ├── auth.go                 # مدل‌های کاربر، ادمین و لاگین
+│   │   ├── catalog.go              # مدل‌های شبکه و رمزارز
+│   │   ├── errors.go               # خطاهای استاندارد دامنه
+│   │   ├── payment.go              # مدل فاکتور، تراکنش و آدرس واریز
 │   │   ├── rebalance.go            # مدل‌های VaultSplit، SplitTransferResult و RebalanceRecord
-│   │   └── repository.go
+│   │   └── repository.go           # اینترفیس‌های دسترسی به داده (Clean Architecture)
 │   ├── repository/                 # مخازن داده خالص (Pure Repositories)
 │   │   ├── address_repo.go         # اشتقاق آدرس‌های BIP-44 با مدیریت اندیس
 │   │   ├── admin_repo.go           # احراز هویت و مدیریت ادمین‌ها
@@ -273,10 +274,9 @@ backend/
 │   │   ├── rebalance_repo.go       # ثبت و استعلام تاریخچه ریبالانسینگ
 │   │   ├── transaction_repo.go     # ثبت تراکنش‌ها جهت جلوگیری از Double-Spend
 │   │   └── user_repo.go            # مدیریت کاربران تلگرام و سیستم
-│   ├── usecase/                    # لایه منطق تجاری
-│   │   ├── invoice_usecase.go      # صدور فاکتور و رصد خودکار زنجیره‌ای BSC, ETH, TON
-│   │   ├── rebalance_usecase.go    # موتور ریبالانسینگ چندمقصدی Many-to-Many
-│   │   └── settlement_usecase.go
+│   ├── usecase/                    # لایه منطق تجاری (Business Logic)
+│   │   ├── invoice_usecase.go      # صدور فاکتور و رصد خودکار زنجیره‌ای BSC, ETH, TON و وب‌هوک
+│   │   └── rebalance_usecase.go    # موتور ریبالانسینگ چندمقصدی Many-to-Many
 │   └── api/                        # لایه وب و ارتباطات RESTful API (تفکیک اصیل Go)
 │       ├── handler/                # پکیج handler: کنترلرها و پاسخ‌های HTTP
 │       │   ├── auth_handler.go     # احراز هویت ادمین
@@ -292,9 +292,11 @@ backend/
 │       │   └── ratelimit.go        # ضد Brute-Force ورود با Rate Limiting
 │       └── router.go               # ثبت مسیرها با http.ServeMux و زنجیره میدلورها
 ├── pkg/
-│   ├── bscrpc/                     # کلاینت عمومی EVM برای شبکه بایننس و اتریوم با موتور Multi-Vault
+│   ├── evmrpc/                     # کلاینت عمومی EVM برای شبکه بایننس و اتریوم با موتور Multi-Vault
 │   ├── hdwallet/                   # اشتقاق حساب‌های سازگار با BIP-44 و Pure XPUB
-│   └── tonrpc/                     # کلاینت ارتباط با نود شبکه TON و قرارداد W5
+│   ├── logger/                     # لاگر ساختاریافته رنگی و خوانا
+│   ├── tonrpc/                     # کلاینت ارتباط با نود شبکه TON و قرارداد W5
+│   └── wallex/                     # کلاینت استعلام نرخ ریالی و تتر از والکس
 ```
 
 ---

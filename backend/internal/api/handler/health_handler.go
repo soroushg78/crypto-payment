@@ -17,3 +17,4 @@ func (h *HealthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
+

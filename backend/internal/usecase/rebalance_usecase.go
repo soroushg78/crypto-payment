@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"wallet-observer/internal/domain"
-	"wallet-observer/pkg/bscrpc"
+	"wallet-observer/pkg/evmrpc"
 	"wallet-observer/pkg/hdwallet"
 	"wallet-observer/pkg/tonrpc"
 )
@@ -17,8 +17,8 @@ import (
 type RebalanceUseCase struct {
 	addressRepo domain.DepositAddressRepository
 	hdManager   *hdwallet.Manager
-	bscClient   *bscrpc.Client
-	ethClient   *bscrpc.Client
+	bscClient   *evmrpc.Client
+	ethClient   *evmrpc.Client
 	invoiceRepo domain.InvoiceRepository
 	tonClient   *tonrpc.Client
 	recordRepo  domain.RebalanceRecordRepository
@@ -27,8 +27,8 @@ type RebalanceUseCase struct {
 func NewRebalanceUseCase(
 	addressRepo domain.DepositAddressRepository,
 	hdManager *hdwallet.Manager,
-	bscClient *bscrpc.Client,
-	ethClient *bscrpc.Client,
+	bscClient *evmrpc.Client,
+	ethClient *evmrpc.Client,
 	invoiceRepo domain.InvoiceRepository,
 	tonClient *tonrpc.Client,
 	recordRepo domain.RebalanceRecordRepository,
@@ -44,7 +44,7 @@ func NewRebalanceUseCase(
 	}
 }
 
-func (u *RebalanceUseCase) getClientForNetwork(networkID string) *bscrpc.Client {
+func (u *RebalanceUseCase) getClientForNetwork(networkID string) *evmrpc.Client {
 	if strings.ToLower(strings.TrimSpace(networkID)) == "eth" {
 		if u.ethClient != nil {
 			return u.ethClient

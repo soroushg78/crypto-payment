@@ -1,4 +1,4 @@
-package bscrpc
+package evmrpc
 
 import (
 	"bytes"
