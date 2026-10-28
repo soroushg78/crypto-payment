@@ -1,0 +1,64 @@
+services:
+  app:
+    image: geopoosh-app:latest  
+    container_name: geopoosh_prod_app
+    restart: unless-stopped
+    env_file:
+      - geopoosh.env
+    volumes:
+      - ./public:/var/www/html/public
+      - ./storage/app/public:/var/www/html/storage/app/public
+      - ./database/database.sqlite:/var/www/html/database/database.sqlite
+    networks:
+      - geopoosh_network
+
+  nginx:
+    image: nginx:latest
+    container_name: geopoosh_prod_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - ./storage/app/public:/var/www/html/storage/app/public:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./crypto-dist:/var/www/crypto:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    networks:
+      - geopoosh_network
+
+  crypto-postgres:
+    image: postgres:16-alpine
+    container_name: crypto_postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: StrongCryptoPassword123!
+      POSTGRES_DB: wallet_ledger
+    volumes:
+      - crypto_pgdata:/var/lib/postgresql/data
+    networks:
+      - geopoosh_network
+
+  crypto-backend:
+    image: crypto-backend:latest
+    container_name: crypto_backend
+    restart: unless-stopped
+    env_file:
+      - crypto.env
+    depends_on:
+      - crypto-postgres
+    networks:
+      - geopoosh_network
+
+networks:
+  geopoosh_network:
+    driver: bridge
+
+volumes:
+  crypto_pgdata:
