@@ -639,7 +639,7 @@ func (c *Client) ExecuteOrSimulateSweep(
 
 	maskedKey := childPrivKeyHex[:6] + "..." + childPrivKeyHex[len(childPrivKeyHex)-6:]
 	logStep(len(logs)+1, "اشتقاق کلید خصوصی در RAM موقت (Deterministic RAM-Only Derivation)",
-		fmt.Sprintf("کلید با استاندارد secp256k1 صرفاً در حافظه موقت مشتق شد (امنیت Zero-Key)."),
+		"کلید با استاندارد secp256k1 صرفاً در حافظه موقت مشتق شد (امنیت Zero-Key).",
 		"SUCCESS", "",
 		fmt.Sprintf("Derived Key: %s", maskedKey),
 	)
