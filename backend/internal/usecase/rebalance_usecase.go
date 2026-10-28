@@ -18,6 +18,7 @@ type RebalanceUseCase struct {
 	addressRepo domain.DepositAddressRepository
 	hdManager   *hdwallet.Manager
 	bscClient   *bscrpc.Client
+	ethClient   *bscrpc.Client
 	invoiceRepo domain.InvoiceRepository
 	tonClient   *tonrpc.Client
 	recordRepo  domain.RebalanceRecordRepository
@@ -27,6 +28,7 @@ func NewRebalanceUseCase(
 	addressRepo domain.DepositAddressRepository,
 	hdManager *hdwallet.Manager,
 	bscClient *bscrpc.Client,
+	ethClient *bscrpc.Client,
 	invoiceRepo domain.InvoiceRepository,
 	tonClient *tonrpc.Client,
 	recordRepo domain.RebalanceRecordRepository,
@@ -35,23 +37,40 @@ func NewRebalanceUseCase(
 		addressRepo: addressRepo,
 		hdManager:   hdManager,
 		bscClient:   bscClient,
+		ethClient:   ethClient,
 		invoiceRepo: invoiceRepo,
 		tonClient:   tonClient,
 		recordRepo:  recordRepo,
 	}
 }
 
-// ListBSCWallets returns all assigned BSC deposit addresses with their live on-chain balances
-func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.RebalanceWalletStatus, error) {
-	addresses, err := u.addressRepo.ListAssigned(ctx, "bsc")
+func (u *RebalanceUseCase) getClientForNetwork(networkID string) *bscrpc.Client {
+	if strings.ToLower(strings.TrimSpace(networkID)) == "eth" {
+		if u.ethClient != nil {
+			return u.ethClient
+		}
+	}
+	return u.bscClient
+}
+
+// ListWallets returns all assigned deposit addresses for a network (BSC or ETH) with live balances
+func (u *RebalanceUseCase) ListWallets(ctx context.Context, networkID string) ([]*domain.RebalanceWalletStatus, error) {
+	networkID = strings.ToLower(strings.TrimSpace(networkID))
+	if networkID == "" {
+		networkID = "bsc"
+	}
+
+	client := u.getClientForNetwork(networkID)
+
+	addresses, err := u.addressRepo.ListAssigned(ctx, networkID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve assigned BSC addresses: %w", err)
+		return nil, fmt.Errorf("failed to retrieve assigned %s addresses: %w", networkID, err)
 	}
 
 	allInvoices, _ := u.invoiceRepo.ListAll(ctx, 300)
 	invByAddr := make(map[string]*domain.Invoice)
 	for _, inv := range allInvoices {
-		if strings.EqualFold(inv.NetworkID, "bsc") {
+		if strings.EqualFold(inv.NetworkID, networkID) {
 			addrLower := strings.ToLower(inv.PayAddress)
 			if _, exists := invByAddr[addrLower]; !exists {
 				invByAddr[addrLower] = inv
@@ -68,24 +87,23 @@ func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.Rebala
 
 		path := fmt.Sprintf("m/44'/60'/0'/0/%d", index)
 
-		// Fetch on-chain balances asynchronously / with timeout
 		ctxBal, cancel := context.WithTimeout(ctx, 3*time.Second)
-		bnbBal, _ := u.bscClient.GetBNBBalance(ctxBal, addr.Address)
-		usdtBal, _ := u.bscClient.GetUSDTBalance(ctxBal, addr.Address)
+		nativeBal, _ := client.GetNativeBalance(ctxBal, addr.Address)
+		usdtBal, _ := client.GetUSDTBalance(ctxBal, addr.Address)
 		cancel()
 
 		needsRefuel := false
 		sweepStatus := "EMPTY"
 
 		if usdtBal > 0 {
-			if bnbBal < 0.0002 {
+			if nativeBal < 0.0003 {
 				needsRefuel = true
 				sweepStatus = "NEED_GAS"
 			} else {
 				sweepStatus = "READY_USDT"
 			}
-		} else if bnbBal > 0.001 {
-			sweepStatus = "READY_BNB"
+		} else if nativeBal > 0.001 {
+			sweepStatus = "READY_NATIVE"
 		}
 
 		var invCreatedAt *time.Time
@@ -104,8 +122,9 @@ func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.Rebala
 			DerivationIndex:   index,
 			DerivationPath:    path,
 			Address:           addr.Address,
-			NetworkID:         addr.NetworkID,
-			BNBBalance:        bnbBal,
+			NetworkID:         networkID,
+			NativeBalance:     nativeBal,
+			BNBBalance:        nativeBal, // for backward compatibility
 			USDTBalance:       usdtBal,
 			NeedsRefuel:       needsRefuel,
 			SweepStatus:       sweepStatus,
@@ -121,28 +140,45 @@ func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.Rebala
 	return results, nil
 }
 
-// ExecuteSweep performs or simulates the sweeping process for a specified derivation index
+// ListBSCWallets returns assigned BSC addresses (backward compatibility)
+func (u *RebalanceUseCase) ListBSCWallets(ctx context.Context) ([]*domain.RebalanceWalletStatus, error) {
+	return u.ListWallets(ctx, "bsc")
+}
+
+// ExecuteSweep performs sweeping with support for Multi-Vault Many-to-Many splits
 func (u *RebalanceUseCase) ExecuteSweep(ctx context.Context, req domain.SweepRequest) (*domain.SweepResult, error) {
-	// 1. Derive the target address for verification
+	networkID := strings.ToLower(strings.TrimSpace(req.NetworkID))
+	if networkID == "" {
+		if strings.EqualFold(req.Asset, "ETH") {
+			networkID = "eth"
+		} else {
+			networkID = "bsc"
+		}
+	}
+
+	client := u.getClientForNetwork(networkID)
+
+	// 1. Derive target address
 	address, err := u.hdManager.DeriveAddress(req.DerivationIndex)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive address at index %d: %w", req.DerivationIndex, err)
 	}
 
-	// 2. Execute sweep sequence via BSC client
-	res, err := u.bscClient.ExecuteOrSimulateSweep(
+	// 2. Execute sweep sequence via EVM client (supports Multi-Vault splits)
+	res, err := client.ExecuteOrSimulateSweep(
 		ctx,
 		req.DerivationIndex,
 		address,
 		req.Asset,
 		req.TreasuryAddress,
-		req.RealBroadcast,
+		req.Mnemonic,
+		req.VaultSplits,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. Mark any associated pending invoice for this address as PAID
+	// 3. Mark pending invoice as PAID
 	if u.invoiceRepo != nil {
 		_ = u.invoiceRepo.MarkPaidByAddress(ctx, address)
 	}
@@ -155,11 +191,21 @@ func (u *RebalanceUseCase) ExecuteSweep(ctx context.Context, req domain.SweepReq
 			txHashStr = res.RefuelTxHash
 		}
 		status := "COMPLETED"
+
+		toAddrDesc := res.TreasuryAddress
+		if len(res.Splits) > 1 {
+			var parts []string
+			for _, s := range res.Splits {
+				parts = append(parts, fmt.Sprintf("%s(%.0f%%:%.4f)", s.Label, s.Percentage, s.Amount))
+			}
+			toAddrDesc = fmt.Sprintf("Multi-Vault: %s", strings.Join(parts, ", "))
+		}
+
 		_ = u.recordRepo.Create(ctx, &domain.RebalanceRecord{
-			NetworkID:       "bsc",
+			NetworkID:       networkID,
 			DerivationIndex: &idx,
 			FromAddress:     res.DepositAddress,
-			ToAddress:       res.TreasuryAddress,
+			ToAddress:       toAddrDesc,
 			Asset:           res.AssetSwept,
 			Amount:          res.AmountSwept,
 			GasFeeBNB:       res.GasFeeBNB,
@@ -173,11 +219,20 @@ func (u *RebalanceUseCase) ExecuteSweep(ctx context.Context, req domain.SweepReq
 	return res, nil
 }
 
-// ExecuteBatchSweep sweeps multiple wallets sequentially with auto-refueling
+// ExecuteBatchSweep sweeps multiple wallets sequentially with Multi-Vault splits (Many-to-Many)
 func (u *RebalanceUseCase) ExecuteBatchSweep(ctx context.Context, req domain.BatchSweepRequest) ([]*domain.SweepResult, error) {
-	wallets, err := u.ListBSCWallets(ctx)
+	networkID := strings.ToLower(strings.TrimSpace(req.NetworkID))
+	if networkID == "" {
+		if strings.EqualFold(req.Asset, "ETH") {
+			networkID = "eth"
+		} else {
+			networkID = "bsc"
+		}
+	}
+
+	wallets, err := u.ListWallets(ctx, networkID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list wallets for batch sweep: %w", err)
+		return nil, fmt.Errorf("failed to list wallets for batch sweep on %s: %w", networkID, err)
 	}
 
 	targetIndexMap := make(map[int]bool)
@@ -185,40 +240,43 @@ func (u *RebalanceUseCase) ExecuteBatchSweep(ctx context.Context, req domain.Bat
 		targetIndexMap[idx] = true
 	}
 
+	client := u.getClientForNetwork(networkID)
+	nativeCoin := client.NativeSymbol()
+
 	var results []*domain.SweepResult
 	for _, w := range wallets {
 		if w.DerivationIndex == 0 {
 			continue // skip gas station
 		}
-		// If specific indexes requested, check membership
 		if len(req.DerivationIndexes) > 0 && !targetIndexMap[w.DerivationIndex] {
 			continue
 		}
-		// If no specific indexes, only sweep wallets with balance
-		if len(req.DerivationIndexes) == 0 && w.BNBBalance <= 0.0005 && w.USDTBalance <= 0 {
+		if len(req.DerivationIndexes) == 0 && w.NativeBalance <= 0.0005 && w.USDTBalance <= 0 {
 			continue
 		}
 
-		// Determine asset
 		asset := req.Asset
 		if asset == "" || strings.EqualFold(asset, "ALL") {
 			if w.USDTBalance > 0 {
 				asset = "USDT"
-			} else if w.BNBBalance > 0.0005 {
-				asset = "BNB"
+			} else if w.NativeBalance > 0.0005 {
+				asset = nativeCoin
 			} else {
 				continue
 			}
 		}
 
 		res, err := u.ExecuteSweep(ctx, domain.SweepRequest{
+			NetworkID:       networkID,
 			DerivationIndex: w.DerivationIndex,
 			Asset:           asset,
 			TreasuryAddress: req.TreasuryAddress,
+			VaultSplits:     req.VaultSplits,
 			RealBroadcast:   req.RealBroadcast,
+			Mnemonic:        req.Mnemonic,
 		})
 		if err != nil {
-			slog.Warn("Batch sweep failed for wallet index", "index", w.DerivationIndex, "error", err)
+			slog.Warn("Batch sweep failed for wallet index", "network", networkID, "index", w.DerivationIndex, "error", err)
 			continue
 		}
 		results = append(results, res)
@@ -227,12 +285,14 @@ func (u *RebalanceUseCase) ExecuteBatchSweep(ctx context.Context, req domain.Bat
 	return results, nil
 }
 
-// GetSecuritySpecs provides comprehensive architecture and security metadata for the tech lead and PM
+// GetSecuritySpecs provides comprehensive architecture and security metadata
 func (u *RebalanceUseCase) GetSecuritySpecs() map[string]interface{} {
-	mnemonic := u.hdManager.GetMnemonic()
-	words := ""
-	if len(mnemonic) > 8 {
-		words = mnemonic[:6] + " ... " + mnemonic[len(mnemonic)-6:]
+	xpub := u.hdManager.GetXPUB()
+	hasPrivKey := u.hdManager.HasPrivateKeyCapability()
+
+	status := "PURE XPUB MODE - ZERO PRIVATE KEYS ON SERVER (Bank-Grade Security)"
+	if hasPrivKey {
+		status = "Hot Mnemonic Mode"
 	}
 
 	masterGasAddr, _ := u.hdManager.DeriveAddress(0)
@@ -243,42 +303,37 @@ func (u *RebalanceUseCase) GetSecuritySpecs() map[string]interface{} {
 	return map[string]interface{}{
 		"standard":                    "BIP-44 (Multi-Account Hierarchy for Deterministic Wallets)",
 		"derivation_path":             "m/44'/60'/0'/0/{index} (Invoices: index >= 1, Gas Station: index 0)",
-		"supported_evm_chain":         "BNB Smart Chain (Chain ID: 56, Testnet: 97)",
-		"private_key_storage":         "ZERO (Keys never stored in PostgreSQL; derived strictly on-demand in volatile RAM)",
-		"master_seed_protection":      "Master Mnemonic stored in protected environment variable / Secret Vault",
-		"token_gas_solution":          "Dedicated Hot Gas Station Wallet (Index 0: Account 1 in MetaMask) auto-refuels BNB for BEP-20 token sweep",
+		"supported_evm_chains":        "BNB Smart Chain (ID: 56/97) & Ethereum (ID: 1/11155111)",
+		"many_to_many_vaults":         "Supported (e.g. 70% Cold Vault, 20% Hot Vault, 10% Gas Buffer)",
+		"private_key_storage":         "ZERO (Keys never stored on server; derived strictly on-demand in volatile RAM by operator)",
+		"master_seed_protection":      "Pure XPUB configuration (No private keys on disk or environment)",
+		"token_gas_solution":          "Dedicated Hot Gas Station Wallet (Index 0) auto-refuels native coin for token sweep",
 		"gas_station_address":         masterGasAddr,
 		"gas_station_bnb_balance":     masterBNBBal,
-		"gas_station_derivation_path": "m/44'/60'/0'/0/0 (Dedicated Master Gas Station)",
-		"direct_rpc_nodes": []string{
-			"https://bsc-dataseed.binance.org",
-			"https://bsc-dataseed1.defibit.io",
-			"Direct BSC Full Node (Geth/Erigon)",
-		},
-		"mnemonic_status":             "Loaded and active (" + words + ")",
-		"master_mnemonic":             mnemonic,
-		"ton_standard":                "TON 24-Word Mnemonic (Ed25519 PBKDF2 HMAC-SHA512)",
-		"ton_wallet_contract":         "Wallet V4R2 (Tonkeeper Standard)",
+		"security_status":             status,
+		"bsc_xpub":                    xpub,
+		"ton_standard":                "TON Master Treasury + Unique Memo Routing (Read-Only)",
+		"ton_wallet_contract":         "Wallet V5R1 / W5 Standard",
 		"ton_treasury_wallet":         os.Getenv("TON_TREASURY_WALLET"),
-		"ton_mnemonic":                os.Getenv("TON_MASTER_MNEMONIC"),
 	}
 }
 
 // EstimateGas calculates the exact on-chain gas requirements and refuel needs for sweeping
-func (u *RebalanceUseCase) EstimateGas(ctx context.Context, derivationIndex int, asset, treasuryAddress string) (*domain.GasEstimateResult, error) {
+func (u *RebalanceUseCase) EstimateGas(ctx context.Context, derivationIndex int, asset, treasuryAddress, networkID string) (*domain.GasEstimateResult, error) {
 	address, err := u.hdManager.DeriveAddress(derivationIndex)
 	if err != nil {
 		return nil, fmt.Errorf("failed to derive address for index %d: %w", derivationIndex, err)
 	}
 
-	return u.bscClient.EstimateSweepGas(ctx, address, asset, treasuryAddress)
+	client := u.getClientForNetwork(networkID)
+	return client.EstimateSweepGas(ctx, address, asset, treasuryAddress)
 }
 
 // GetTONTreasuryStatus returns live on-chain balance and invoice memo routing for TON Master Treasury
 func (u *RebalanceUseCase) GetTONTreasuryStatus(ctx context.Context) (*domain.TONTreasuryStatus, error) {
 	treasuryAddr := os.Getenv("TON_TREASURY_WALLET")
 	if treasuryAddr == "" {
-		treasuryAddr = "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw"
+		treasuryAddr = "UQDRW1hBJ7uPVffzd_AGaB4DS0LNNp0WfVGO0k03DqQmUHWX"
 	}
 
 	var liveBalance float64
@@ -293,7 +348,6 @@ func (u *RebalanceUseCase) GetTONTreasuryStatus(ctx context.Context) (*domain.TO
 		}
 	}
 
-	// Fetch all TON invoices from database
 	allInvoices, err := u.invoiceRepo.ListAll(ctx, 100)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve invoices: %w", err)
@@ -354,4 +408,3 @@ func (u *RebalanceUseCase) ListRebalanceRecords(ctx context.Context, limit int) 
 	}
 	return u.recordRepo.ListAll(ctx, limit)
 }
-

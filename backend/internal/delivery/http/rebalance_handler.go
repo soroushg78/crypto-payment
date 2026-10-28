@@ -19,9 +19,14 @@ func NewRebalanceHandler(rebalanceUC *usecase.RebalanceUseCase) *RebalanceHandle
 	}
 }
 
-// ListWallets handles GET /api/v1/rebalance/wallets
+// ListWallets handles GET /api/v1/rebalance/wallets?network=bsc (or eth)
 func (h *RebalanceHandler) ListWallets(w http.ResponseWriter, r *http.Request) {
-	wallets, err := h.rebalanceUC.ListBSCWallets(r.Context())
+	networkID := r.URL.Query().Get("network")
+	if networkID == "" {
+		networkID = "bsc"
+	}
+
+	wallets, err := h.rebalanceUC.ListWallets(r.Context(), networkID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -88,8 +93,12 @@ func (h *RebalanceHandler) EstimateGas(w http.ResponseWriter, r *http.Request) {
 	index, _ := strconv.Atoi(indexStr)
 	asset := r.URL.Query().Get("asset")
 	treasury := r.URL.Query().Get("treasury")
+	networkID := r.URL.Query().Get("network")
+	if networkID == "" {
+		networkID = "bsc"
+	}
 
-	estimate, err := h.rebalanceUC.EstimateGas(r.Context(), index, asset, treasury)
+	estimate, err := h.rebalanceUC.EstimateGas(r.Context(), index, asset, treasury, networkID)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -134,4 +143,3 @@ func (h *RebalanceHandler) ListRecords(w http.ResponseWriter, r *http.Request) {
 		Data:    records,
 	})
 }
-

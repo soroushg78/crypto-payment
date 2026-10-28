@@ -189,38 +189,41 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 	DELETE FROM currencies WHERE network_id = 'ton' AND symbol = 'USDT';
 	DELETE FROM networks WHERE id = 'tron';
 
-	-- Ensure index 0 in BSC is strictly reserved for Master Gas Station and removed from invoice addresses
+	-- Ensure index 0 in BSC/ETH is strictly reserved for Master Gas Station
 	DELETE FROM observed_transactions WHERE invoice_id IN (
 		SELECT id FROM invoices WHERE pay_address IN (
-			SELECT address FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0
+			SELECT address FROM deposit_addresses WHERE (network_id = 'bsc' OR network_id = 'eth') AND derivation_index = 0
 		)
 	);
 	DELETE FROM invoices WHERE pay_address IN (
-		SELECT address FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0
+		SELECT address FROM deposit_addresses WHERE (network_id = 'bsc' OR network_id = 'eth') AND derivation_index = 0
 	);
-	DELETE FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index = 0;
+	DELETE FROM deposit_addresses WHERE (network_id = 'bsc' OR network_id = 'eth') AND derivation_index = 0;
 
 	-- Migrate legacy TON currency completely to GRAM
 	UPDATE networks SET native_currency = 'GRAM' WHERE id = 'ton';
 	UPDATE currencies SET symbol = 'GRAM' WHERE network_id = 'ton' AND symbol = 'TON';
 	DELETE FROM currencies WHERE network_id = 'ton' AND symbol = 'TON';
 
-	-- Seed actual supported networks (TON & BSC)
+	-- Seed actual supported networks (TON, BSC, ETH)
 	INSERT INTO networks (id, name, native_currency, rpc_endpoint, is_testnet, is_active)
 	VALUES 
-		('ton', 'The Open Network (TON)', 'GRAM', 'https://ton.org/global.config.json', false, true),
-		('bsc', 'BNB Smart Chain (BSC)', 'BNB', 'https://bsc-dataseed.binance.org', false, true)
+		('ton', 'The Open Network (TON)', 'GRAM', 'https://toncenter.com/api/v2', false, true),
+		('bsc', 'BNB Smart Chain (BSC)', 'BNB', 'https://bsc-dataseed.binance.org', false, true),
+		('eth', 'Ethereum (ETH)', 'ETH', 'https://eth.llamarpc.com', false, true)
 	ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, native_currency = EXCLUDED.native_currency, rpc_endpoint = EXCLUDED.rpc_endpoint;
 
 	-- Clean up legacy mock currency UUIDs (like 11111111-...)
 	DELETE FROM currencies WHERE id IN ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '33333333-3333-3333-3333-333333333333');
 
-	-- Seed actual supported currencies (GRAM on ton, BNB on bsc, USDT on bsc)
+	-- Seed actual supported currencies (GRAM on ton, BNB/USDT on bsc, ETH/USDT on eth)
 	INSERT INTO currencies (symbol, network_id, contract_address, decimals, min_deposit, is_active)
 	VALUES 
 		('GRAM', 'ton', NULL, 9, 0.1, true),
 		('BNB', 'bsc', NULL, 18, 0.001, true),
-		('USDT', 'bsc', '0x55d398326f99059fF775485246999027B3197955', 18, 1.0, true)
+		('USDT', 'bsc', '0x55d398326f99059fF775485246999027B3197955', 18, 1.0, true),
+		('ETH', 'eth', NULL, 18, 0.001, true),
+		('USDT', 'eth', '0xdAC17F958D2ee523a2206206994597C13D831ec7', 6, 5.0, true)
 	ON CONFLICT (symbol, network_id) DO NOTHING;
 
 	-- Seed Telegram user @babasoroush
@@ -233,29 +236,45 @@ func AutoMigrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	// Seed super admin from environment variables or secure default with real bcrypt hash
-	adminUsername := os.Getenv("ADMIN_USERNAME")
-	if adminUsername == "" {
-		adminUsername = "admin"
-	}
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
-	if adminPassword == "" {
-		adminPassword = "C4ypt0_Adm!n#2026$X9z"
+	// Dynamic Testnet Mode synchronization (Free Testnet Coins vs Real Mainnet)
+	isTestnet := os.Getenv("IS_TESTNET") == "true"
+	if isTestnet {
+		_, _ = pool.Exec(ctx, `
+			UPDATE networks SET is_testnet = true, rpc_endpoint = 'https://bsc-testnet.publicnode.com' WHERE id = 'bsc';
+			UPDATE networks SET is_testnet = true, rpc_endpoint = 'https://testnet.toncenter.com/api/v2' WHERE id = 'ton';
+			UPDATE networks SET is_testnet = true, rpc_endpoint = 'https://ethereum-sepolia.publicnode.com' WHERE id = 'eth';
+			UPDATE currencies SET contract_address = '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd' WHERE network_id = 'bsc' AND symbol = 'USDT';
+			UPDATE currencies SET contract_address = '0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0' WHERE network_id = 'eth' AND symbol = 'USDT';
+		`)
+		slog.Info("Database synced: TESTNET MODE ACTIVE (Free Test Faucet Coins)")
+	} else {
+		_, _ = pool.Exec(ctx, `
+			UPDATE networks SET is_testnet = false, rpc_endpoint = 'https://bsc-dataseed.binance.org' WHERE id = 'bsc';
+			UPDATE networks SET is_testnet = false, rpc_endpoint = 'https://toncenter.com/api/v2' WHERE id = 'ton';
+			UPDATE networks SET is_testnet = false, rpc_endpoint = 'https://eth.llamarpc.com' WHERE id = 'eth';
+			UPDATE currencies SET contract_address = '0x55d398326f99059fF775485246999027B3197955' WHERE network_id = 'bsc' AND symbol = 'USDT';
+			UPDATE currencies SET contract_address = '0xdAC17F958D2ee523a2206206994597C13D831ec7' WHERE network_id = 'eth' AND symbol = 'USDT';
+		`)
+		slog.Info("Database synced: MAINNET MODE ACTIVE (Real Assets)")
 	}
 
-	var adminExists bool
-	_ = pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM admins WHERE username = $1)", adminUsername).Scan(&adminExists)
-	if !adminExists {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
-		if err == nil {
-			_, _ = pool.Exec(ctx,
-				"INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, 'SUPER_ADMIN')",
-				adminUsername, string(hashedPassword),
-			)
-			slog.Info("Super admin seeded successfully", "username", adminUsername)
+	// Seed super admin on fresh deployment ONLY if credentials provided in environment
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminUsername != "" && adminPassword != "" {
+		var adminExists bool
+		_ = pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM admins WHERE username = $1)", adminUsername).Scan(&adminExists)
+		if !adminExists {
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+			if err == nil {
+				_, _ = pool.Exec(ctx,
+					"INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, 'SUPER_ADMIN')",
+					adminUsername, string(hashedPassword),
+				)
+				slog.Info("Super admin seeded successfully into database", "username", adminUsername)
+			}
 		}
 	}
 
-	slog.Info("All database tables, constraints, admins, and supported networks/currencies initialized successfully")
 	return nil
 }

@@ -47,14 +47,19 @@ func main() {
 		slog.Warn("Failed running database auto-migrations", "error", err)
 	}
 
-	// 5.5. Initialize BSC HD Wallet Manager (BIP-44)
+	// 5.5. Initialize BSC & ETH HD Wallet Manager (BIP-44: Supports XPUB and Mnemonic)
 	masterMnemonic := os.Getenv("BSC_MASTER_MNEMONIC")
-	hdManager, err := hdwallet.NewManager(masterMnemonic)
+	bscXPUB := os.Getenv("BSC_XPUB")
+	hdManager, err := hdwallet.NewManagerFromConfig(bscXPUB, masterMnemonic)
 	if err != nil {
 		slog.Error("Failed to initialize HD wallet manager", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("BSC HD-Wallet Manager initialized (BIP-44 standard)")
+	if bscXPUB != "" {
+		slog.Info("EVM HD-Wallet Manager initialized in PURE XPUB MODE (Zero-Key Security: m/44'/60'/0'/0)")
+	} else {
+		slog.Info("EVM HD-Wallet Manager initialized (BIP-44 standard)")
+	}
 
 	// 6. Initialize Separated Repositories (SOLID - SRP)
 	networkRepo := postgres.NewNetworkRepository(pool)
@@ -66,14 +71,42 @@ func main() {
 	transactionRepo := postgres.NewObservedTransactionRepository(pool)
 	rebalanceRecordRepo := postgres.NewRebalanceRecordRepository(pool)
 
-	// 6.5 Initialize BSC RPC Client (Direct Node Connector)
-	bscClient := bscrpc.NewClient("", hdManager)
+	// 6.5 Initialize BSC & ETH RPC Clients (Direct Node Connector with Dynamic Testnet Support)
+	isTestnet := os.Getenv("IS_TESTNET") == "true"
+	bscRPC := os.Getenv("BSC_RPC_ENDPOINT")
+	bscClient := bscrpc.NewEVMClient("bsc", bscRPC, hdManager, isTestnet)
+	if isTestnet {
+		slog.Warn("BSC RPC Client initialized in TESTNET MODE (Chain ID: 97, Free Testnet BNB/USDT)")
+	} else {
+		slog.Info("BSC RPC Client initialized in MAINNET MODE (Chain ID: 56, Real BNB/USDT)")
+	}
 
-	// 6.6 Initialize TON RPC Client (Toncenter Direct Node Connector)
+	ethRPC := os.Getenv("ETH_RPC_ENDPOINT")
+	ethClient := bscrpc.NewEVMClient("eth", ethRPC, hdManager, isTestnet)
+	if isTestnet {
+		slog.Warn("Ethereum RPC Client initialized in TESTNET MODE (Chain ID: 11155111 Sepolia, Free Sepolia ETH/USDT)")
+	} else {
+		slog.Info("Ethereum RPC Client initialized in MAINNET MODE (Chain ID: 1, Real ETH/USDT)")
+	}
+
+	// 6.6 Initialize TON RPC Client (Toncenter Direct Node Connector with Dynamic Testnet Support)
 	tonEndpoint := os.Getenv("TON_ENDPOINT")
+	if isTestnet {
+		if tonEndpoint == "" || tonEndpoint == "https://toncenter.com/api/v2" {
+			tonEndpoint = "https://testnet.toncenter.com/api/v2"
+		}
+	} else {
+		if tonEndpoint == "" || tonEndpoint == "https://testnet.toncenter.com/api/v2" {
+			tonEndpoint = "https://toncenter.com/api/v2"
+		}
+	}
 	tonAPIKey := os.Getenv("TON_API_KEY")
 	tonClient := tonrpc.NewClient(tonEndpoint, tonAPIKey)
-	slog.Info("TON RPC Client initialized (Toncenter live node connector)")
+	if isTestnet {
+		slog.Warn("TON RPC Client initialized in TESTNET MODE", "endpoint", tonEndpoint)
+	} else {
+		slog.Info("TON RPC Client initialized in MAINNET MODE", "endpoint", tonEndpoint)
+	}
 
 	// 6.7 Initialize Wallex Price Oracle Client (Public Market API)
 	wallexClient := wallex.NewClient()
@@ -89,13 +122,22 @@ func main() {
 		addressRepo,
 		transactionRepo,
 		bscClient,
+		ethClient,
 		tonClient,
 		wallexClient,
 	)
 	authUC := usecase.NewAuthUseCase(adminRepo)
-	rebalanceUC := usecase.NewRebalanceUseCase(addressRepo, hdManager, bscClient, invoiceRepo, tonClient, rebalanceRecordRepo)
+	rebalanceUC := usecase.NewRebalanceUseCase(
+		addressRepo,
+		hdManager,
+		bscClient,
+		ethClient,
+		invoiceRepo,
+		tonClient,
+		rebalanceRecordRepo,
+	)
 
-	// 7.5 Start Background On-Chain Payment Observer (BSC & TON auto-settlement every 10s)
+	// 7.5 Start Background On-Chain Payment Observer (BSC, ETH & TON auto-settlement every 10s)
 	invoiceUC.StartBackgroundObserver(ctx, 10*time.Second)
 
 	// 8. Initialize Separated HTTP Handlers (SOLID - SRP)

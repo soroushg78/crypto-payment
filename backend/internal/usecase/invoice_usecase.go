@@ -24,6 +24,7 @@ type InvoiceUseCase struct {
 	addressRepo     domain.DepositAddressRepository
 	transactionRepo domain.ObservedTransactionRepository
 	bscClient       *bscrpc.Client
+	ethClient       *bscrpc.Client
 	tonClient       *tonrpc.Client
 	wallexClient    *wallex.Client
 }
@@ -36,6 +37,7 @@ func NewInvoiceUseCase(
 	addressRepo domain.DepositAddressRepository,
 	transactionRepo domain.ObservedTransactionRepository,
 	bscClient *bscrpc.Client,
+	ethClient *bscrpc.Client,
 	tonClient *tonrpc.Client,
 	wallexClient *wallex.Client,
 ) *InvoiceUseCase {
@@ -47,6 +49,7 @@ func NewInvoiceUseCase(
 		addressRepo:     addressRepo,
 		transactionRepo: transactionRepo,
 		bscClient:       bscClient,
+		ethClient:       ethClient,
 		tonClient:       tonClient,
 		wallexClient:    wallexClient,
 	}
@@ -69,7 +72,7 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 		networkID = strings.ToLower(strings.TrimSpace(input.Network))
 	}
 	if networkID == "" {
-		return nil, fmt.Errorf("network is required (e.g. bsc, ton)")
+		return nil, fmt.Errorf("network is required (e.g. bsc, eth, ton)")
 	}
 
 	net, err := u.networkRepo.GetByID(ctx, networkID)
@@ -94,7 +97,7 @@ func (u *InvoiceUseCase) CreateInvoice(ctx context.Context, input domain.CreateI
 			return nil, fmt.Errorf("currency '%s' not supported on network '%s': %w", input.Currency, net.ID, err)
 		}
 	} else {
-		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, gram)")
+		return nil, fmt.Errorf("currency is required (e.g. usdt, bnb, eth, gram)")
 	}
 
 	// 4. Resolve / Create User (MANDATORY)
@@ -217,22 +220,28 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 		return
 	}
 
-	// 2. Real on-chain check for BSC
-	if inv.NetworkID == "bsc" && u.bscClient != nil {
+	// 2. Real on-chain check for EVM chains (BSC or Ethereum)
+	var evmClient *bscrpc.Client
+	if inv.NetworkID == "bsc" {
+		evmClient = u.bscClient
+	} else if inv.NetworkID == "eth" {
+		evmClient = u.ethClient
+	}
+
+	if evmClient != nil {
 		checkCtx, cancel := context.WithTimeout(context.Background(), 3500*time.Millisecond)
 		defer cancel()
 
 		var liveBalance float64
 		var err error
 
-		if strings.EqualFold(inv.CurrencySymbol, "BNB") {
-			liveBalance, err = u.bscClient.GetBNBBalance(checkCtx, inv.PayAddress)
+		if strings.EqualFold(inv.CurrencySymbol, "BNB") || strings.EqualFold(inv.CurrencySymbol, "ETH") {
+			liveBalance, err = evmClient.GetNativeBalance(checkCtx, inv.PayAddress)
 		} else if strings.Contains(strings.ToUpper(inv.CurrencySymbol), "USDT") {
-			liveBalance, err = u.bscClient.GetUSDTBalance(checkCtx, inv.PayAddress)
+			liveBalance, err = evmClient.GetUSDTBalance(checkCtx, inv.PayAddress)
 		}
 
 		if err == nil && liveBalance > 0 {
-			// Threshold: 98% of expected crypto amount to protect against minor fee/rounding variations
 			threshold := inv.CryptoAmount * 0.98
 			if threshold <= 0 {
 				threshold = 0.000001
@@ -246,12 +255,13 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 					slog.Info("🎉 Invoice SETTLED on-chain by live balance detector!",
 						"invoice", inv.InvoiceNumber,
 						"address", inv.PayAddress,
+						"network", inv.NetworkID,
 						"balance", liveBalance,
 						"required", inv.CryptoAmount,
 					)
 
 					if u.transactionRepo != nil {
-						txHash := fmt.Sprintf("bsc-settled-%s-%d", inv.InvoiceNumber, now.Unix())
+						txHash := fmt.Sprintf("%s-settled-%s-%d", inv.NetworkID, inv.InvoiceNumber, now.Unix())
 						_ = u.transactionRepo.RecordTransaction(ctx, &domain.ObservedTransaction{
 							InvoiceID:     &inv.ID,
 							NetworkID:     inv.NetworkID,
@@ -267,8 +277,7 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 				}
 			}
 		} else {
-			// If balance is currently 0, check if this wallet was already SWEPT (nonce > 0 on-chain)
-			nonce, nonceErr := u.bscClient.GetNonce(checkCtx, inv.PayAddress)
+			nonce, nonceErr := evmClient.GetNonce(checkCtx, inv.PayAddress)
 			if nonceErr == nil && nonce > 0 {
 				now := time.Now()
 				if err := u.invoiceRepo.UpdateStatus(ctx, inv.ID, domain.StatusPaid, &now); err == nil {
@@ -276,6 +285,7 @@ func (u *InvoiceUseCase) checkOnChainSettlement(ctx context.Context, inv *domain
 					inv.PaidAt = &now
 					slog.Info("🎉 Invoice SETTLED because deposit address was SWEPT (nonce > 0)!",
 						"invoice", inv.InvoiceNumber,
+						"network", inv.NetworkID,
 						"address", inv.PayAddress,
 						"nonce", nonce,
 					)
@@ -345,12 +355,10 @@ func (u *InvoiceUseCase) StartBackgroundObserver(ctx context.Context, interval t
 			}
 		}
 	}()
-	slog.Info("🚀 Background payment observer started (BSC & TON)", "interval", interval.String())
+	slog.Info("🚀 Background payment observer started (BSC, ETH & TON)", "interval", interval.String())
 }
 
 // GetLiveRates returns dynamic crypto exchange rates queried from Wallex API
 func (u *InvoiceUseCase) GetLiveRates(ctx context.Context) map[string]float64 {
 	return u.wallexClient.GetAllRates(ctx)
 }
-
-

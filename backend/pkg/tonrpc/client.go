@@ -35,10 +35,28 @@ type TransactionID struct {
 	Hash string `json:"hash"`
 }
 
+type ComputePhase struct {
+	Skipped  bool  `json:"skipped"`
+	Success  bool  `json:"success"`
+	ExitCode int64 `json:"exit_code"`
+}
+
+type ActionPhase struct {
+	Success    bool  `json:"success"`
+	Valid      bool  `json:"valid"`
+	ResultCode int64 `json:"result_code"`
+}
+
+type TxDescription struct {
+	ComputePh *ComputePhase `json:"compute_ph"`
+	Action    *ActionPhase  `json:"action"`
+}
+
 type Transaction struct {
-	UTime         int64         `json:"utime"`
-	TransactionID TransactionID `json:"transaction_id"`
-	InMsg         *InMsg        `json:"in_msg"`
+	UTime         int64          `json:"utime"`
+	TransactionID TransactionID  `json:"transaction_id"`
+	InMsg         *InMsg         `json:"in_msg"`
+	Description   *TxDescription `json:"description"`
 }
 
 type ToncenterResponse struct {
@@ -193,6 +211,20 @@ func (c *Client) CheckPayment(ctx context.Context, address string, expectedMemo 
 	for _, tx := range txs {
 		if tx.InMsg == nil {
 			continue
+		}
+
+		// Verify execution exit code if description is provided (reverts / TVM failures protection)
+		if tx.Description != nil {
+			if tx.Description.ComputePh != nil && !tx.Description.ComputePh.Skipped {
+				if !tx.Description.ComputePh.Success || tx.Description.ComputePh.ExitCode != 0 {
+					continue // TVM execution failed / bounced
+				}
+			}
+			if tx.Description.Action != nil {
+				if !tx.Description.Action.Success || tx.Description.Action.ResultCode != 0 {
+					continue // Action phase failed
+				}
+			}
 		}
 
 		// Verify transaction timestamp (at or after invoice created - allow 10 minutes buffer for clock skew)

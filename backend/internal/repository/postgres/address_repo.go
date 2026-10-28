@@ -27,24 +27,24 @@ func NewDepositAddressRepository(pool *pgxpool.Pool, hdManager *hdwallet.Manager
 }
 
 func (r *DepositAddressRepository) AssignAddress(ctx context.Context, networkID string, userID *string) (*domain.DepositAddress, error) {
-	if networkID == "bsc" {
+	if networkID == "bsc" || networkID == "eth" {
 		// 1. Calculate next derivation index deterministically (starting at index 1; index 0 is reserved for Master Gas Station)
 		var nextIndex int
-		err := r.pool.QueryRow(ctx, "SELECT COALESCE(MAX(derivation_index), 0) + 1 FROM deposit_addresses WHERE network_id = 'bsc' AND derivation_index > 0").Scan(&nextIndex)
+		err := r.pool.QueryRow(ctx, "SELECT COALESCE(MAX(derivation_index), 0) + 1 FROM deposit_addresses WHERE network_id = $1 AND derivation_index > 0", networkID).Scan(&nextIndex)
 		if err != nil || nextIndex < 1 {
 			nextIndex = 1
 		}
 
-		// 2. Derive unique EVM address at index (m/44'/60'/0'/0/{index})
-		bscAddress, err := r.hdManager.DeriveAddress(nextIndex)
+		// 2. Derive unique EVM address at index (m/44'/60'/0'/0/{index}) - Standard for both BSC and ETH
+		evmAddress, err := r.hdManager.DeriveAddress(nextIndex)
 		if err != nil {
-			return nil, fmt.Errorf("failed to derive BSC address at index %d: %w", nextIndex, err)
+			return nil, fmt.Errorf("failed to derive %s address at index %d: %w", networkID, nextIndex, err)
 		}
 
 		addr := &domain.DepositAddress{
 			UserID:          userID,
 			NetworkID:       networkID,
-			Address:         bscAddress,
+			Address:         evmAddress,
 			DerivationIndex: &nextIndex,
 			IsAssigned:      true,
 			CreatedAt:       time.Now(),
@@ -57,7 +57,7 @@ func (r *DepositAddressRepository) AssignAddress(ctx context.Context, networkID 
 		`
 		err = r.pool.QueryRow(ctx, query, userID, networkID, addr.Address, addr.DerivationIndex).Scan(&addr.ID, &addr.CreatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to record assigned BSC address: %w", err)
+			return nil, fmt.Errorf("failed to record assigned %s address: %w", networkID, err)
 		}
 
 		return addr, nil
@@ -66,7 +66,7 @@ func (r *DepositAddressRepository) AssignAddress(ctx context.Context, networkID 
 	// Default / TON: Single Master Treasury Wallet + Unique Memo
 	treasuryWallet := os.Getenv("TON_TREASURY_WALLET")
 	if treasuryWallet == "" {
-		treasuryWallet = "UQCoIO3NMFAZJnXOPdlZqCrahKRiGBB8I6fSaa4ij6qKquQw"
+		treasuryWallet = "UQDRW1hBJ7uPVffzd_AGaB4DS0LNNp0WfVGO0k03DqQmUHWX"
 	}
 	memoBytes := make([]byte, 4)
 	_, _ = rand.Read(memoBytes)
