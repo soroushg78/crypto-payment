@@ -33,3 +33,4 @@ type LoginResponse struct {
 	ExpiresAt time.Time `json:"expires_at"`
 	ExpiresIn int       `json:"expires_in"` // in seconds: 86400 (24 hours)
 }
+

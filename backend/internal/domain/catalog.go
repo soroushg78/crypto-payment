@@ -20,3 +20,4 @@ type Currency struct {
 	MinDeposit      float64 `json:"min_deposit"`
 	IsActive        bool    `json:"is_active"`
 }
+
