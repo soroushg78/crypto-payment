@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"wallet-observer/internal/config"
-	"wallet-observer/internal/repository/postgres"
+	"wallet-observer/internal/repository"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	pool, err := postgres.NewPool(ctx, cfg.Database)
+	pool, err := repository.NewPool(ctx, cfg.Database)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// Run clean AutoMigrate to re-seed tables, BSC/TON networks, currencies (BNB, USDT, TON), admin, and users
-	if err := postgres.AutoMigrate(ctx, pool); err != nil {
+	if err := repository.AutoMigrate(ctx, pool); err != nil {
 		log.Fatalf("❌ AutoMigrate failed: %v", err)
 	}
 

@@ -13,7 +13,7 @@ import (
 
 	"wallet-observer/internal/config"
 	httpDelivery "wallet-observer/internal/delivery/http"
-	"wallet-observer/internal/repository/postgres"
+	"wallet-observer/internal/repository"
 	"wallet-observer/internal/usecase"
 	"wallet-observer/pkg/bscrpc"
 	"wallet-observer/pkg/hdwallet"
@@ -35,7 +35,7 @@ func main() {
 	defer stop()
 
 	// 4. Initialize PostgreSQL Connection Pool
-	pool, err := postgres.NewPool(ctx, cfg.Database)
+	pool, err := repository.NewPool(ctx, cfg.Database)
 	if err != nil {
 		slog.Error("Failed to initialize database pool", "error", err)
 		os.Exit(1)
@@ -43,7 +43,7 @@ func main() {
 	defer pool.Close()
 
 	// 5. Run Database Migrations & Seeds
-	if err := postgres.AutoMigrate(ctx, pool); err != nil {
+	if err := repository.AutoMigrate(ctx, pool); err != nil {
 		slog.Warn("Failed running database auto-migrations", "error", err)
 	}
 
@@ -62,14 +62,14 @@ func main() {
 	}
 
 	// 6. Initialize Separated Repositories (SOLID - SRP)
-	networkRepo := postgres.NewNetworkRepository(pool)
-	currencyRepo := postgres.NewCurrencyRepository(pool)
-	userRepo := postgres.NewUserRepository(pool)
-	adminRepo := postgres.NewAdminRepository(pool)
-	addressRepo := postgres.NewDepositAddressRepository(pool, hdManager)
-	invoiceRepo := postgres.NewInvoiceRepository(pool)
-	transactionRepo := postgres.NewObservedTransactionRepository(pool)
-	rebalanceRecordRepo := postgres.NewRebalanceRecordRepository(pool)
+	networkRepo := repository.NewNetworkRepository(pool)
+	currencyRepo := repository.NewCurrencyRepository(pool)
+	userRepo := repository.NewUserRepository(pool)
+	adminRepo := repository.NewAdminRepository(pool)
+	addressRepo := repository.NewDepositAddressRepository(pool, hdManager)
+	invoiceRepo := repository.NewInvoiceRepository(pool)
+	transactionRepo := repository.NewObservedTransactionRepository(pool)
+	rebalanceRecordRepo := repository.NewRebalanceRecordRepository(pool)
 
 	// 6.5 Initialize BSC & ETH RPC Clients (Direct Node Connector with Dynamic Testnet Support)
 	isTestnet := os.Getenv("IS_TESTNET") == "true"

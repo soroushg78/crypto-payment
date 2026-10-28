@@ -249,12 +249,16 @@ backend/
 │   │   ├── payment.go              # مدل فاکتور، تراکنش و آدرس
 │   │   ├── rebalance.go            # مدل‌های VaultSplit، SplitTransferResult و RebalanceRecord
 │   │   └── repository.go
-│   ├── repository/postgres/        # مخازن داده با پشتیبانی شبکه‌های BSC, ETH, TON
+│   ├── repository/                 # مخازن داده با پشتیبانی شبکه‌های BSC, ETH, TON
 │   │   ├── address_repo.go         # اشتقاق آدرس‌های BIP-44 با مدیریت اندیس
-│   │   ├── catalog_repo.go
-│   │   ├── invoice_repo.go
+│   │   ├── admin_repo.go           # احراز هویت و مدیریت ادمین‌ها
+│   │   ├── currency_repo.go        # استعلام و مدیریت رمزارزها
+│   │   ├── invoice_repo.go         # مدیریت صدور و تسویه فاکتورها
+│   │   ├── network_repo.go         # مدیریت و تنظیمات نودهای شبکه
+│   │   ├── postgres.go             # اتصال دیتابیس و AutoMigrate خودکار
 │   │   ├── rebalance_repo.go       # ثبت و استعلام تاریخچه ریبالانسینگ
-│   │   └── postgres.go             # سیدینگ اولیه شبکه‌ها و رمزارزها با همگام‌سازی تست‌نت
+│   │   ├── transaction_repo.go     # ثبت تراکنش‌ها جهت جلوگیری از Double-Spend
+│   │   └── user_repo.go            # مدیریت کاربران تلگرام و سیستم
 │   ├── usecase/                    # لایه منطق تجاری
 │   │   ├── invoice_usecase.go      # صدور فاکتور و رصد خودکار زنجیره‌ای BSC, ETH, TON
 │   │   ├── rebalance_usecase.go    # موتور ریبالانسینگ چندمقصدی Many-to-Many
