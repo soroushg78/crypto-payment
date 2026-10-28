@@ -15,3 +15,4 @@ CREATE TABLE IF NOT EXISTS rebalance_records (
 );
 CREATE INDEX IF NOT EXISTS idx_rebalance_records_created_at ON rebalance_records(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_rebalance_records_network ON rebalance_records(network_id);
+

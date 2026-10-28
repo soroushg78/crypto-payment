@@ -1,54 +1,13 @@
-package http
+package middleware
 
 import (
 	"fmt"
-	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 )
-
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		next.ServeHTTP(w, r)
-		slog.Info("HTTP Request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"remote_addr", r.RemoteAddr,
-			"duration", time.Since(start),
-		)
-	})
-}
-
-func RecoveryMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if rec := recover(); rec != nil {
-				slog.Error("Recovered from panic in HTTP handler", "panic", rec)
-				writeError(w, http.StatusInternalServerError, "internal server error")
-			}
-		}()
-		next.ServeHTTP(w, r)
-	})
-}
-
-func CorsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
 
 type ipRateLimiter struct {
 	mu      sync.Mutex
@@ -65,7 +24,7 @@ func NewRateLimiter(maxReqs int, window time.Duration) func(http.Handler) http.H
 		window:  window,
 	}
 
-	// periodic cleanup of old records
+	// Periodic background cleanup of expired records
 	go func() {
 		ticker := time.NewTicker(window * 2)
 		for range ticker.C {
@@ -114,7 +73,9 @@ func NewRateLimiter(maxReqs int, window time.Duration) func(http.Handler) http.H
 			if len(valid) >= rl.maxReqs {
 				rl.mu.Unlock()
 				w.Header().Set("Retry-After", fmt.Sprintf("%d", int(window.Seconds())))
-				writeError(w, http.StatusTooManyRequests, "Too many login attempts. Please try again later.")
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusTooManyRequests)
+				_, _ = w.Write([]byte(`{"success":false,"error":"تعداد تلاش‌های ناموفق بیش از حد مجاز است. لطفاً کمی بعد تلاش کنید."}`))
 				return
 			}
 

@@ -63,3 +63,4 @@ func createTables(ctx context.Context, pool *pgxpool.Pool) error {
 	slog.Info("All database schema tables created/verified successfully", "tables_count", len(sqlFiles))
 	return nil
 }
+

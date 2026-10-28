@@ -1,16 +1,20 @@
-package http
+package api
 
 import (
 	"net/http"
 	"time"
+
+	"wallet-observer/internal/api/handler"
+	"wallet-observer/internal/api/middleware"
 )
 
+// NewRouter constructs the HTTP handler with registered routes and middlewares
 func NewRouter(
-	healthH *HealthHandler,
-	catalogH *CatalogHandler,
-	invoiceH *InvoiceHandler,
-	authH *AuthHandler,
-	rebalanceH *RebalanceHandler,
+	healthH *handler.HealthHandler,
+	catalogH *handler.CatalogHandler,
+	invoiceH *handler.InvoiceHandler,
+	authH *handler.AuthHandler,
+	rebalanceH *handler.RebalanceHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -18,7 +22,7 @@ func NewRouter(
 	mux.HandleFunc("GET /health", healthH.HealthCheck)
 
 	// 2. Authentication route with brute-force rate limiting (5 attempts/min)
-	loginLimiter := NewRateLimiter(5, 1*time.Minute)
+	loginLimiter := middleware.NewRateLimiter(5, 1*time.Minute)
 	mux.Handle("POST /api/v1/auth/login", loginLimiter(http.HandlerFunc(authH.Login)))
 
 	// 3. Catalog routes (Networks, Currencies)
@@ -41,11 +45,11 @@ func NewRouter(
 	mux.HandleFunc("GET /api/v1/rebalance/security", rebalanceH.SecuritySpecs)
 	mux.HandleFunc("GET /api/v1/rebalance/records", rebalanceH.ListRecords)
 
-	// Apply Middlewares in chain
-	var handler http.Handler = mux
-	handler = CorsMiddleware(handler)
-	handler = LoggingMiddleware(handler)
-	handler = RecoveryMiddleware(handler)
+	// Apply Middlewares in chain (Outer to Inner)
+	var h http.Handler = mux
+	h = middleware.Cors(h)
+	h = middleware.Logging(h)
+	h = middleware.Recovery(h)
 
-	return handler
+	return h
 }

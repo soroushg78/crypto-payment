@@ -15,3 +15,4 @@ CREATE TABLE IF NOT EXISTS observed_transactions (
     CONSTRAINT uq_network_tx_hash UNIQUE(network_id, tx_hash)
 );
 CREATE INDEX IF NOT EXISTS idx_tx_to_address ON observed_transactions(to_address);
+

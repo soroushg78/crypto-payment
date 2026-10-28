@@ -277,11 +277,20 @@ backend/
 │   │   ├── invoice_usecase.go      # صدور فاکتور و رصد خودکار زنجیره‌ای BSC, ETH, TON
 │   │   ├── rebalance_usecase.go    # موتور ریبالانسینگ چندمقصدی Many-to-Many
 │   │   └── settlement_usecase.go
-│   └── delivery/http/              # هندلرهای RESTful API
-│       ├── invoice_handler.go
-│       ├── rebalance_handler.go    # مدیریت سوئیپ تکی و دسته‌ای با پارامتر network
-│       ├── middleware.go
-│       └── router.go
+│   └── api/                        # لایه وب و ارتباطات RESTful API (تفکیک اصیل Go)
+│       ├── handler/                # پکیج handler: کنترلرها و پاسخ‌های HTTP
+│       │   ├── auth_handler.go     # احراز هویت ادمین
+│       │   ├── catalog_handler.go  # استعلام شبکه‌ها و رمزارزها
+│       │   ├── health_handler.go   # هلث‌چک سیستم
+│       │   ├── invoice_handler.go  # صدور و استعلام فاکتورها
+│       │   ├── rebalance_handler.go # سوئیپ و مدیریت خزانه‌داری
+│       │   └── response.go         # قالب استاندارد پاسخ‌های JSON
+│       ├── middleware/             # پکیج middleware: میدلورهای مستقل و خوانا
+│       │   ├── cors.go             # مدیریت هدرهای CORS برای فرانت‌اند
+│       │   ├── logging.go          # لاگ شفاف زمان و آدرس درخواست‌ها
+│       │   ├── recovery.go         # جلوگیری از کرش سرور در زمان Panic
+│       │   └── ratelimit.go        # ضد Brute-Force ورود با Rate Limiting
+│       └── router.go               # ثبت مسیرها با http.ServeMux و زنجیره میدلورها
 ├── pkg/
 │   ├── bscrpc/                     # کلاینت عمومی EVM برای شبکه بایننس و اتریوم با موتور Multi-Vault
 │   ├── hdwallet/                   # اشتقاق حساب‌های سازگار با BIP-44 و Pure XPUB

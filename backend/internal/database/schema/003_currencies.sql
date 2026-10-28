@@ -8,3 +8,4 @@ CREATE TABLE IF NOT EXISTS currencies (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT uq_symbol_network UNIQUE (symbol, network_id)
 );
+

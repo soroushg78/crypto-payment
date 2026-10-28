@@ -1,4 +1,4 @@
-package http
+package handler
 
 import (
 	"encoding/json"
@@ -48,7 +48,7 @@ func (h *RebalanceHandler) SweepWallet(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.rebalanceUC.ExecuteSweep(r.Context(), req)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *RebalanceHandler) SweepBatch(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.rebalanceUC.ExecuteBatchSweep(r.Context(), req)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -78,35 +78,46 @@ func (h *RebalanceHandler) SweepBatch(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// SecuritySpecs handles GET /api/v1/rebalance/security
-func (h *RebalanceHandler) SecuritySpecs(w http.ResponseWriter, r *http.Request) {
-	specs := h.rebalanceUC.GetSecuritySpecs()
-	writeJSON(w, http.StatusOK, APIResponse{
-		Success: true,
-		Data:    specs,
-	})
-}
-
-// EstimateGas handles GET /api/v1/rebalance/estimate
+// EstimateGas handles GET /api/v1/rebalance/estimate?index=1&asset=USDT&network=bsc
 func (h *RebalanceHandler) EstimateGas(w http.ResponseWriter, r *http.Request) {
 	indexStr := r.URL.Query().Get("index")
-	index, _ := strconv.Atoi(indexStr)
 	asset := r.URL.Query().Get("asset")
-	treasury := r.URL.Query().Get("treasury")
 	networkID := r.URL.Query().Get("network")
 	if networkID == "" {
 		networkID = "bsc"
 	}
+	treasuryAddress := r.URL.Query().Get("treasury_address")
 
-	estimate, err := h.rebalanceUC.EstimateGas(r.Context(), index, asset, treasury, networkID)
+	if indexStr == "" || asset == "" {
+		writeError(w, http.StatusBadRequest, "Parameters 'index' and 'asset' are required")
+		return
+	}
+
+	index, err := strconv.Atoi(indexStr)
+	if err != nil || index < 1 {
+		writeError(w, http.StatusBadRequest, "Invalid derivation index")
+		return
+	}
+
+	estimate, err := h.rebalanceUC.EstimateGas(r.Context(), index, asset, treasuryAddress, networkID)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	writeJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data:    estimate,
+	})
+}
+
+// SecuritySpecs handles GET /api/v1/rebalance/security
+func (h *RebalanceHandler) SecuritySpecs(w http.ResponseWriter, r *http.Request) {
+	specs := h.rebalanceUC.GetSecuritySpecs()
+
+	writeJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data:    specs,
 	})
 }
 
@@ -124,12 +135,14 @@ func (h *RebalanceHandler) GetTONTreasury(w http.ResponseWriter, r *http.Request
 	})
 }
 
-// ListRecords handles GET /api/v1/rebalance/records
+// ListRecords handles GET /api/v1/rebalance/records?limit=50
 func (h *RebalanceHandler) ListRecords(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
-	limit, _ := strconv.Atoi(limitStr)
-	if limit <= 0 {
-		limit = 100
+	limit := 50
+	if limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+			limit = parsed
+		}
 	}
 
 	records, err := h.rebalanceUC.ListRebalanceRecords(r.Context(), limit)

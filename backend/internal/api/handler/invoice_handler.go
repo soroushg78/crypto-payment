@@ -1,4 +1,4 @@
-package http
+package handler
 
 import (
 	"encoding/json"
@@ -75,13 +75,13 @@ func (h *InvoiceHandler) GetInvoice(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *InvoiceHandler) GetInvoiceByNumber(w http.ResponseWriter, r *http.Request) {
-	num := r.PathValue("number")
-	if num == "" {
+	number := r.PathValue("number")
+	if number == "" {
 		writeError(w, http.StatusBadRequest, "number parameter is required")
 		return
 	}
 
-	invoice, err := h.invoiceUC.GetInvoiceByNumber(r.Context(), num)
+	invoice, err := h.invoiceUC.GetInvoiceByNumber(r.Context(), number)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "invoice not found")
@@ -97,12 +97,13 @@ func (h *InvoiceHandler) GetInvoiceByNumber(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// ListInvoices handles GET /api/v1/invoices
 func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
-	limit, _ := strconv.Atoi(limitStr)
-	if limit <= 0 {
-		limit = 50
+	limit := 50
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
 	}
 
 	invoices, err := h.invoiceUC.ListInvoices(r.Context(), limit)
@@ -117,12 +118,11 @@ func (h *InvoiceHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetRates handles GET /api/v1/rates - returns live crypto prices from Wallex
 func (h *InvoiceHandler) GetRates(w http.ResponseWriter, r *http.Request) {
 	rates := h.invoiceUC.GetLiveRates(r.Context())
+
 	writeJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data:    rates,
 	})
 }
-

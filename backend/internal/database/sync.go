@@ -40,3 +40,4 @@ func SyncNetworkMode(ctx context.Context, pool *pgxpool.Pool, isTestnet bool) er
 	}
 	return nil
 }
+

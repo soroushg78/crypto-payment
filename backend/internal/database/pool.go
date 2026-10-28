@@ -39,3 +39,4 @@ func NewPool(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, err
 	slog.Info("PostgreSQL connection pool established successfully")
 	return pool, nil
 }
+

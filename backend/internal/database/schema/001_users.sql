@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(128),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

@@ -66,3 +66,4 @@ func SeedInitialData(ctx context.Context, pool *pgxpool.Pool) error {
 	slog.Info("Database initial seeds applied successfully")
 	return nil
 }
+

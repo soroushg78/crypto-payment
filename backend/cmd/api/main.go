@@ -11,9 +11,10 @@ import (
 	"syscall"
 	"time"
 
+	"wallet-observer/internal/api"
+	"wallet-observer/internal/api/handler"
 	"wallet-observer/internal/config"
 	"wallet-observer/internal/database"
-	httpDelivery "wallet-observer/internal/delivery/http"
 	"wallet-observer/internal/repository"
 	"wallet-observer/internal/usecase"
 	"wallet-observer/pkg/bscrpc"
@@ -143,14 +144,14 @@ func main() {
 	invoiceUC.StartBackgroundObserver(ctx, 10*time.Second)
 
 	// 8. Initialize Separated HTTP Handlers (SOLID - SRP)
-	healthHandler := httpDelivery.NewHealthHandler()
-	catalogHandler := httpDelivery.NewCatalogHandler(catalogUC)
-	invoiceHandler := httpDelivery.NewInvoiceHandler(invoiceUC)
-	authHandler := httpDelivery.NewAuthHandler(authUC)
-	rebalanceHandler := httpDelivery.NewRebalanceHandler(rebalanceUC)
+	healthHandler := handler.NewHealthHandler()
+	catalogHandler := handler.NewCatalogHandler(catalogUC)
+	invoiceHandler := handler.NewInvoiceHandler(invoiceUC)
+	authHandler := handler.NewAuthHandler(authUC)
+	rebalanceHandler := handler.NewRebalanceHandler(rebalanceUC)
 
 	// 9. Wire Router with Handlers & Middlewares
-	router := httpDelivery.NewRouter(healthHandler, catalogHandler, invoiceHandler, authHandler, rebalanceHandler)
+	router := api.NewRouter(healthHandler, catalogHandler, invoiceHandler, authHandler, rebalanceHandler)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	server := &http.Server{
